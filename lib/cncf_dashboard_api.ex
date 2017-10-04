@@ -13,7 +13,7 @@ defmodule CncfDashboardApi do
       # Start the endpoint when the application starts
       supervisor(CncfDashboardApi.Endpoint, []),
       # Start your own worker by calling: CncfDashboardApi.Worker.start_link(arg1, arg2, arg3)
-      # worker(CncfDashboardApi.Worker, [arg1, arg2, arg3]),
+      worker(CncfDashboardApi.Scheduler, []),
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html

@@ -39,6 +39,8 @@ defmodule CncfDashboardApi.Mixfile do
      {:gettext, "~> 0.11"},
      {:cowboy, "~> 1.0"},
      {:mix_test_watch, "~> 0.3", only: :dev},
+     {:quantum, ">= 2.1.0"},
+     {:timex, "~> 3.0"},
      {:export, "~> 0.1.1"}]
 
   end
