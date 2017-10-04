@@ -6,7 +6,7 @@ defmodule CncfDashboardApi.SchedulerTest do
 
   test "save_projects" do 
     projects = CncfDashboardApi.Scheduler.save_projects()
-    assert 2 > CncfDashboardApi.Repo.aggregate(CncfDashboardApi.Projects, :count, :id)  
+    assert 1 < CncfDashboardApi.Repo.aggregate(CncfDashboardApi.Projects, :count, :id)  
   end
 
   # test "get_gitlab_pipelines" do 
