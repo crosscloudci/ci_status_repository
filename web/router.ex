@@ -19,8 +19,10 @@ defmodule CncfDashboardApi.Router do
     get "/", PageController, :index
   end
 
+
   # Other scopes may use custom stacks.
-  # scope "/api", CncfDashboardApi do
-  #   pipe_through :api
-  # end
+  scope "/api", CncfDashboardApi do
+    pipe_through :api
+    resources "/projects", ProjectsController 
+  end
 end
