@@ -34,10 +34,4 @@ config :logger, :console, format: "[$level] $message\n"
 config :phoenix, :stacktrace_depth, 20
 
 # Configure your database
-config :cncf_dashboard_api, CncfDashboardApi.Repo,
-  adapter: Ecto.Adapters.Postgres,
-  username: "pair",
-  password: "pass1234",
-  database: "cncf_dashboard_api_dev",
-  hostname: "localhost",
-  pool_size: 10
+import_config "dev.secret.exs"
