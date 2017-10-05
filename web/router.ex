@@ -23,6 +23,7 @@ defmodule CncfDashboardApi.Router do
   # Other scopes may use custom stacks.
   scope "/api", CncfDashboardApi do
     pipe_through :api
-    resources "/projects", ProjectsController 
+    resources "/projects", ProjectsController, except: [:new, :edit]   
+    resources "/source_key_projects", SourceKeyProjectsController, except: [:new, :edit]   
   end
 end

@@ -35,3 +35,4 @@ config :phoenix, :stacktrace_depth, 20
 
 # Configure your database
 import_config "dev.secret.exs"
+

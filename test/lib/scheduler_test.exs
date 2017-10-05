@@ -4,13 +4,13 @@ defmodule CncfDashboardApi.SchedulerTest do
 
   alias CncfDashboardApi.Projects
 
-  test "save_projects" do 
-    projects = CncfDashboardApi.Scheduler.save_projects()
+  test "save_project_names" do 
+    projects = CncfDashboardApi.Scheduler.save_project_names()
     assert 1 < CncfDashboardApi.Repo.aggregate(CncfDashboardApi.Projects, :count, :id)  
   end
 
-  # test "get_gitlab_pipelines" do 
-  #   pipelines = RubyElixir.GitLabProxy.get_gitlab_pipelines(CncfDashboardApi.GitLabProxyTest.project_id)
-  #   assert true = is_list(pipelines)
-  # end
+  test "upsert_projects" do 
+    projects = CncfDashboardApi.Scheduler.upsert_projects()
+    assert 1 < CncfDashboardApi.Repo.aggregate(CncfDashboardApi.Projects, :count, :id)  
+  end
 end
