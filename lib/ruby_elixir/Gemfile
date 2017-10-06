@@ -1,0 +1,6 @@
+source 'https://rubygems.org'
+gem 'gitlab'
+gem 'prawn'
+gem 'json'
+gem 'httparty'
+gem 'awesome_print'

@@ -29,10 +29,10 @@ flow-typed/
 config/dev.secrets.exs
 uploads
 # dont include compiled lib subdirectories but *do* include bling files 
-lib/*/
-# do include bling subdirectorys
-!/lib/bling
-!/lib/api
+# lib/*/
+# # do include bling subdirectorys
+# !/lib/bling
+# !/lib/api
 .env
 /tmp
 #too big to include, use the tar file
