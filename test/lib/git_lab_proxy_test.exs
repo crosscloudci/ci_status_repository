@@ -14,7 +14,6 @@ defmodule CncfDashboardApi.GitLabProxyTest do
 
   test "get_gitlab_projects" do 
     projects = RubyElixir.GitLabProxy.get_gitlab_projects 
-    IEx.pry
       Logger.info fn ->
         "test: projects: #{inspect(projects)}"
       end

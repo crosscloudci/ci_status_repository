@@ -15,6 +15,7 @@ defmodule CncfDashboardApi.Projects do
   def changeset(struct, params \\ %{}) do
     struct
     |> cast(params, [:name, :ssh_url_to_repo, :http_url_to_repo])
-    |> validate_required([:name, :ssh_url_to_repo, :http_url_to_repo])
+    # |> validate_required([:name, :ssh_url_to_repo, :http_url_to_repo])
+    |> validate_required([:name])
   end
 end
