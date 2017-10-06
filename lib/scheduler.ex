@@ -1,7 +1,7 @@
 require Logger;
 require IEx;
 defmodule CncfDashboardApi.Scheduler do
-  use Quantum.Scheduler, otp_app: :your_app
+  use Quantum.Scheduler, otp_app: :cncf_dashboard_api
   use EctoConditionals, repo: CncfDashboardApi.Repo
 
 	def save_project_names do

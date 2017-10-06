@@ -4,9 +4,8 @@ require 'awesome_print'
 
 def gitlab_client 
   Gitlab.configure do |config|
-    config.endpoint = ENV["GITLAB_API"] # API endpoint URL, default: ENV['GITLAB_API_ENDPOINT']
-    # config.endpoint = "https://gitlab.vulk.coop/api/v4" # API endpoint URL, default: ENV['GITLAB_API_ENDPOINT']
-    config.private_token = ENV["GITLAB_TOKEN"] # user's private token or OAuth2 access token, default: ENV['GITLAB_API_PRIVATE_TOKEN']
+    config.endpoint = ENV["GITLAB_API"] 
+    config.private_token = ENV["GITLAB_TOKEN"] 
   end
 
   @g = Gitlab.client(endpoint: ENV["GITLAB_API"], private_token: ENV["GITLAB_TOKEN"])

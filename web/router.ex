@@ -25,5 +25,6 @@ defmodule CncfDashboardApi.Router do
     pipe_through :api
     resources "/projects", ProjectsController, except: [:new, :edit]   
     resources "/source_key_projects", SourceKeyProjectsController, except: [:new, :edit]   
+    resources "/pipelines", PipelinesController, except: [:new, :edit]
   end
 end
