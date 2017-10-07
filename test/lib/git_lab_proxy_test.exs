@@ -7,6 +7,10 @@ defmodule CncfDashboardApi.GitLabProxyTest do
     "1"
 	end
 
+  def pipeline_id do
+    "1"
+	end
+
   test "get_gitlab_project_names" do 
     projects = RubyElixir.GitLabProxy.get_gitlab_project_names 
     assert true = is_list(projects)
@@ -22,6 +26,11 @@ defmodule CncfDashboardApi.GitLabProxyTest do
 
   test "get_gitlab_pipelines" do 
     pipelines = RubyElixir.GitLabProxy.get_gitlab_pipelines(CncfDashboardApi.GitLabProxyTest.project_id)
+    assert true = is_list(pipelines)
+  end
+
+  test "get_gitlab_pipeline_jobs" do 
+    pipelines = RubyElixir.GitLabProxy.get_gitlab_pipeline_jobs(CncfDashboardApi.GitLabProxyTest.project_id, CncfDashboardApi.GitLabProxyTest.pipeline_id)
     assert true = is_list(pipelines)
   end
 end
