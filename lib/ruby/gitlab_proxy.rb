@@ -12,13 +12,13 @@ def gitlab_client
 end 
 
 def get_project_names
-  Tuple.new([:ok, gitlab_client.projects.reduce([]) {|x,y| x << y.name}.to_json ])
+  Tuple.new([:ok, gitlab_client.projects.auto_paginate.reduce([]) {|x,y| x << y.name}.to_json ])
 end 
 
 def get_projects 
-  Tuple.new([:ok, gitlab_client.projects.reduce([]) {|x,y| x << y.to_hash}.to_json ])
+  Tuple.new([:ok, gitlab_client.projects.auto_paginate.reduce([]) {|x,y| x << y.to_hash}.to_json ])
 end 
 
 def get_pipelines(project_id)
-  Tuple.new([:ok, gitlab_client.pipelines(project_id).reduce([]) {|x,y| x << y.status}.to_json ])
+  Tuple.new([:ok, gitlab_client.pipelines(project_id).auto_paginate.reduce([]) {|x,y| x << y.status}.to_json ])
 end 

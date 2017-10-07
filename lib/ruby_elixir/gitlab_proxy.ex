@@ -23,6 +23,7 @@ defmodule RubyElixir.GitLabProxy do
 
   def get_gitlab_pipelines(project_id) do
     {:ok, ruby} = Ruby.start(ruby_lib: Path.expand("lib/ruby"))
+    # need to page through all calls
     {:ok, pipelines} = ruby |> Ruby.call("gitlab_proxy", "get_pipelines", [project_id])
     ruby |> Ruby.stop()
     Poison.decode!(pipelines) 
