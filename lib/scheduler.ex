@@ -5,7 +5,7 @@ defmodule CncfDashboardApi.Scheduler do
   use EctoConditionals, repo: CncfDashboardApi.Repo
 
 	def save_project_names do
-		projects = RubyElixir.GitLabProxy.get_gitlab_project_names
+		projects = GitLabProxy.get_gitlab_project_names
 		Enum.map(projects, fn(source_project) -> 
 
 			prec = %CncfDashboardApi.Projects{name: source_project} 
@@ -14,7 +14,7 @@ defmodule CncfDashboardApi.Scheduler do
   end
 
 	def upsert_projects do
-		projects = RubyElixir.GitLabProxy.get_gitlab_projects 
+		projects = GitLabProxy.get_gitlab_projects 
 
     # 1) log that we are starting the load
       Logger.info fn ->
