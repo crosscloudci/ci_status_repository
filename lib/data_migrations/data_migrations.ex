@@ -15,7 +15,7 @@ defmodule CncfDashboardApi.DataMigrations do
 
       # 2) get the list of all source records and loop through them
       #
-      #   LegacyProvider.all.each do |legacy_provider|
+      #   LegacyEducationalInstitution.all.each do |legacy_educational_institution|
 
       Enum.map(projects, fn(source_project) -> 
 
@@ -24,7 +24,7 @@ defmodule CncfDashboardApi.DataMigrations do
         # or 
         # 4.b) retrieve local uniquekey record with the unique key from the source 
 
-        #     lkp = LegacyKeysProvider.find_or_initialize_by(legacy_id: legacy_provider.ProviderId)
+        #     lkp = LegacyKeysEducationalInstitution.find_or_initialize_by(legacy_id: legacy_educational_institution.EducationalInstitutionId)
 
         # {skp_found, skp_record} = %CncfDashboardApi.SourceKeyProjects{source_id: Integer.to_string(source_project["id"])} |> find_by(:source_id)
         {skp_found, skp_record} = %unquote(key_model){source_id: Integer.to_string(source_project["id"])} |> find_by(:source_id)
@@ -32,7 +32,7 @@ defmodule CncfDashboardApi.DataMigrations do
         # 5.a) create a new local record 
         # or 
         # 5.b) retrieve local record with the local key from the source's uniquekey table 
-        #     provider = Provider.find_or_initialize_by(id: lkp.new_id)
+        #     educational_institution = EducationalInstitution.find_or_initialize_by(id: lkp.new_id)
         #
 
         # {sp_found, sp_record} = %CncfDashboardApi.Projects{id: (skp_record.new_id || -1)} |> find_by(:id)
@@ -49,8 +49,8 @@ defmodule CncfDashboardApi.DataMigrations do
 
         # 6) populate the local record with the rest of the information from the source (don't save yet)
         #     # fill in record from legacy record
-        #     provider.company_name = legacy_provider.companyName
-        #     provider.short_name = legacy_provider.shortName
+        #     educational_institution.company_name = legacy_educational_institution.companyName
+        #     educational_institution.short_name = legacy_educational_institution.shortName
 
         # changeset = CncfDashboardApi.Projects.changeset(sp_record, %{name: source_project["name"]})
         #
@@ -75,7 +75,7 @@ defmodule CncfDashboardApi.DataMigrations do
         changeset = unquote(model).changeset(sp_record, cs1)
 
         # 7) save the local record
-        #     provider.save!
+        #     educational_institution.save!
 
         case sp_found do
           :found ->
@@ -88,7 +88,7 @@ defmodule CncfDashboardApi.DataMigrations do
 
         # 8) save the uniquekey record
 
-        #     lkp.new_id = provider.id
+        #     lkp.new_id = educational_institution.id
         #     lkp.save!
 
         # changeset = CncfDashboardApi.SourceKeyProjects.changeset(skp_record, %{new_id: sp_record.id})

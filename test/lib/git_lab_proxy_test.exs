@@ -21,16 +21,16 @@ defmodule CncfDashboardApi.GitLabProxyTest do
       Logger.info fn ->
         "test: projects: #{inspect(projects)}"
       end
-    assert true = is_list(projects)
+    assert %{"id" => a } = List.first(projects)
   end
 
   test "get_gitlab_pipelines" do 
     pipelines = GitLabProxy.get_gitlab_pipelines(CncfDashboardApi.GitLabProxyTest.project_id)
-    assert true = is_list(pipelines)
+    assert %{"id" => a } = List.first(pipelines)
   end
 
   test "get_gitlab_pipeline_jobs" do 
     pipelines = GitLabProxy.get_gitlab_pipeline_jobs(CncfDashboardApi.GitLabProxyTest.project_id, CncfDashboardApi.GitLabProxyTest.pipeline_id)
-    assert true = is_list(pipelines)
+    assert %{"commit" => %{} } = List.first(pipelines)
   end
 end

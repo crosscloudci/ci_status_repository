@@ -14,9 +14,10 @@ defmodule CncfDashboardApi.GitlabMigrations do
   end
 
 	def upsert_projects do
+    project_map = GitLabProxy.get_gitlab_projects
     CncfDashboardApi.DataMigrations.upsert_from_map(
       CncfDashboardApi.Repo,
-      GitLabProxy.get_gitlab_projects,
+      project_map,
       CncfDashboardApi.SourceKeyProjects,
       CncfDashboardApi.Projects,
       %{name: :name}
