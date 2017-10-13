@@ -3,6 +3,11 @@ defmodule CncfDashboardApi.GitlabMigrationsTest do
   use CncfDashboardApi.ModelCase
 
   alias CncfDashboardApi.Projects
+  alias CncfDashboardApi.Pipelines
+
+  def projects do
+    GitLabProxy.get_gitlab_projects()
+  end
 
   test "save_project_names" do 
     projects = CncfDashboardApi.GitlabMigrations.save_project_names()
@@ -20,5 +25,19 @@ defmodule CncfDashboardApi.GitlabMigrationsTest do
     CncfDashboardApi.GitlabMigrations.upsert_projects()
     assert project_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.Projects, :count, :id)  
     assert source_project_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyProjects, :count, :id)  
+  end
+
+  @tag timeout: 120_000 
+  test "upsert_pipelines" do 
+    # check insert 
+    CncfDashboardApi.GitlabMigrations.upsert_pipelines(Enum.take(projects(), 1))
+    pipeline_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.Pipelines, :count, :id)  
+    source_pipeline_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyPipelines, :count, :id)  
+    assert 1 < pipeline_count  
+    assert 1 < source_pipeline_count
+    # check update -- should not increase
+    CncfDashboardApi.GitlabMigrations.upsert_pipelines(Enum.take(projects(), 1))
+    assert pipeline_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.Pipelines, :count, :id)  
+    assert source_pipeline_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyPipelines, :count, :id)  
   end
 end

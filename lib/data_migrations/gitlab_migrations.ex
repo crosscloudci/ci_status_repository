@@ -23,4 +23,19 @@ defmodule CncfDashboardApi.GitlabMigrations do
       %{name: :name}
     )
   end
+
+  def upsert_pipelines(projects) do
+    Enum.map(projects, fn (%{"id" => project_id}) ->
+      pipeline_map = GitLabProxy.get_gitlab_pipelines(project_id)
+      CncfDashboardApi.DataMigrations.upsert_from_map(
+        CncfDashboardApi.Repo,
+        pipeline_map,
+        CncfDashboardApi.SourceKeyPipelines,
+        CncfDashboardApi.Pipelines,
+        %{ref: :ref, 
+        status: :status}
+      )
+    end
+    )
+  end
 end
