@@ -6,6 +6,6 @@ defmodule Mix.Tasks.GitlabData.LoadProjects do
   def run(_) do
     ensure_started(CncfDashboardApi.Repo, [])
     upsert_count = CncfDashboardApi.GitlabMigrations.upsert_projects()
-   IO.puts(inspect(upsert_count) <> " records upserted")
+    Mix.shell.info(inspect(upsert_count) <> " records upserted")
   end
 end
