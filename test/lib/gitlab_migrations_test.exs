@@ -40,4 +40,16 @@ defmodule CncfDashboardApi.GitlabMigrationsTest do
     assert pipeline_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.Pipelines, :count, :id)  
     assert source_pipeline_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyPipelines, :count, :id)  
   end
+
+  test "upsert_pipeline_jobs" do 
+    CncfDashboardApi.GitlabMigrations.upsert_pipeline_jobs(1, 1)
+    pipeline_jobs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.PipelineJobs, :count, :id)  
+    source_pipeline_jobs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyPipelineJobs, :count, :id)  
+    assert 1 < pipeline_jobs_count  
+    assert 1 < source_pipeline_jobs_count
+    # check update -- should not increase
+    CncfDashboardApi.GitlabMigrations.upsert_pipeline_jobs(1, 1)
+    assert pipeline_jobs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.PipelineJobs, :count, :id)  
+    assert source_pipeline_jobs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyPipelineJobs, :count, :id)  
+  end
 end

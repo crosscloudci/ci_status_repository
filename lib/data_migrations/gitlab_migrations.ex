@@ -38,4 +38,16 @@ defmodule CncfDashboardApi.GitlabMigrations do
     end
     )
   end
+
+  def upsert_pipeline_jobs(project_id, pipeline_id) do 
+    pipeline_job_map = GitLabProxy.get_gitlab_pipeline_jobs(project_id, pipeline_id)
+    CncfDashboardApi.DataMigrations.upsert_from_map(
+      CncfDashboardApi.Repo,
+      pipeline_job_map,
+      CncfDashboardApi.SourceKeyPipelineJobs,
+      CncfDashboardApi.PipelineJobs,
+      %{name: :name, ref: :ref, 
+        status: :status}
+    )
+  end 
 end
