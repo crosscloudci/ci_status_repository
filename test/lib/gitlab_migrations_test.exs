@@ -16,9 +16,10 @@ defmodule CncfDashboardApi.GitlabMigrationsTest do
 
   test "upsert_projects" do 
     # check insert 
-    CncfDashboardApi.GitlabMigrations.upsert_projects()
+    upsert_count = CncfDashboardApi.GitlabMigrations.upsert_projects()
     project_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.Projects, :count, :id)  
     source_project_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyProjects, :count, :id)  
+    assert 1 < upsert_count  
     assert 1 < project_count  
     assert 1 < source_project_count
     # check update -- should not increase

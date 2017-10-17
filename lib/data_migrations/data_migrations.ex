@@ -17,7 +17,7 @@ defmodule CncfDashboardApi.DataMigrations do
       #
       #   LegacyEducationalInstitution.all.each do |legacy_educational_institution|
 
-      Enum.map(projects, fn(source_project) -> 
+      upserted_count = Enum.reduce(projects, 0, fn(source_project, acc) -> 
 
         # 3) find out if the unique key from the source is already saved locally in the local uniquekey table
         # 4.a) initialize a new local uniquekey record with the key from the source
@@ -101,7 +101,9 @@ defmodule CncfDashboardApi.DataMigrations do
             # {_, skp_record} = CncfDashboardApi.Repo.insert(changeset) 
             {_, skp_record} = unquote(repo).insert(changeset) 
         end
+  		  acc + 1
       end) 
+    upserted_count
     end
   end
 end
