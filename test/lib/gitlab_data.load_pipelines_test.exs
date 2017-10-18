@@ -4,6 +4,7 @@ defmodule Mix.Tasks.GitlabData.LoadPipelinesTest do
   use ExUnit.Case, async: true
   use CncfDashboardApi.ModelCase
 
+  @tag timeout: 300_000 
   describe "run/1" do
     test "Upserts all pipelines" do
       Mix.Tasks.GitlabData.LoadPipelines.run([])
