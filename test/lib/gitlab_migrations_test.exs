@@ -1,3 +1,4 @@
+require IEx;
 defmodule CncfDashboardApi.GitlabMigrationsTest do
   use ExUnit.Case
   use CncfDashboardApi.ModelCase

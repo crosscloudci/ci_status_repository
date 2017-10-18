@@ -5,6 +5,7 @@ defmodule CncfDashboardApi.Pipelines do
     field :ref, :string
     field :status, :string
     field :sha, :string
+    field :project_id, :string
 
     timestamps()
   end
@@ -14,7 +15,7 @@ defmodule CncfDashboardApi.Pipelines do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:ref, :status, :sha])
+    |> cast(params, [:ref, :status, :sha, :project_id])
     # |> validate_required([:ref, :status])
     |> validate_required([:ref, :status])
   end

@@ -30,14 +30,21 @@ defmodule CncfDashboardApi.GitlabMigrations do
       Logger.info fn ->
         "project_id is: " <> inspect(project_id)
       end
+      #
       pipeline_map = GitLabProxy.get_gitlab_pipelines(project_id)
+      # TODO map project_id into pipeline_map ino order to add project id into 
+      # pipeline task
+      # pipeline_map_with_projects =Enum.reduce(pipeline_map, [], fn (x,acc) -> acc ++ [Map.put(x, "project_id", project_id)] end)
+      pipeline_map_with_projects = Enum.reduce(pipeline_map, [], fn (x,acc) -> [Enum.into(x, %{"project_id" => Integer.to_string(project_id)}) | acc] end) 
       CncfDashboardApi.DataMigrations.upsert_from_map(
         CncfDashboardApi.Repo,
-        pipeline_map,
+        pipeline_map_with_projects,
         CncfDashboardApi.SourceKeyPipelines,
         CncfDashboardApi.Pipelines,
         %{ref: :ref, 
-        status: :status}
+          status: :status,
+          sha: :sha,
+          project_id: :project_id}
       )
     end
     )
@@ -45,7 +52,7 @@ defmodule CncfDashboardApi.GitlabMigrations do
 
   def upsert_all_pipelines do
     source_key_projects = CncfDashboardApi.Repo.all(from skp in CncfDashboardApi.SourceKeyProjects) 
-    project_ids = Enum.map(source_key_projects, fn(%{source_id: id}) -> %{"id" => id}end) 
+    project_ids = Enum.map(source_key_projects, fn(%{source_id: id}) -> %{"id" => String.to_integer(id)}end) 
       Logger.info fn ->
         "project_id take is: " <> inspect(Enum.take(project_ids, 1))
       end
@@ -63,4 +70,13 @@ defmodule CncfDashboardApi.GitlabMigrations do
         status: :status}
     )
   end 
+
+  def upsert_all_pipeline_jobs do
+    source_key_projects = CncfDashboardApi.Repo.all(from skp in CncfDashboardApi.SourceKeyProjects) 
+    project_ids = Enum.map(source_key_projects, fn(%{source_id: id}) -> %{"id" => id}end) 
+      Logger.info fn ->
+        "project_id take is: " <> inspect(Enum.take(project_ids, 1))
+      end
+    CncfDashboardApi.GitlabMigrations.upsert_pipelines(Enum.take(project_ids, 1))
+  end
 end
