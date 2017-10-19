@@ -5,7 +5,8 @@ defmodule CncfDashboardApi.PipelineJobs do
     field :name, :string
     field :status, :string
     field :ref, :string
-    field :pipeline_source_id, :string
+    field :pipeline_id, :string
+    field :project_id, :string
 
     timestamps()
   end
@@ -15,7 +16,7 @@ defmodule CncfDashboardApi.PipelineJobs do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :status, :ref, :pipeline_source_id])
+    |> cast(params, [:name, :status, :ref, :project_id, :pipeline_id])
     |> validate_required([:name, :status, :ref])
     # |> validate_required([:name, :status, :ref, :pipeline_source_id])
   end

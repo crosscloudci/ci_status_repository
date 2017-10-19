@@ -53,19 +53,49 @@ defmodule CncfDashboardApi.GitlabMigrations do
       Logger.info fn ->
         "project_id take is: " <> inspect(project_ids)
       end
-    CncfDashboardApi.GitlabMigrations.upsert_pipelines(project_ids)
-  end
+    CncfDashboardApi.GitlabMigrations.upsert_pipelines(project_ids) 
+  end 
 
-  def upsert_pipeline_jobs(project_id, pipeline_id) do 
-    pipeline_job_map = GitLabProxy.get_gitlab_pipeline_jobs(project_id, pipeline_id)
-    CncfDashboardApi.DataMigrations.upsert_from_map(
-      CncfDashboardApi.Repo,
-      pipeline_job_map,
-      CncfDashboardApi.SourceKeyPipelineJobs,
-      CncfDashboardApi.PipelineJobs,
-      %{name: :name, ref: :ref, 
-        status: :status}
-    )
+  # pipeline_jobs depends on projects and pipelines being upserted previously
+  def upsert_pipeline_jobs(source_project_id, source_pipeline_id) do 
+
+    pipeline_job_map = GitLabProxy.get_gitlab_pipeline_jobs(source_project_id, source_pipeline_id)
+    skp = CncfDashboardApi.Repo.get_by(CncfDashboardApi.SourceKeyProjects, 
+                                       source_id: source_project_id |> Integer.to_string) 
+    skpl = CncfDashboardApi.Repo.get_by(CncfDashboardApi.SourceKeyPipelines, 
+                                        source_id: source_pipeline_id |> Integer.to_string) 
+    # sproject_id = source_project_id |> Integer.to_string
+    # spipeline_id = source_pipeline_id |> Integer.to_string
+    # %{new_id: project_id} = CncfDashboardApi.Repo.all(
+    #   from skp in 
+    #   CncfDashboardApi.SourceKeyProjects, 
+    #   where: skp.source_id == ^sproject_id ) 
+    #   |> List.first
+    #
+    # %{new_id: pipeline_id} = CncfDashboardApi.Repo.all(
+    #   from skp in 
+    #   CncfDashboardApi.SourceKeyPipelines, 
+    #   where: skp.source_id == ^spipeline_id) 
+    #   |> List.first
+    #
+    if skp && skpl do
+      pipeline_job_map_with_ids = Enum.reduce(pipeline_job_map, [], 
+                                              fn (x,acc) -> 
+                                                [Enum.into(x, %{"project_id" => Integer.to_string(skp.new_id)})
+                                                |> Enum.into(%{"pipeline_id" => Integer.to_string(skpl.new_id)}) | acc] 
+                                              end) 
+
+      CncfDashboardApi.DataMigrations.upsert_from_map(
+        CncfDashboardApi.Repo,
+        pipeline_job_map_with_ids,
+        CncfDashboardApi.SourceKeyPipelineJobs,
+        CncfDashboardApi.PipelineJobs,
+        %{name: :name, ref: :ref, 
+          status: :status,
+          project_id: :project_id,
+          pipeline_id: :pipeline_id}
+      )
+    end
   end 
 
   def upsert_all_pipeline_jobs do

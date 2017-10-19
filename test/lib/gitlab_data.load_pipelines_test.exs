@@ -6,12 +6,12 @@ defmodule Mix.Tasks.GitlabData.LoadPipelinesTest do
 
   @tag timeout: 300_000 
   describe "run/1" do
-    test "Upserts all pipelines" do
-      Mix.Tasks.GitlabData.LoadPipelines.run([])
-
-      assert_received {:mix_shell, :info, [upsert_count]}    # pattern matching FTW
-
-      assert upsert_count =~ "records upserted"
-    end
+    # test "Upserts all pipelines" do
+    #   Mix.Tasks.GitlabData.LoadPipelines.run([])
+    #
+    #   assert_received {:mix_shell, :info, [upsert_count]}    # pattern matching FTW
+    #
+    #   assert upsert_count =~ "records upserted"
+    # end
   end
 end

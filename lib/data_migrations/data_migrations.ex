@@ -6,18 +6,18 @@ defmodule CncfDashboardApi.DataMigrations do
   defmacro upsert_from_map(repo, map, key_model, model, column_map) do
     quote do
       # projects = GitLabProxy.get_gitlab_projects 
-      projects = unquote(map)
+      source_array = unquote(map)
 
       # 1) log that we are starting the load
       Logger.info fn ->
-        "Upsert Projects"
+        "Upsert " <> (Atom.to_string(unquote(model)))
       end
 
       # 2) get the list of all source records and loop through them
       #
       #   LegacyEducationalInstitution.all.each do |legacy_educational_institution|
 
-      upserted_count = Enum.reduce(projects, 0, fn(source_project, acc) -> 
+      upserted_count = Enum.reduce(source_array, 0, fn(source_map, acc) -> 
 
         # 3) find out if the unique key from the source is already saved locally in the local uniquekey table
         # 4.a) initialize a new local uniquekey record with the key from the source
@@ -27,7 +27,7 @@ defmodule CncfDashboardApi.DataMigrations do
         #     lkp = LegacyKeysEducationalInstitution.find_or_initialize_by(legacy_id: legacy_educational_institution.EducationalInstitutionId)
 
         # {skp_found, skp_record} = %CncfDashboardApi.SourceKeyProjects{source_id: Integer.to_string(source_project["id"])} |> find_by(:source_id)
-        {skp_found, skp_record} = %unquote(key_model){source_id: Integer.to_string(source_project["id"])} |> find_by(:source_id)
+        {skp_found, skp_record} = %unquote(key_model){source_id: Integer.to_string(source_map["id"])} |> find_by(:source_id)
 
         # 5.a) create a new local record 
         # or 
@@ -39,9 +39,9 @@ defmodule CncfDashboardApi.DataMigrations do
         {sp_found, sp_record} = %unquote(model){id: (skp_record.new_id || -1)} |> find_by(:id)
         case sp_found do
           :not_found ->
-          Logger.info fn ->
-            "upsert: sp_found not found"
-          end
+          # Logger.info fn ->
+          #   "upsert: sp_found not found"
+          # end
           # sp_record = %CncfDashboardApi.Projects{}
           sp_record = %unquote(model){}
           _ -> :ok
@@ -65,7 +65,7 @@ defmodule CncfDashboardApi.DataMigrations do
         # build the destination changeset
         cs1 = Enum.reduce(unquote(column_map), %{}, 
                                   fn (x,acc) -> 
-                                    Map.put(acc, elem(x,1), source_project[elem(x,0) 
+                                    Map.put(acc, elem(x,1), source_map[elem(x,0) 
                                     |> Atom.to_string]) 
                                   end
         ) 

@@ -3,7 +3,7 @@ defmodule CncfDashboardApi.PipelineJobsTest do
 
   alias CncfDashboardApi.PipelineJobs
 
-  @valid_attrs %{name: "some content", pipeline_source_id: "some content", ref: "some content", status: "some content"}
+  @valid_attrs %{name: "some content", ref: "some content", status: "some content"}
   @invalid_attrs %{}
 
   test "changeset with valid attributes" do

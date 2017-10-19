@@ -13,7 +13,6 @@ defmodule CncfDashboardApi.PipelineJobsView do
     %{id: pipeline_jobs.id,
       name: pipeline_jobs.name,
       status: pipeline_jobs.status,
-      ref: pipeline_jobs.ref,
-      pipeline_source_id: pipeline_jobs.pipeline_source_id}
+      ref: pipeline_jobs.ref }
   end
 end

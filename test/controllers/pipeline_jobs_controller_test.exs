@@ -2,7 +2,7 @@ defmodule CncfDashboardApi.PipelineJobsControllerTest do
   use CncfDashboardApi.ConnCase
 
   alias CncfDashboardApi.PipelineJobs
-  @valid_attrs %{name: "some content", pipeline_source_id: "some content", ref: "some content", status: "some content"}
+  @valid_attrs %{name: "some content", ref: "some content", status: "some content"}
   @invalid_attrs %{}
 
   setup %{conn: conn} do
@@ -20,8 +20,7 @@ defmodule CncfDashboardApi.PipelineJobsControllerTest do
     assert json_response(conn, 200)["data"] == %{"id" => pipeline_jobs.id,
       "name" => pipeline_jobs.name,
       "status" => pipeline_jobs.status,
-      "ref" => pipeline_jobs.ref,
-      "pipeline_source_id" => pipeline_jobs.pipeline_source_id}
+      "ref" => pipeline_jobs.ref}
   end
 
   test "renders page not found when id is nonexistent", %{conn: conn} do
