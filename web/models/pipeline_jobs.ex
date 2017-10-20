@@ -5,8 +5,10 @@ defmodule CncfDashboardApi.PipelineJobs do
     field :name, :string
     field :status, :string
     field :ref, :string
-    field :pipeline_id, :string
-    field :project_id, :string
+    # field :pipeline_id, :integer
+    # field :project_id, :integer
+    belongs_to :project, CncfDashboardApi.Projects
+    belongs_to :pipeline, CncfDashboardApi.Pipelines
 
     timestamps()
   end
