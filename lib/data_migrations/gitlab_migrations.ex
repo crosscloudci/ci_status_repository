@@ -17,7 +17,7 @@ defmodule CncfDashboardApi.GitlabMigrations do
 	def upsert_projects do
     project_map_orig = GitLabProxy.get_gitlab_projects()
     if Mix.env == :test do
-      project_map =  Enum.take(project_map_orig, 3)
+      project_map =  Enum.take(project_map_orig, 2)
     else
       project_map = project_map_orig 
     end
@@ -61,7 +61,7 @@ defmodule CncfDashboardApi.GitlabMigrations do
   def upsert_all_pipelines do
     source_key_projects_orig = CncfDashboardApi.Repo.all(from skp in CncfDashboardApi.SourceKeyProjects) 
     if Mix.env == :test do
-      source_key_projects =  Enum.take(source_key_projects_orig, 3)
+      source_key_projects =  Enum.take(source_key_projects_orig, 2)
     else
       source_key_projects = source_key_projects_orig
     end
@@ -77,7 +77,7 @@ defmodule CncfDashboardApi.GitlabMigrations do
 
     pipeline_job_map_orig = GitLabProxy.get_gitlab_pipeline_jobs(source_project_id, source_pipeline_id)
     if Mix.env == :test do
-      pipeline_job_map =  Enum.take(pipeline_job_map_orig, 3)
+      pipeline_job_map =  Enum.take(pipeline_job_map_orig, 2)
     else
       pipeline_job_map = pipeline_job_map_orig
     end
