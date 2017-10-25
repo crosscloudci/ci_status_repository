@@ -1,4 +1,4 @@
-
+require IEx;
 defmodule CncfDashboardApi.YmlReader.GitlabCiTest do
   use ExUnit.Case
 
@@ -8,6 +8,6 @@ defmodule CncfDashboardApi.YmlReader.GitlabCiTest do
   end
   test "cloud_list" do 
     cloud_list = CncfDashboardApi.YmlReader.GitlabCi.cloud_list()
-    assert 0 < Regex.scan(~r/.*aws.*/, cloud_list) |> Enum.count
+    assert Enum.find_value(cloud_list, fn(x) -> x["cloud_name"] == "aws" end) 
   end
 end

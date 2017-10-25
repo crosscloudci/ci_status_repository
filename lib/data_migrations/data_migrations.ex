@@ -27,7 +27,13 @@ defmodule CncfDashboardApi.DataMigrations do
         #     lkp = LegacyKeysEducationalInstitution.find_or_initialize_by(legacy_id: legacy_educational_institution.EducationalInstitutionId)
 
         # {skp_found, skp_record} = %CncfDashboardApi.SourceKeyProjects{source_id: Integer.to_string(source_project["id"])} |> find_by(:source_id)
-        {skp_found, skp_record} = %unquote(key_model){source_id: Integer.to_string(source_map["id"])} |> find_by(:source_id)
+        unquote(
+          if key_model do 
+            quote do
+              {skp_found, skp_record} = %unquote(key_model){source_id: Integer.to_string(source_map["id"])} |> find_by(:source_id)
+            end
+          end
+        ) 
 
         # 5.a) create a new local record 
         # or 
@@ -36,7 +42,18 @@ defmodule CncfDashboardApi.DataMigrations do
         #
 
         # {sp_found, sp_record} = %CncfDashboardApi.Projects{id: (skp_record.new_id || -1)} |> find_by(:id)
-        {sp_found, sp_record} = %unquote(model){id: (skp_record.new_id || -1)} |> find_by(:id)
+        unquote(
+          if key_model do 
+            quote do
+              {sp_found, sp_record} = %unquote(model){id: (skp_record.new_id || -1)} |> find_by(:id)
+            end
+          else
+            quote do
+              {sp_found, sp_record} = %unquote(model){id: source_map["id"]} |> find_by(:id)
+            end
+          end
+        ) 
+
         case sp_found do
           :not_found ->
           # Logger.info fn ->
@@ -92,15 +109,21 @@ defmodule CncfDashboardApi.DataMigrations do
         #     lkp.save!
 
         # changeset = CncfDashboardApi.SourceKeyProjects.changeset(skp_record, %{new_id: sp_record.id})
-        changeset = unquote(key_model).changeset(skp_record, %{new_id: sp_record.id})
-        case skp_found do
-          :found ->
-            # {_, skp_record} = CncfDashboardApi.Repo.update(changeset) 
-            {_, skp_record} = unquote(repo).update(changeset) 
-          :not_found ->
-            # {_, skp_record} = CncfDashboardApi.Repo.insert(changeset) 
-            {_, skp_record} = unquote(repo).insert(changeset) 
-        end
+        unquote(
+          if key_model do 
+            quote do
+              changeset = unquote(key_model).changeset(skp_record, %{new_id: sp_record.id})
+              case skp_found do
+                :found ->
+                  # {_, skp_record} = CncfDashboardApi.Repo.update(changeset) 
+                  {_, skp_record} = unquote(repo).update(changeset) 
+                :not_found ->
+                  # {_, skp_record} = CncfDashboardApi.Repo.insert(changeset) 
+                  {_, skp_record} = unquote(repo).insert(changeset) 
+              end
+            end
+          end
+        ) 
   		  acc + 1
       end) 
     upserted_count

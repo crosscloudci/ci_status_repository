@@ -14,6 +14,19 @@ defmodule CncfDashboardApi.GitlabMigrations do
 		end) 
   end
 
+	def upsert_clouds do
+    cloud_map = CncfDashboardApi.YmlReader.GitlabCi.cloud_list()
+
+    upsert_count = CncfDashboardApi.DataMigrations.upsert_from_map(
+      CncfDashboardApi.Repo,
+      cloud_map,
+      false,
+      CncfDashboardApi.Clouds,
+      %{cloud_name: :cloud_name}
+    )
+    {:ok, upsert_count, cloud_map}
+  end
+
 	def upsert_projects do
     project_map_orig = GitLabProxy.get_gitlab_projects()
     if Mix.env == :test do

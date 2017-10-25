@@ -9,6 +9,12 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
   end
   def cloud_list do
     yml = CncfDashboardApi.YmlReader.GitlabCi.get() |> YamlElixir.read_from_string 
-    yml["variables"]["ACTIVE_CLOUDS"]
+    yml["variables"]["ACTIVE_CLOUDS"] 
+    |> String.split(",")
+    |> Stream.with_index 
+    |> Enum.reduce([], 
+                   fn ({x,idx},acc) -> 
+                     [%{"id" => idx, "cloud_name" => x} | acc] 
+                   end)
   end
 end
