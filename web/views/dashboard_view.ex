@@ -5,7 +5,10 @@ defmodule CncfDashboardApi.DashboardView do
     %{dashboard: render_one(dashboard, CncfDashboardApi.DashboardView, "dashboard.json")}
   end
   def render("dashboard.json", %{dashboard: dashboard}) do
-    dashboard["dashboard"]
+    %{
+      clouds: dashboard["dashboard"]["clouds"],
+      projects: dashboard["dashboard"]["projects"],
+    }
   end
 
 end

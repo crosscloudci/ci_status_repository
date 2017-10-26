@@ -1,4 +1,3 @@
-require IEx;
 defmodule CncfDashboardApi.YmlReader.GitlabCi do
 	def get do
 		Application.ensure_all_started :inets

@@ -1,11 +1,11 @@
+require IEx;
 defmodule CncfDashboardApi.DashboardController do
   use CncfDashboardApi.Web, :controller
 
   alias CncfDashboardApi.Dashboard
 
   def index(conn, _params) do
-    # pipelines = Repo.all(Pipelines)
-    dashboard = ~s({
+    fixture_dashboard = ~s({
       "dashboard": {
         "clouds":[
           {
@@ -317,7 +317,14 @@ defmodule CncfDashboardApi.DashboardController do
     })
 
 
-    render(conn, "index.json", dashboard: Poison.decode!(dashboard))
+    dashboard = Poison.decode!(fixture_dashboard) 
+
+    cloud_list = CncfDashboardApi.Repo.all(from cd1 in CncfDashboardApi.Clouds, select: %{cloud_id: cd1.id, name: cd1.cloud_name}) 
+
+    %{"dashboard" => %{"clouds" => _, "projects" => p1}} = dashboard 
+
+    with_cloud = %{"dashboard" => %{"clouds" => cloud_list, "projects" => p1}} 
+    render(conn, "index.json", dashboard: with_cloud)
   end
 
 end
