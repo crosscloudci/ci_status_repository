@@ -5,6 +5,7 @@ defmodule CncfDashboardApi.SourceKeyProjects do
     field :source_id, :string
     field :new_id, :integer
     field :source_name, :string
+    has_many :source_key_project_monitor, CncfDashboardApi.SourceKeyProjectMonitor, foreign_key: :source_project_id, references: :source_id
 
     timestamps()
   end
