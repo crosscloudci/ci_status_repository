@@ -13,6 +13,6 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitorView do
     %{id: source_key_project_monitor.id,
       source_project_id: source_key_project_monitor.source_project_id,
       source_pipeline_id: source_key_project_monitor.source_pipeline_id,
-      stable_ref: source_key_project_monitor.stable_ref}
+      pipeline_release_type: source_key_project_monitor.pipeline_release_type }
   end
 end

@@ -2,7 +2,7 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitorControllerTest do
   use CncfDashboardApi.ConnCase
 
   alias CncfDashboardApi.SourceKeyProjectMonitor
-  @valid_attrs %{source_pipeline_id: "some content", source_project_id: "some content", stable_ref: "some content", active: true}
+  @valid_attrs %{source_pipeline_id: "some content", source_project_id: "some content", pipeline_release_type: "some content"}
   @invalid_attrs %{}
 
   setup %{conn: conn} do
@@ -20,7 +20,7 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitorControllerTest do
     assert json_response(conn, 200)["data"] == %{"id" => source_key_project_monitor.id,
       "source_project_id" => source_key_project_monitor.source_project_id,
       "source_pipeline_id" => source_key_project_monitor.source_pipeline_id,
-      "stable_ref" => source_key_project_monitor.stable_ref}
+      "pipeline_release_type" => source_key_project_monitor.pipeline_release_type}
   end
 
   test "renders page not found when id is nonexistent", %{conn: conn} do
