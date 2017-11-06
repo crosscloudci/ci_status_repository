@@ -7,6 +7,7 @@ defmodule CncfDashboardApi.Pipelines do
     field :sha, :string
     # field :project_id, :integer
     belongs_to :project, CncfDashboardApi.Projects
+    has_many :pipeline_jobs, CncfDashboardApi.PipelineJobs, foreign_key: :pipeline_id
 
     timestamps()
   end

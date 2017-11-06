@@ -7,6 +7,16 @@ defmodule GitLabProxy do
     |> Ruby.call("gitlab_proxy", "puts_user", [])
   end
 
+  @doc """
+  Returns a list of projects 
+
+  ## Examples
+
+      iex> GitLabProxy.get_gitlab_project_names
+      ["cross-cloud", "cross-project", "omnibus-gitlab",
+			 "miigitlab", "omnibus-gitlab"] 
+
+  """
   def get_gitlab_project_names do
     {:ok, ruby} = Ruby.start(ruby_lib: Path.expand("lib/gitlab"))
     {:ok, projects} = ruby |> Ruby.call("gitlab_proxy", "get_project_names", [])
@@ -21,6 +31,19 @@ defmodule GitLabProxy do
     Poison.decode!(projects) 
   end
 
+  @doc """
+  Returns a list of pipelines 
+
+  ## Parameters
+
+    - name: Integer that represents a project id.
+
+  ## Examples
+
+      iex> GitLabProxy.get_gitlab_pipelines(1)
+      [%{"id" => 522, "ref" => "ci-artifacts", "sha" => "6ec12a4db82fafa84f72076c96cab918dcdb814d", "status" => "success"}] 
+
+  """
   def get_gitlab_pipelines(project_id) do
     {:ok, ruby} = Ruby.start(ruby_lib: Path.expand("lib/gitlab"))
     {:ok, pipelines} = ruby |> Ruby.call("gitlab_proxy", "get_pipelines", [project_id])

@@ -5,6 +5,8 @@ defmodule CncfDashboardApi.Projects do
     field :name, :string
     field :ssh_url_to_repo, :string
     field :http_url_to_repo, :string
+    has_many :pipelines, CncfDashboardApi.Pipelines, foreign_key: :project_id
+    has_many :pipeline_jobs, CncfDashboardApi.PipelineJobs, foreign_key: :project_id
 
     timestamps()
   end
