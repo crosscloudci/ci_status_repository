@@ -37,6 +37,8 @@ defmodule CncfDashboardApi.Endpoint do
     store: :cookie,
     key: "_cncf_dashboard_api_key",
     signing_salt: "cvHU9vDx"
+    
+  plug CORSPlug
 
   plug CncfDashboardApi.Router
 end
