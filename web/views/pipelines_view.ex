@@ -10,6 +10,7 @@ defmodule CncfDashboardApi.PipelinesView do
   end
 
   def render("pipelines.json", %{pipelines: pipelines}) do
+    # call a render_many for each pipeline
     %{id: pipelines.id,
       ref: pipelines.ref,
       status: pipelines.status}
