@@ -9,7 +9,8 @@ defmodule CncfDashboardApi.Projects do
     field :logo_url, :string
     field :display_name, :string
     field :sub_title, :string
-    field :gitlab_name, :string
+    field :yml_name, :string
+    field :yml_gitlab_name, :string
     field :project_url, :string
     has_many :pipelines, CncfDashboardApi.Pipelines, foreign_key: :project_id
     has_many :pipeline_jobs, CncfDashboardApi.PipelineJobs, foreign_key: :project_id
