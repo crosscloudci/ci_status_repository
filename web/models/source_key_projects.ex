@@ -3,8 +3,9 @@ defmodule CncfDashboardApi.SourceKeyProjects do
 
   schema "source_key_projects" do
     field :source_id, :string
-    field :new_id, :integer
+    # field :new_id, :integer
     field :source_name, :string
+    belongs_to :project, CncfDashboardApi.Projects, foreign_key: :new_id
     has_many :source_key_project_monitor, CncfDashboardApi.SourceKeyProjectMonitor, foreign_key: :source_project_id, references: :source_id
 
     timestamps()

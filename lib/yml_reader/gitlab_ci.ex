@@ -1,3 +1,4 @@
+require IEx;
 defmodule CncfDashboardApi.YmlReader.GitlabCi do
 	def get do
 		Application.ensure_all_started :inets
@@ -8,12 +9,14 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
   end
   def cloud_list do
     yml = CncfDashboardApi.YmlReader.GitlabCi.get() |> YamlElixir.read_from_string 
-    yml["variables"]["ACTIVE_CLOUDS"] 
-    |> String.split(",")
+    # yml["variables"]["ACTIVE_CLOUDS"] 
+    # |> String.split(",")
+    # |> Stream.with_index 
+    # |> Enum.reduce([], fn ({x,idx},acc) -> [%{"id" => idx, "cloud_name" => x} | acc] end)
+    yml["clouds"] 
     |> Stream.with_index 
-    |> Enum.reduce([], 
-                   fn ({x,idx},acc) -> 
-                     [%{"id" => idx, "cloud_name" => x} | acc] 
-                   end)
+    |> Enum.reduce([], fn ({{k, v}, idx}, acc) -> 
+      [%{"id" => idx, "cloud_name" => k, "active" => v} | acc] 
+    end) 
   end
 end
