@@ -42,6 +42,7 @@ defmodule CncfDashboardApi.Mixfile do
      {:timex, "~> 3.0"},
      {:ecto_conditionals, "~> 0.1.0"},
      {:yaml_elixir, "~> 1.3.1"},
+     {:cors_plug, "~> 1.2"},
      {:export, "~> 0.1.1"}]
 
   end

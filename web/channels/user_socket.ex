@@ -3,7 +3,7 @@ defmodule CncfDashboardApi.UserSocket do
 
   ## Channels
   # channel "room:*", CncfDashboardApi.RoomChannel
-
+  channel "dashboard:*", CncfDashboardApi.DashboardChannel
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket
   # transport :longpoll, Phoenix.Transports.LongPoll
