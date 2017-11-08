@@ -1,10 +1,15 @@
 require IEx;
+require CncfDashboardApi.DataMigrations;
+require Logger;
 defmodule CncfDashboardApi.GitlabMigrationsTest do
+  import Ecto.Query
+  use EctoConditionals, repo: CncfDashboardApi.Repo
   use ExUnit.Case
   use CncfDashboardApi.ModelCase
 
   alias CncfDashboardApi.Projects
   alias CncfDashboardApi.Pipelines
+require CncfDashboardApi.DataMigrations;
 
   def projects do
     pjs = GitLabProxy.get_gitlab_projects()
@@ -46,6 +51,23 @@ defmodule CncfDashboardApi.GitlabMigrationsTest do
     {:ok, upsert, project_map} = CncfDashboardApi.GitlabMigrations.upsert_projects()
     assert project_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.Projects, :count, :id)  
     assert source_project_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyProjects, :count, :id)  
+  end
+
+  test "upsert_yml_projects" do 
+    # check insert 
+    # {:ok, _, _} = CncfDashboardApi.GitlabMigrations.upsert_projects()
+    # need all the projects to test the yml
+    project_map = GitLabProxy.get_gitlab_projects()
+
+    upsert_count = CncfDashboardApi.DataMigrations.upsert_from_map(
+      CncfDashboardApi.Repo,
+      project_map,
+      CncfDashboardApi.SourceKeyProjects,
+      CncfDashboardApi.Projects,
+      %{name: :name}
+    )
+    {:ok, upsert_count, project_map} = CncfDashboardApi.GitlabMigrations.upsert_yml_projects()
+    assert 1 < upsert_count  
   end
 
   @tag timeout: 120_000 

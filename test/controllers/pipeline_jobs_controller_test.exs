@@ -18,13 +18,11 @@ defmodule CncfDashboardApi.PipelineJobsControllerTest do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
-  @tag :wip
   test "lists all entries on index", %{conn: conn} do
     conn = get conn, pipeline_jobs_path(conn, :index)
     assert json_response(conn, 200)["data"] == []
   end
 
-  @tag :wip
   test "shows chosen resource", %{conn: conn} do
     pipeline_jobs = Repo.insert! %PipelineJobs{}
     conn = get conn, pipeline_jobs_path(conn, :show, pipeline_jobs)
@@ -38,14 +36,12 @@ defmodule CncfDashboardApi.PipelineJobsControllerTest do
       "project_id" => pipeline_jobs.project_id} 
   end
 
-  @tag :wip
   test "renders page not found when id is nonexistent", %{conn: conn} do
     assert_error_sent 404, fn ->
       get conn, pipeline_jobs_path(conn, :show, -1)
     end
   end
 
-  @tag :wip
   test "creates and renders resource when data is valid", %{conn: conn} do
     conn = post conn, pipeline_jobs_path(conn, :create), pipeline_jobs: @valid_attrs
     assert json_response(conn, 201)["data"]["id"]
@@ -53,13 +49,11 @@ defmodule CncfDashboardApi.PipelineJobsControllerTest do
     assert Repo.get_by(PipelineJobs, @valid_attrs |> Map.delete(:job_id) )
   end
 
-  @tag :wip
   test "does not create resource and renders errors when data is invalid", %{conn: conn} do
     conn = post conn, pipeline_jobs_path(conn, :create), pipeline_jobs: @invalid_attrs
     assert json_response(conn, 422)["errors"] != %{}
   end
 
-  @tag :wip
   test "updates and renders chosen resource when data is valid", %{conn: conn} do
     pipeline_jobs = Repo.insert! %PipelineJobs{}
     conn = put conn, pipeline_jobs_path(conn, :update, pipeline_jobs), pipeline_jobs: @valid_attrs
@@ -67,14 +61,12 @@ defmodule CncfDashboardApi.PipelineJobsControllerTest do
     assert Repo.get_by(PipelineJobs, @valid_attrs |> Map.delete(:job_id))
   end
 
-  @tag :wip
   test "does not update chosen resource and renders errors when data is invalid", %{conn: conn} do
     pipeline_jobs = Repo.insert! %PipelineJobs{}
     conn = put conn, pipeline_jobs_path(conn, :update, pipeline_jobs), pipeline_jobs: @invalid_attrs
     assert json_response(conn, 422)["errors"] != %{}
   end
 
-  @tag :wip
   test "deletes chosen resource", %{conn: conn} do
     pipeline_jobs = Repo.insert! %PipelineJobs{}
     conn = delete conn, pipeline_jobs_path(conn, :delete, pipeline_jobs)

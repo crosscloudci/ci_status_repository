@@ -28,7 +28,55 @@ defmodule CncfDashboardApi.GitlabMigrations do
     {:ok, upsert_count, cloud_map}
   end
 
-	def upsert_projects do
+	def upsert_yml_projects do
+    # need to pull local ids into the prject map
+    project_map = CncfDashboardApi.YmlReader.GitlabCi.project_list()
+    |> Enum.reduce([], fn(x, acc) -> 
+      local_project = CncfDashboardApi.Repo.all(from p in CncfDashboardApi.Projects, 
+                                                where: p.name == ^x["yml_gitlab_name"])
+                                                |> List.first
+                                   
+      if local_project do  
+        [%{x | "id" => local_project.id} | acc] 
+      else
+        acc
+      end
+    end)
+      # field :name, :string
+      # field :ssh_url_to_repo, :string
+      # field :http_url_to_repo, :string
+      # field :active, :boolean
+      # field :logo_url, :string
+      # field :display_name, :string
+      # field :sub_title, :string
+      # field :yml_name, :string
+      # field :yml_gitlab_name, :string
+      # field :project_url, :string
+      # 
+    # assert Enum.find_value(project_list, fn(x) -> x["yml_name"] == "kubernetes" end) 
+    # assert Enum.find_value(project_list, fn(x) -> x["active"] == true end) 
+    # assert Enum.find_value(project_list, fn(x) -> x["logo_url"] == "https://raw.githubusercontent.com/cncf/artwork/master/kubernetes/logo.png" end) 
+    # assert Enum.find_value(project_list, fn(x) -> x["display_name"] == "Kubernetes" end) 
+    # assert Enum.find_value(project_list, fn(x) -> x["sub_title"] == "Orchestration" end) 
+    # assert Enum.find_value(project_list, fn(x) -> x["yml_gitlab_name"] == "Kubernetes" end) 
+    # assert Enum.find_value(project_list, fn(x) -> x["project_url"] == "https://github.com/kubernetes/kubernetes" end) 
+    upsert_count = CncfDashboardApi.DataMigrations.upsert_from_map(
+      CncfDashboardApi.Repo,
+      project_map,
+      false,
+      CncfDashboardApi.Projects,
+      %{yml_name: :yml_name,
+        active: :active,
+        logo_url: :logo_url,
+        display_name: :display_name,
+        sub_title: :sub_title,
+        yml_gitlab_name: :yml_gitlab_name
+      }
+    )
+    {:ok, upsert_count, project_map}
+  end
+
+  def upsert_projects do
     project_map_orig = GitLabProxy.get_gitlab_projects()
     if Mix.env == :test do
       project_map =  Enum.take(project_map_orig, 2)
@@ -53,21 +101,21 @@ defmodule CncfDashboardApi.GitlabMigrations do
       end
       pipeline_map = GitLabProxy.get_gitlab_pipelines(source_project_id)
       skp = CncfDashboardApi.Repo.get_by(CncfDashboardApi.SourceKeyProjects, 
-                                       source_id: source_project_id |> Integer.to_string) 
-      pipeline_map_with_projects = Enum.reduce(pipeline_map, [], 
-                                               fn (x,acc) -> 
-                                                 [Enum.into(x, %{"project_id" => Integer.to_string(skp.new_id)}) | acc] 
-                                               end) 
-      CncfDashboardApi.DataMigrations.upsert_from_map(
-        CncfDashboardApi.Repo,
-        pipeline_map_with_projects,
-        CncfDashboardApi.SourceKeyPipelines,
-        CncfDashboardApi.Pipelines,
-        %{ref: :ref, 
-          status: :status,
-          sha: :sha,
-          project_id: :project_id}
-      )
+                                         source_id: source_project_id |> Integer.to_string) 
+                                         pipeline_map_with_projects = Enum.reduce(pipeline_map, [], 
+                                                                                  fn (x,acc) -> 
+                                                                                    [Enum.into(x, %{"project_id" => Integer.to_string(skp.new_id)}) | acc] 
+                                                                                  end) 
+                                                                                  CncfDashboardApi.DataMigrations.upsert_from_map(
+                                                                                    CncfDashboardApi.Repo,
+                                                                                    pipeline_map_with_projects,
+                                                                                    CncfDashboardApi.SourceKeyPipelines,
+                                                                                    CncfDashboardApi.Pipelines,
+                                                                                    %{ref: :ref, 
+                                                                                      status: :status,
+                                                                                      sha: :sha,
+                                                                                      project_id: :project_id}
+                                                                                  )
     end
     )
   end
@@ -106,16 +154,16 @@ defmodule CncfDashboardApi.GitlabMigrations do
                                                 |> Enum.into(%{"pipeline_id" => Integer.to_string(skpl.new_id)}) | acc] 
                                               end) 
 
-      CncfDashboardApi.DataMigrations.upsert_from_map(
-        CncfDashboardApi.Repo,
-        pipeline_job_map_with_ids,
-        CncfDashboardApi.SourceKeyPipelineJobs,
-        CncfDashboardApi.PipelineJobs,
-        %{name: :name, ref: :ref, 
-          status: :status,
-          project_id: :project_id,
-          pipeline_id: :pipeline_id}
-      )
+                                              CncfDashboardApi.DataMigrations.upsert_from_map(
+                                                CncfDashboardApi.Repo,
+                                                pipeline_job_map_with_ids,
+                                                CncfDashboardApi.SourceKeyPipelineJobs,
+                                                CncfDashboardApi.PipelineJobs,
+                                                %{name: :name, ref: :ref, 
+                                                  status: :status,
+                                                  project_id: :project_id,
+                                                  pipeline_id: :pipeline_id}
+                                              )
     else
       Logger.info fn ->
         "Either Source key project or pipeline is nil"
@@ -125,9 +173,9 @@ defmodule CncfDashboardApi.GitlabMigrations do
 
   # pipeline_jobs depends on projects and pipelines being upserted previously
   def upsert_all_pipeline_jobs do
-      Logger.info fn ->
-        "upsert_all_pipeline_jobs"
-      end
+    Logger.info fn ->
+      "upsert_all_pipeline_jobs"
+    end
     # TODO 1. loop through all projects that exist remotely
     # TODO 2. loop through each pipeline that exists for each project
     # TODO 3. get the local id for the project
