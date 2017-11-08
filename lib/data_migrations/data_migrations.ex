@@ -2,7 +2,31 @@ require Logger;
 require IEx;
 defmodule CncfDashboardApi.DataMigrations do
   # use EctoConditionals, repo: CncfDashboardApi.Repo
+  @moduledoc """
+    Provides a macro for generic upserts from a remote datasource  
+  """
 
+  @doc """
+  Creates a upsert function based on a source map and a destination tabe 
+
+  ## Parameters
+
+    - repo: Destination repo
+    - map: Array of maps 
+    - key_model: String that represents the name of the source-destination key mapping model. Set to false if none provided
+    - model: String that represents the name of the destination model.
+    - column_map: map that represents the source and destination fields.
+
+  ## Examples
+
+      iex> upsert_count = CncfDashboardApi.DataMigrations.upsert_from_map(
+      CncfDashboardApi.Repo,
+      project_map,
+      CncfDashboardApi.SourceKeyProjects,
+      CncfDashboardApi.Projects,
+      %{name: :name}
+    )
+  """
   defmacro upsert_from_map(repo, map, key_model, model, column_map) do
     quote do
       # projects = GitLabProxy.get_gitlab_projects 
