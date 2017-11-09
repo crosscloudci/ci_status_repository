@@ -9,6 +9,14 @@ defmodule CncfDashboardApi.PipelineJobsView do
     %{data: render_one(pipeline_jobs, CncfDashboardApi.PipelineJobsView, "pipeline_jobs.json")}
   end
 
+  # "jobs":[
+  #   {
+  #     "pipeline_id":1,
+  #     "project_id":2,
+  #     "job_id":26,
+  #     "cloud_id":1,
+  #     "status":"fail"
+  #   },
   def render("pipeline_jobs.json", %{pipeline_jobs: pipeline_jobs}) do
     %{id: pipeline_jobs.id,
       pipeline_id: pipeline_jobs.pipeline_id,

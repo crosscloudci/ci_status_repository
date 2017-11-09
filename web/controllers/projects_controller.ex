@@ -26,6 +26,11 @@ defmodule CncfDashboardApi.ProjectsController do
 
   def show(conn, %{"id" => id}) do
     projects = Repo.get!(Projects, id)
+    # projects = CncfDashboardApi.Repo.all(from projects in CncfDashboardApi.Projects,      
+    #                                      join: pipelines in assoc(projects, :pipelines),
+    #                                      join: pipeline_jobs in assoc(pipelines, :pipeline_jobs),
+    #                                      where: projects.id == ^id, preload: [pipelines: {pipelines, pipeline_jobs: pipeline_jobs}] ) 
+    #                                      |> List.first
     render(conn, "show.json", projects: projects)
   end
 

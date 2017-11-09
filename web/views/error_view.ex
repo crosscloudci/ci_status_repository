@@ -1,6 +1,10 @@
 defmodule CncfDashboardApi.ErrorView do
   use CncfDashboardApi.Web, :view
 
+  def render("404.json", _assigns) do
+    %{errors: %{message: "Not Found"}}
+  end
+
   def render("404.html", _assigns) do
     "Page not found"
   end

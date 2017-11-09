@@ -1,5 +1,7 @@
+require IEx;
 defmodule CncfDashboardApi.PipelinesControllerTest do
   use CncfDashboardApi.ConnCase
+  import CncfDashboardApi.Factory
 
   alias CncfDashboardApi.Pipelines
   @valid_attrs %{ref: "some content", status: "some content"}
@@ -14,18 +16,36 @@ defmodule CncfDashboardApi.PipelinesControllerTest do
     assert json_response(conn, 200)["data"] == []
   end
 
+  @tag :wip
+  @tag timeout: 300_000 
   test "shows chosen resource", %{conn: conn} do
-    pipelines = Repo.insert! %Pipelines{}
+    # pipelines = Repo.insert! %Pipelines{}
+        pipelines = insert(:pipeline)
+        # comment = insert(:comment, article: article)
     conn = get conn, pipelines_path(conn, :show, pipelines)
-    assert json_response(conn, 200)["data"] == %{"id" => pipelines.id,
-      "ref" => pipelines.ref,
-      "status" => pipelines.status}
+     assert %{"id" => _,
+      "pipeline_id" => _,
+      "project_id" => _,
+      "status" => _,
+      "stable_tag" => _,
+      "head_commit" => _,
+      "ref" => _,
+      "jobs" => [%{"cloud_id" => _, 
+        "id" => _, "job_id" => _, 
+        "name" => "Kubernetes", 
+        "pipeline_id" => _, 
+        "project_id" => nil, 
+        "ref" => "ci_master", 
+        "status" => "success"}]} = json_response(conn, 200)["data"]
   end
 
+  @tag :wip
   test "renders page not found when id is nonexistent", %{conn: conn} do
-    assert_error_sent 404, fn ->
-      get conn, pipelines_path(conn, :show, -1)
-    end
+    conn = get conn, pipelines_path(conn, :show, -1)
+    assert %{"errors" => _} = json_response(conn, 404) 
+    # assert_error_sent 404, fn ->
+    #   get conn, pipelines_path(conn, :show, -1)
+    # end
   end
 
   test "creates and renders resource when data is valid", %{conn: conn} do

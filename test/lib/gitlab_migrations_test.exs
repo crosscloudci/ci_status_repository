@@ -85,6 +85,7 @@ require CncfDashboardApi.DataMigrations;
     assert source_pipeline_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyPipelines, :count, :id)  
   end
 
+  @tag :wip
   @tag timeout: 320_000 
   test "upsert_pipeline_jobs" do 
     # CncfDashboardApi.GitlabMigrations.upsert_pipeline_jobs(test_project_id, test_pipeline_id)
@@ -96,8 +97,8 @@ require CncfDashboardApi.DataMigrations;
     CncfDashboardApi.GitlabMigrations.upsert_pipeline_jobs( project["id"], pipeline["id"])
     pipeline_jobs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.PipelineJobs, :count, :id)  
     source_pipeline_jobs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyPipelineJobs, :count, :id)  
-    assert 1 < pipeline_jobs_count  
-    assert 1 < source_pipeline_jobs_count
+    assert 0 < pipeline_jobs_count  
+    assert 0 < source_pipeline_jobs_count
     # check update -- should not increase
     CncfDashboardApi.GitlabMigrations.upsert_pipeline_jobs(test_project_id, test_pipeline_id)
     assert pipeline_jobs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.PipelineJobs, :count, :id)  

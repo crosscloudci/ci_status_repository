@@ -324,6 +324,7 @@ defmodule CncfDashboardApi.DashboardController do
     %{"dashboard" => %{"clouds" => _, "projects" => p1}} = dashboard 
 
     with_cloud = %{"dashboard" => %{"clouds" => cloud_list, "projects" => p1}} 
+    #TODO embed pipelines into projects
     render(conn, "index.json", dashboard: with_cloud)
   end
 

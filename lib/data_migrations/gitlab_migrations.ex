@@ -42,24 +42,6 @@ defmodule CncfDashboardApi.GitlabMigrations do
         acc
       end
     end)
-      # field :name, :string
-      # field :ssh_url_to_repo, :string
-      # field :http_url_to_repo, :string
-      # field :active, :boolean
-      # field :logo_url, :string
-      # field :display_name, :string
-      # field :sub_title, :string
-      # field :yml_name, :string
-      # field :yml_gitlab_name, :string
-      # field :project_url, :string
-      # 
-    # assert Enum.find_value(project_list, fn(x) -> x["yml_name"] == "kubernetes" end) 
-    # assert Enum.find_value(project_list, fn(x) -> x["active"] == true end) 
-    # assert Enum.find_value(project_list, fn(x) -> x["logo_url"] == "https://raw.githubusercontent.com/cncf/artwork/master/kubernetes/logo.png" end) 
-    # assert Enum.find_value(project_list, fn(x) -> x["display_name"] == "Kubernetes" end) 
-    # assert Enum.find_value(project_list, fn(x) -> x["sub_title"] == "Orchestration" end) 
-    # assert Enum.find_value(project_list, fn(x) -> x["yml_gitlab_name"] == "Kubernetes" end) 
-    # assert Enum.find_value(project_list, fn(x) -> x["project_url"] == "https://github.com/kubernetes/kubernetes" end) 
     upsert_count = CncfDashboardApi.DataMigrations.upsert_from_map(
       CncfDashboardApi.Repo,
       project_map,
