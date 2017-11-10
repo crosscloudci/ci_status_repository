@@ -9,6 +9,7 @@ defmodule CncfDashboardApi.PipelineJobs do
     # field :project_id, :integer
     belongs_to :project, CncfDashboardApi.Projects
     belongs_to :pipeline, CncfDashboardApi.Pipelines
+    belongs_to :cloud, CncfDashboardApi.Clouds, foreign_key: :cloud_id
 
     timestamps()
   end
@@ -18,7 +19,7 @@ defmodule CncfDashboardApi.PipelineJobs do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :status, :ref, :project_id, :pipeline_id])
+    |> cast(params, [:name, :status, :ref, :project_id, :pipeline_id, :cloud_id])
     |> validate_required([:name, :status, :ref])
     # |> validate_required([:name, :status, :ref, :pipeline_source_id])
   end

@@ -1,8 +1,17 @@
+require IEx;
 defmodule CncfDashboardApi.PipelineJobsControllerTest do
   use CncfDashboardApi.ConnCase
 
   alias CncfDashboardApi.PipelineJobs
-  @valid_attrs %{name: "some content", ref: "some content", status: "some content"}
+                # "jobs":[
+                #   {
+                #     "pipeline_id":1,
+                #     "project_id":1,
+                #     "job_id":23,
+                #     "cloud_id":1,
+                #     "status":"fail"
+                #   },
+  @valid_attrs %{pipeline_id: 1, project_id: 1, job_id: 23, cloud_id: 1, name: "some content", ref: "some content", status: "some content"}
   @invalid_attrs %{}
 
   setup %{conn: conn} do
@@ -17,10 +26,14 @@ defmodule CncfDashboardApi.PipelineJobsControllerTest do
   test "shows chosen resource", %{conn: conn} do
     pipeline_jobs = Repo.insert! %PipelineJobs{}
     conn = get conn, pipeline_jobs_path(conn, :show, pipeline_jobs)
-    assert json_response(conn, 200)["data"] == %{"id" => pipeline_jobs.id,
-      "name" => pipeline_jobs.name,
-      "status" => pipeline_jobs.status,
-      "ref" => pipeline_jobs.ref}
+    assert json_response(conn, 200)["data"] == %{"id" => pipeline_jobs.id, 
+      "name" => pipeline_jobs.name, 
+      "status" => pipeline_jobs.status, 
+      "ref" => pipeline_jobs.ref, 
+      "cloud_id" => pipeline_jobs.cloud_id, 
+      "job_id" => pipeline_jobs.id, 
+      "pipeline_id" => pipeline_jobs.pipeline_id, 
+      "project_id" => pipeline_jobs.project_id} 
   end
 
   test "renders page not found when id is nonexistent", %{conn: conn} do
@@ -32,7 +45,8 @@ defmodule CncfDashboardApi.PipelineJobsControllerTest do
   test "creates and renders resource when data is valid", %{conn: conn} do
     conn = post conn, pipeline_jobs_path(conn, :create), pipeline_jobs: @valid_attrs
     assert json_response(conn, 201)["data"]["id"]
-    assert Repo.get_by(PipelineJobs, @valid_attrs)
+    # using specialized json
+    assert Repo.get_by(PipelineJobs, @valid_attrs |> Map.delete(:job_id) )
   end
 
   test "does not create resource and renders errors when data is invalid", %{conn: conn} do
@@ -44,7 +58,7 @@ defmodule CncfDashboardApi.PipelineJobsControllerTest do
     pipeline_jobs = Repo.insert! %PipelineJobs{}
     conn = put conn, pipeline_jobs_path(conn, :update, pipeline_jobs), pipeline_jobs: @valid_attrs
     assert json_response(conn, 200)["data"]["id"]
-    assert Repo.get_by(PipelineJobs, @valid_attrs)
+    assert Repo.get_by(PipelineJobs, @valid_attrs |> Map.delete(:job_id))
   end
 
   test "does not update chosen resource and renders errors when data is invalid", %{conn: conn} do

@@ -1,6 +1,7 @@
 defmodule CncfDashboardApi.DashboardChannel do
   use CncfDashboardApi.Web, :channel
 
+
   def join("dashboard:*", payload, socket) do
     if authorized?(payload) do
     dashboard = ~s({
@@ -314,14 +315,25 @@ defmodule CncfDashboardApi.DashboardChannel do
       }
     })
 
-
-  dashboard_json = Poison.decode!(dashboard)
-    response = CncfDashboardApi.DashboardView.render("dashboard.json", %{dashboard: dashboard_json})
-        {:ok, %{reply: response}, socket}
+      dashboard_json = Poison.decode!(dashboard)
+      response = CncfDashboardApi.DashboardView.render("dashboard.json", %{dashboard: dashboard_json})
+      {:ok, %{reply: response}, socket}
     else
-      {:error, %{reason: "unauthorized"}}
+    {:error, %{reason: "unauthorized"}}
     end
   end
+
+  def join(topic, _resource, socket) do
+    # if permitted_topic?(socket, :listen, topic) do
+      { :ok, %{ message: "Joined" }, socket }
+    # else
+    #   { :error, :authentication_required }
+    # end
+  end
+
+  # def join(_room, _payload, _socket) do
+  #   { :error, :authentication_required }
+  # end
 
   # Channels can be used in a request/response fashion
   # by sending replies to requests from the client

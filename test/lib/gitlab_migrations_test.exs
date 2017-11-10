@@ -1,10 +1,15 @@
 require IEx;
+require CncfDashboardApi.DataMigrations;
+require Logger;
 defmodule CncfDashboardApi.GitlabMigrationsTest do
+  import Ecto.Query
+  use EctoConditionals, repo: CncfDashboardApi.Repo
   use ExUnit.Case
   use CncfDashboardApi.ModelCase
 
   alias CncfDashboardApi.Projects
   alias CncfDashboardApi.Pipelines
+require CncfDashboardApi.DataMigrations;
 
   def projects do
     pjs = GitLabProxy.get_gitlab_projects()
@@ -48,6 +53,23 @@ defmodule CncfDashboardApi.GitlabMigrationsTest do
     assert source_project_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyProjects, :count, :id)  
   end
 
+  test "upsert_yml_projects" do 
+    # check insert 
+    # {:ok, _, _} = CncfDashboardApi.GitlabMigrations.upsert_projects()
+    # need all the projects to test the yml
+    project_map = GitLabProxy.get_gitlab_projects()
+
+    upsert_count = CncfDashboardApi.DataMigrations.upsert_from_map(
+      CncfDashboardApi.Repo,
+      project_map,
+      CncfDashboardApi.SourceKeyProjects,
+      CncfDashboardApi.Projects,
+      %{name: :name}
+    )
+    {:ok, upsert_count, project_map} = CncfDashboardApi.GitlabMigrations.upsert_yml_projects()
+    assert 1 < upsert_count  
+  end
+
   @tag timeout: 120_000 
   test "upsert_pipelines" do 
     # check insert 
@@ -74,8 +96,8 @@ defmodule CncfDashboardApi.GitlabMigrationsTest do
     CncfDashboardApi.GitlabMigrations.upsert_pipeline_jobs( project["id"], pipeline["id"])
     pipeline_jobs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.PipelineJobs, :count, :id)  
     source_pipeline_jobs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyPipelineJobs, :count, :id)  
-    assert 1 < pipeline_jobs_count  
-    assert 1 < source_pipeline_jobs_count
+    assert 0 < pipeline_jobs_count  
+    assert 0 < source_pipeline_jobs_count
     # check update -- should not increase
     CncfDashboardApi.GitlabMigrations.upsert_pipeline_jobs(test_project_id, test_pipeline_id)
     assert pipeline_jobs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.PipelineJobs, :count, :id)  
