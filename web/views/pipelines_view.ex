@@ -19,7 +19,6 @@ defmodule CncfDashboardApi.PipelinesView do
       stable_tag: pipelines.release_type,
       head_commit: pipelines.sha,
       ref: pipelines.ref,
-      # jobs: render_many(pipeline_jobs, CncfDashboardApi.PipelinesView, "pipelines.json")
       jobs: render_many(pipelines.pipeline_jobs, CncfDashboardApi.PipelineJobsView, "pipeline_jobs.json"),
       }
   end

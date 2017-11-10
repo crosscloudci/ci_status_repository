@@ -85,7 +85,6 @@ require CncfDashboardApi.DataMigrations;
     assert source_pipeline_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyPipelines, :count, :id)  
   end
 
-  @tag :wip
   @tag timeout: 320_000 
   test "upsert_pipeline_jobs" do 
     # CncfDashboardApi.GitlabMigrations.upsert_pipeline_jobs(test_project_id, test_pipeline_id)

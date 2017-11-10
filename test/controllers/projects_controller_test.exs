@@ -1,5 +1,6 @@
 defmodule CncfDashboardApi.ProjectsControllerTest do
   use CncfDashboardApi.ConnCase
+  import CncfDashboardApi.Factory
 
   alias CncfDashboardApi.Projects
   @valid_attrs %{http_url_to_repo: "some content", name: "some content", ssh_url_to_repo: "some content"}
@@ -13,20 +14,65 @@ defmodule CncfDashboardApi.ProjectsControllerTest do
     conn = get conn, projects_path(conn, :index)
     assert json_response(conn, 200)["data"] == []
   end
+        # "projects":[
+        #   {
+        #     "project_id":1,
+        #     "title":"Kubernetes", 
+        #     "caption":"Orchestration",
+        #     "url":"http://kubernetes.io/",
+        #     "icon":"https://www.cncf.io/wp-content/uploads/2016/09/ico_kubernetes-100x100.png",
+        #     "deployments": ["AWS", "Azure", "Bluemix", "GCE", "GKE", "Packet"],
+            # "pipelines":[
 
+    # field :name, :string
+    # field :ssh_url_to_repo, :string
+    # field :http_url_to_repo, :string
+    # field :active, :boolean
+    # field :logo_url, :string
+    # field :display_name, :string
+    # field :sub_title, :string
+    # field :yml_name, :string
+    # field :yml_gitlab_name, :string
+    # field :project_url, :string
+  @tag :wip
   test "shows chosen resource", %{conn: conn} do
-    projects = Repo.insert! %Projects{}
+    # projects = Repo.insert! %Projects{}
+    projects = insert(:project)
     conn = get conn, projects_path(conn, :show, projects)
-    assert json_response(conn, 200)["data"] == %{"id" => projects.id,
-      "name" => projects.name,
-      "ssh_url_to_repo" => projects.ssh_url_to_repo,
-      "http_url_to_repo" => projects.http_url_to_repo}
+    assert  %{"id" => _,
+      "name" => _,
+      "project_id" => _,
+      "title" => _,
+      "caption" => _,
+      "url" => _,
+      "icon" => _,
+      "display_name" => _,
+      "sub_title" => _,
+      "ssh_url_to_repo" => _,
+      "http_url_to_repo" => _,
+      "pipelines" => [%{"id" => _,
+        "pipeline_id" => _,
+        "project_id" => _,
+        "status" => _,
+        "stable_tag" => _,
+        "head_commit" => _,
+        "ref" => _,
+        "jobs" => [%{"cloud_id" => _, 
+          "id" => _, "job_id" => _, 
+          "name" => _, 
+          "pipeline_id" => _, 
+          "project_id" => _, 
+          "ref" => _, 
+          "status" => _}]}]} = json_response(conn, 200)["data"]
   end
 
+  @tag :wip
   test "renders page not found when id is nonexistent", %{conn: conn} do
-    assert_error_sent 404, fn ->
-      get conn, projects_path(conn, :show, -1)
-    end
+    conn =  get conn, projects_path(conn, :show, -1)
+    assert %{"errors" => _} = json_response(conn, 404) 
+    # assert_error_sent 404, fn ->
+    #   get conn, projects_path(conn, :show, -1)
+    # end
   end
 
   test "creates and renders resource when data is valid", %{conn: conn} do
@@ -40,15 +86,19 @@ defmodule CncfDashboardApi.ProjectsControllerTest do
     assert json_response(conn, 422)["errors"] != %{}
   end
 
+  @tag :wip
   test "updates and renders chosen resource when data is valid", %{conn: conn} do
-    projects = Repo.insert! %Projects{}
+    # projects = Repo.insert! %Projects{}
+    projects = insert(:project)
     conn = put conn, projects_path(conn, :update, projects), projects: @valid_attrs
     assert json_response(conn, 200)["data"]["id"]
     assert Repo.get_by(Projects, @valid_attrs)
   end
 
+  @tag :wip
   test "does not update chosen resource and renders errors when data is invalid", %{conn: conn} do
     projects = Repo.insert! %Projects{}
+    # projects = insert(:project)
     conn = put conn, projects_path(conn, :update, projects), projects: @invalid_attrs
     assert json_response(conn, 422)["errors"] != %{}
   end

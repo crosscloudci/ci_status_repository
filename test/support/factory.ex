@@ -37,7 +37,7 @@ defmodule CncfDashboardApi.Factory do
       yml_name: "Kubernetes",
       yml_gitlab_name: "kubernetes",
       project_url: "http://kubernetes.io/",
-      pipelines: [build(:pipelines)],
+      pipelines: [build(:pipeline)],
     }
 	end
 

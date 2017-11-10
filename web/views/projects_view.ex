@@ -12,7 +12,15 @@ defmodule CncfDashboardApi.ProjectsView do
   def render("projects.json", %{projects: projects}) do
     %{id: projects.id,
       name: projects.name,
+      project_id: projects.id,
+      title: projects.name,
+      caption: projects.sub_title,
+      url: projects.project_url,
+      icon: projects.logo_url,
+      display_name: projects.display_name,
+      sub_title: projects.sub_title,
       ssh_url_to_repo: projects.ssh_url_to_repo,
+      pipelines: render_many(projects.pipelines, CncfDashboardApi.PipelinesView, "pipelines.json"),
       http_url_to_repo: projects.http_url_to_repo}
   end
 end

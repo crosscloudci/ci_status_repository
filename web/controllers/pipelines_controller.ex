@@ -32,16 +32,13 @@ defmodule CncfDashboardApi.PipelinesController do
 
   def show(conn, %{"id" => id}) do
     # pipelines = Repo.get!(Pipelines, id)
-    inspect("show pipelines controller")
     pipelines = CncfDashboardApi.Repo.all(from pl in CncfDashboardApi.Pipelines, 
                                           where: pl.id == ^id, preload: [:pipeline_jobs]) 
                                           |> List.first
     case pipelines do
       %{} -> 
-        inspect("case %{} pipelines controller")
         render(conn, "show.json", pipelines: pipelines)
       nil ->
-        inspect("case nil pipelines controller")
         conn
         |> put_status(404)
         |> render(CncfDashboardApi.ErrorView, "404.json", pipelines: pipelines)
