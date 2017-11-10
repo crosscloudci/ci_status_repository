@@ -27,8 +27,8 @@ defmodule CncfDashboardApi.DashboardChannel do
               {
                 "pipeline_id":1,
                 "project_id":1,
-                "status":"successful",
-                "stable_tag":"release",
+                "status":"success",
+                "stable_tag":"stable",
                 "head_commit":"2342342342343243sdfsdfsdfs",
                 "jobs":[
                   {
@@ -50,8 +50,8 @@ defmodule CncfDashboardApi.DashboardChannel do
               {
                 "pipeline_id":2,
                 "project_id":1,
-                "status":"successful",
-                "stable_tag":"release",
+                "status":"success",
+                "stable_tag":"head",
                 "head_commit":"2342342342343243sdfsdfsdfs",
                 "jobs":[
                   {
@@ -74,22 +74,22 @@ defmodule CncfDashboardApi.DashboardChannel do
             "deployments": ["AWS", "Azure", "Bluemix", "GCE", "GKE", "Packet"],
             "pipelines":[
               {
-                "pipeline_id":1,
-                "project_id":1,
-                "status":"successful",
-                "stable_tag":"release",
+                "pipeline_id":3,
+                "project_id":2,
+                "status":"success",
+                "stable_tag":"stable",
                 "head_commit":"2342342342343243sdfsdfsdfs",
                 "jobs":[
                   {
-                    "pipeline_id":1,
-                    "project_id":1,
+                    "pipeline_id":3,
+                    "project_id":2,
                     "job_id":23,
                     "cloud_id":1,
                     "status":"fail"
                   },
                   {
-                    "pipeline_id":1,
-                    "project_id":1,
+                    "pipeline_id":3,
+                    "project_id":2,
                     "job_id":24,
                     "cloud_id":2,
                     "status":"success"
@@ -97,15 +97,15 @@ defmodule CncfDashboardApi.DashboardChannel do
                 ]
               },
               {
-                "pipeline_id":2,
-                "project_id":1,
-                "status":"successful",
-                "stable_tag":"release",
+                "pipeline_id":4,
+                "project_id":2,
+                "status":"success",
+                "stable_tag":"head",
                 "head_commit":"2342342342343243sdfsdfsdfs",
                 "jobs":[
                   {
-                    "pipeline_id":2,
-                    "project_id":1,
+                    "pipeline_id":4,
+                    "project_id":2,
                     "job_id":23,
                     "cloud_id":1,
                     "status":"fail"
@@ -123,22 +123,22 @@ defmodule CncfDashboardApi.DashboardChannel do
             "deployments": ["AWS", "Azure", "Bluemix", "GCE", "GKE", "Packet"],
             "pipelines":[
               {
-                "pipeline_id":1,
-                "project_id":2,
-                "status":"successful",
-                "stable_tag":"release",
+                "pipeline_id":5,
+                "project_id":3,
+                "status":"success",
+                "stable_tag":"stable",
                 "head_commit":"2342342342343243sdfsdfsdfs",
                 "jobs":[
                   {
-                    "pipeline_id":1,
-                    "project_id":2,
+                    "pipeline_id":5,
+                    "project_id":3,
                     "job_id":26,
                     "cloud_id":1,
                     "status":"fail"
                   },
                   {
-                    "pipeline_id":1,
-                    "project_id":2,
+                    "pipeline_id":5,
+                    "project_id":3,
                     "job_id":27,
                     "cloud_id":2,
                     "status":"success"
@@ -146,15 +146,15 @@ defmodule CncfDashboardApi.DashboardChannel do
                 ]
               },
               {
-                "pipeline_id":2,
-                "project_id":2,
-                "status":"successful",
-                "stable_tag":"release",
+                "pipeline_id":6,
+                "project_id":3,
+                "status":"success",
+                "stable_tag":"head",
                 "head_commit":"2342342342343243sdfsdfsdfs",
                 "jobs":[
                   {
-                    "pipeline_id":2,
-                    "project_id":2,
+                    "pipeline_id":6,
+                    "project_id":3,
                     "job_id":29,
                     "cloud_id":1,
                     "status":"fail"
@@ -172,22 +172,22 @@ defmodule CncfDashboardApi.DashboardChannel do
             "deployments": ["AWS", "Azure", "Bluemix", "GCE", "GKE", "Packet"],
             "pipelines":[
               {
-                "pipeline_id":1,
-                "project_id":2,
-                "status":"successful",
-                "stable_tag":"release",
+                "pipeline_id":7,
+                "project_id":4,
+                "status":"success",
+                "stable_tag":"stable",
                 "head_commit":"2342342342343243sdfsdfsdfs",
                 "jobs":[
                   {
-                    "pipeline_id":1,
-                    "project_id":2,
+                    "pipeline_id":7,
+                    "project_id":4,
                     "job_id":26,
                     "cloud_id":1,
                     "status":"fail"
                   },
                   {
-                    "pipeline_id":1,
-                    "project_id":2,
+                    "pipeline_id":7,
+                    "project_id":4,
                     "job_id":27,
                     "cloud_id":2,
                     "status":"success"
@@ -195,15 +195,15 @@ defmodule CncfDashboardApi.DashboardChannel do
                 ]
               },
               {
-                "pipeline_id":2,
-                "project_id":2,
-                "status":"successful",
-                "stable_tag":"release",
+                "pipeline_id":8,
+                "project_id":4,
+                "status":"success",
+                "stable_tag":"head",
                 "head_commit":"2342342342343243sdfsdfsdfs",
                 "jobs":[
                   {
-                    "pipeline_id":2,
-                    "project_id":2,
+                    "pipeline_id":8,
+                    "project_id":4,
                     "job_id":29,
                     "cloud_id":1,
                     "status":"fail"
@@ -221,22 +221,22 @@ defmodule CncfDashboardApi.DashboardChannel do
             "deployments": ["AWS", "Azure", "Bluemix", "GCE", "GKE", "Packet"],
             "pipelines":[
               {
-                "pipeline_id":1,
-                "project_id":2,
-                "status":"successful",
-                "stable_tag":"release",
+                "pipeline_id":9,
+                "project_id":5,
+                "status":"success",
+                "stable_tag":"stable",
                 "head_commit":"2342342342343243sdfsdfsdfs",
                 "jobs":[
                   {
-                    "pipeline_id":1,
-                    "project_id":2,
+                    "pipeline_id":9,
+                    "project_id":5,
                     "job_id":26,
                     "cloud_id":1,
                     "status":"fail"
                   },
                   {
-                    "pipeline_id":1,
-                    "project_id":2,
+                    "pipeline_id":9,
+                    "project_id":5,
                     "job_id":27,
                     "cloud_id":2,
                     "status":"success"
@@ -244,15 +244,15 @@ defmodule CncfDashboardApi.DashboardChannel do
                 ]
               },
               {
-                "pipeline_id":2,
-                "project_id":2,
-                "status":"successful",
+                "pipeline_id":10,
+                "project_id":5,
+                "status":"success",
                 "stable_tag":"release",
                 "head_commit":"2342342342343243sdfsdfsdfs",
                 "jobs":[
                   {
-                    "pipeline_id":2,
-                    "project_id":2,
+                    "pipeline_id":10,
+                    "project_id":5,
                     "job_id":29,
                     "cloud_id":1,
                     "status":"fail"
@@ -270,22 +270,22 @@ defmodule CncfDashboardApi.DashboardChannel do
             "deployments": ["AWS", "Azure", "Bluemix", "GCE", "GKE", "Packet"],
             "pipelines":[
               {
-                "pipeline_id":1,
-                "project_id":2,
-                "status":"successful",
+                "pipeline_id":11,
+                "project_id":6,
+                "status":"success",
                 "stable_tag":"release",
                 "head_commit":"2342342342343243sdfsdfsdfs",
                 "jobs":[
                   {
-                    "pipeline_id":1,
-                    "project_id":2,
+                    "pipeline_id":11,
+                    "project_id":6,
                     "job_id":26,
                     "cloud_id":1,
                     "status":"fail"
                   },
                   {
-                    "pipeline_id":1,
-                    "project_id":2,
+                    "pipeline_id":11,
+                    "project_id":6,
                     "job_id":27,
                     "cloud_id":2,
                     "status":"success"
@@ -293,15 +293,15 @@ defmodule CncfDashboardApi.DashboardChannel do
                 ]
               },
               {
-                "pipeline_id":2,
-                "project_id":2,
-                "status":"successful",
+                "pipeline_id":12,
+                "project_id":6,
+                "status":"success",
                 "stable_tag":"release",
                 "head_commit":"2342342342343243sdfsdfsdfs",
                 "jobs":[
                   {
-                    "pipeline_id":2,
-                    "project_id":2,
+                    "pipeline_id":12,
+                    "project_id":6,
                     "job_id":29,
                     "cloud_id":1,
                     "status":"fail"
