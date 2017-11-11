@@ -18,6 +18,7 @@ defmodule CncfDashboardApi.CloudsControllerTest do
     clouds = Repo.insert! %Clouds{}
     conn = get conn, clouds_path(conn, :show, clouds)
     assert json_response(conn, 200)["data"] == %{"id" => clouds.id,
+      "cloud_id" => clouds.id,
       "cloud_name" => clouds.cloud_name}
   end
 

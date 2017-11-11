@@ -10,33 +10,38 @@ defmodule CncfDashboardApi.ProjectsControllerTest do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
+  @tag :wip
   test "lists all entries on index", %{conn: conn} do
+    projects = insert(:project)
     conn = get conn, projects_path(conn, :index)
-    assert json_response(conn, 200)["data"] == []
+    assert  [%{"id" => _,
+      "name" => _,
+      "project_id" => _,
+      "title" => _,
+      "caption" => _,
+      "url" => _,
+      "icon" => _,
+      "display_name" => _,
+      "sub_title" => _,
+      "ssh_url_to_repo" => _,
+      "http_url_to_repo" => _,
+      "pipelines" => [%{"id" => _,
+        "pipeline_id" => _,
+        "project_id" => _,
+        "status" => _,
+        "stable_tag" => _,
+        "head_commit" => _,
+        "ref" => _,
+        "jobs" => [%{"cloud_id" => _, 
+          "id" => _, "job_id" => _, 
+          "name" => _, 
+          "pipeline_id" => _, 
+          "project_id" => _, 
+          "ref" => _, 
+          "status" => _}]}]}] = json_response(conn, 200)["data"]
   end
-        # "projects":[
-        #   {
-        #     "project_id":1,
-        #     "title":"Kubernetes", 
-        #     "caption":"Orchestration",
-        #     "url":"http://kubernetes.io/",
-        #     "icon":"https://www.cncf.io/wp-content/uploads/2016/09/ico_kubernetes-100x100.png",
-        #     "deployments": ["AWS", "Azure", "Bluemix", "GCE", "GKE", "Packet"],
-            # "pipelines":[
-
-    # field :name, :string
-    # field :ssh_url_to_repo, :string
-    # field :http_url_to_repo, :string
-    # field :active, :boolean
-    # field :logo_url, :string
-    # field :display_name, :string
-    # field :sub_title, :string
-    # field :yml_name, :string
-    # field :yml_gitlab_name, :string
-    # field :project_url, :string
   @tag :wip
   test "shows chosen resource", %{conn: conn} do
-    # projects = Repo.insert! %Projects{}
     projects = insert(:project)
     conn = get conn, projects_path(conn, :show, projects)
     assert  %{"id" => _,

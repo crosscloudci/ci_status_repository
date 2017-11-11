@@ -6,9 +6,9 @@ defmodule CncfDashboardApi.PipelineJobs do
     field :status, :string
     field :ref, :string
     # field :pipeline_id, :integer
+    belongs_to :pipeline, CncfDashboardApi.Pipelines
     # field :project_id, :integer
     belongs_to :project, CncfDashboardApi.Projects
-    belongs_to :pipeline, CncfDashboardApi.Pipelines
     belongs_to :cloud, CncfDashboardApi.Clouds, foreign_key: :cloud_id
 
     timestamps()
