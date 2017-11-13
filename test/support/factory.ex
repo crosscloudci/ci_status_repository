@@ -4,7 +4,8 @@ defmodule CncfDashboardApi.Factory do
 
   def cloud_factory do
     %CncfDashboardApi.Clouds{
-      cloud_name: "aws"
+      cloud_name: "aws",
+      active: true 
     }
   end
   def pipeline_job_factory do

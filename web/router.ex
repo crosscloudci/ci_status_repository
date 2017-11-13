@@ -32,5 +32,8 @@ defmodule CncfDashboardApi.Router do
     resources "/clouds", CloudsController, except: [:new, :edit] 
     resources "/dashboard", DashboardController, only: [:index]   
     resources "/source_key_project_monitor", SourceKeyProjectMonitorController, except: [:new, :edit]
+    resources "/cloud_job_status", CloudJobStatusController, except: [:new, :edit]
+    resources "/build_job_status", BuildJobStatusController, except: [:new, :edit]
+    resources "/pipeline_monitor", PipelineMonitorController, except: [:new, :edit]
   end
 end
