@@ -23,7 +23,8 @@ defmodule CncfDashboardApi.GitlabMigrations do
       false,
       CncfDashboardApi.Clouds,
       %{cloud_name: :cloud_name,
-        active: :active}
+        active: :active,
+        order: :order}
     )
     {:ok, upsert_count, cloud_map}
   end
@@ -52,7 +53,8 @@ defmodule CncfDashboardApi.GitlabMigrations do
         logo_url: :logo_url,
         display_name: :display_name,
         sub_title: :sub_title,
-        yml_gitlab_name: :yml_gitlab_name
+        yml_gitlab_name: :yml_gitlab_name,
+        order: :order,
       }
     )
     {:ok, upsert_count, project_map}

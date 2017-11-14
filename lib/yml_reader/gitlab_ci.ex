@@ -12,7 +12,10 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
     yml["clouds"] 
     |> Stream.with_index 
     |> Enum.reduce([], fn ({{k, v}, idx}, acc) -> 
-      [%{"id" => (idx + 1), "cloud_name" => k, "active" => v} | acc] 
+      [%{"id" => (idx + 1), 
+        "cloud_name" => k, 
+        "active" => v,
+        "order" => (idx + 1)} | acc] 
     end) 
 	end
 
@@ -28,7 +31,8 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
         "display_name" => v["display_name"],
         "sub_title" => v["sub_title"],
         "yml_gitlab_name" => v["gitlab_name"],
-        "project_url" => v["project_url"]} | acc] 
+        "project_url" => v["project_url"],
+        "order" => (idx + 1)} | acc] 
 		end) 
 	end
 end
