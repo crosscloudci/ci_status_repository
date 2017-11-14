@@ -60,7 +60,10 @@ defmodule CncfDashboardApi.GitlabMigrations do
     {:ok, upsert_count, project_map}
   end
 
-  def upsert_projects do
+  def upsert_single_project(source_project_id) do
+    project_map_orig = GitLabProxy.get_gitlab_projects()
+  end
+  def upsert_projects(map) do
     project_map_orig = GitLabProxy.get_gitlab_projects()
     if Mix.env == :test do
       project_map =  Enum.take(project_map_orig, 2)
