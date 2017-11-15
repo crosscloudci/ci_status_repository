@@ -1,0 +1,42 @@
+version: '2'
+networks:
+  default:
+    external:
+      name: nginx-proxy
+
+services:
+  # nginx-proxy:
+  #   image: jwilder/nginx-proxy
+  #   container_name: nginx-proxy
+  #   ports:
+  #     - "80:80"
+  #   volumes:
+  #     - ../volumes/certs/:/etc/nginx/certs:ro # Cerificares for all Required Domains must be in this Directory
+  #     - /etc/nginx/vhost.d
+  #     - /usr/share/nginx/html
+  #     - /var/run/docker.sock:/tmp/docker.sock:ro
+
+  postgres:
+    image: postgres:9.6
+    container_name: postgres
+    environment:
+      POSTGRES_DB: backend
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: database
+
+  backend:
+    image: registry.cncf.ci/cncf/cncf_ci_dashboard_backend:latest 
+    links:
+      - postgres:postgres
+    container_name: backend
+    environment:
+      # VIRTUAL_HOST: api.dev.cncf.ci
+      # VIRTUAL_PORT: 80
+      # VIRTUAL_PROTO: http
+      GITLAB_API: https://gitlab.dev.cncf.ci/api/v4
+      GITLAB_TOKEN: token
+      GITLAB_CI_YML: https://gitlab.cncf.ci/cncf/cross-cloud/raw/ci-stable-v0.1.0/.gitlab-ci.yml
+      PORT: 4000
+    ports:
+      - "4000:4000"
+
