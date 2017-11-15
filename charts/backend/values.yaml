@@ -9,6 +9,7 @@ name: backend
 image:
   repository: registry.cncf.ci/cncf/cncf_ci_dashboard_backend
   tag: "latest"
+  secret: SET DOCKER SECRET
   pullPolicy: Always
 
 db:
