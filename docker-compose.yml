@@ -25,9 +25,7 @@ services:
       POSTGRES_PASSWORD: database
 
   backend:
-    env_file:
-      - backend.env
-    image: "registry.cncf.ci/cncf/cncf_ci_dashboard_backend:${DOCKER_TAG}" 
+    image: "${DOCKER_IMAGE}:${DOCKER_TAG}" 
     links:
       - postgres:postgres
     container_name: backend
