@@ -55,7 +55,7 @@ spec:
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
       imagePullSecrets:
-        - name: {{ .Values.name }}
+      - name: {{ .Values.name }}
         resources:
 {{ toYaml .Values.resources | indent 10 }}
         ports:
