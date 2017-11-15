@@ -10,7 +10,6 @@ defmodule CncfDashboardApi.ProjectsControllerTest do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
-  @tag :wip
   test "lists all entries on index", %{conn: conn} do
     projects = insert(:project)
     conn = get conn, projects_path(conn, :index)
@@ -40,7 +39,7 @@ defmodule CncfDashboardApi.ProjectsControllerTest do
           "ref" => _, 
           "status" => _}]}]}] = json_response(conn, 200)["data"]
   end
-  @tag :wip
+
   test "shows chosen resource", %{conn: conn} do
     projects = insert(:project)
     conn = get conn, projects_path(conn, :show, projects)
@@ -71,7 +70,6 @@ defmodule CncfDashboardApi.ProjectsControllerTest do
           "status" => _}]}]} = json_response(conn, 200)["data"]
   end
 
-  @tag :wip
   test "renders page not found when id is nonexistent", %{conn: conn} do
     conn =  get conn, projects_path(conn, :show, -1)
     assert %{"errors" => _} = json_response(conn, 404) 
@@ -91,7 +89,6 @@ defmodule CncfDashboardApi.ProjectsControllerTest do
     assert json_response(conn, 422)["errors"] != %{}
   end
 
-  @tag :wip
   test "updates and renders chosen resource when data is valid", %{conn: conn} do
     # projects = Repo.insert! %Projects{}
     projects = insert(:project)
@@ -100,7 +97,6 @@ defmodule CncfDashboardApi.ProjectsControllerTest do
     assert Repo.get_by(Projects, @valid_attrs)
   end
 
-  @tag :wip
   test "does not update chosen resource and renders errors when data is invalid", %{conn: conn} do
     projects = Repo.insert! %Projects{}
     # projects = insert(:project)
