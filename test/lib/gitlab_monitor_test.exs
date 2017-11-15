@@ -26,6 +26,11 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert 1 = pipeline_monitor_count  
     assert_receive %Phoenix.Socket.Broadcast{ topic: "dashboard:*", 
       event: "new_cross_cloud_call", payload: %{reply: %{dashboard: dashboard}}}
+
+    pipeline_jobs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.PipelineJobs, :count, :id)  
+    source_pipeline_jobs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyPipelineJobs, :count, :id)  
+    assert 0 < pipeline_jobs_count  
+    assert 0 < source_pipeline_jobs_count
     # assert 1 < project_count  
     # assert 1 < source_project_count
     # # check update -- should not increase

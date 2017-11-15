@@ -50,15 +50,21 @@ defmodule CncfDashboardApi.GitlabMonitor do
     CncfDashboardApi.Repo.insert(changeset)
 
     # TODO Get all of the jobs for the pipeline 
+    CncfDashboardApi.GitlabMigrations.upsert_pipeline_jobs(monitor.source_project_id |> String.to_integer, 
+                                                           monitor.source_pipeline_id |> String.to_integer)
 
     # TODO start polling
+    #
      
     # Call dashboard channel
-    
     CncfDashboardApi.Endpoint.broadcast! "dashboard:*", "new_cross_cloud_call", %{reply: dashboard_response} 
-    
+
+    Logger.info fn ->
+      "GitlabMonitor: Broadcasted json"
+    end
+
     # TODO update last updated
-    
+
   end
 
   def dashboard_response do
