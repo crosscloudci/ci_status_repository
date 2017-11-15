@@ -190,7 +190,7 @@ COPY . /backend
 COPY entrypoint.sh /
 RUN chmod +x /entrypoint.sh
 
-COPY Dockerfiles/dev.secret.exs /backend/config/dev.secret.exs
+# COPY Dockerfiles/dev.secret.exs /backend/config/dev.secret.exs
 
 WORKDIR /backend
 

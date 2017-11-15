@@ -11,6 +11,12 @@ image:
   tag: "latest"
   pullPolicy: Always
 
+db:
+  user: DATABASE USER
+  password: DATABASE PASSWORD
+  name: DATABASE NAME
+  host: DATABASE_HOST
+
 resources:
   limits:
     cpu: 100m
