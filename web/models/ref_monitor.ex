@@ -19,6 +19,8 @@ defmodule CncfDashboardApi.RefMonitor do
   def changeset(struct, params \\ %{}) do
     struct
     |> cast(params, [:ref, :status, :sha, :release_type, :project_id, :order, :pipeline_id])
-    |> validate_required([:ref, :status, :sha, :release_type, :project_id, :order, :pipeline_id])
+    # |> validate_required([:ref, :status, :sha, :release_type, :project_id, :order, :pipeline_id])
+    # initialized ref_monitors will have no pipeline (they exist before a build)
+    |> validate_required([:ref, :status, :sha, :release_type, :project_id, :order])
   end
 end

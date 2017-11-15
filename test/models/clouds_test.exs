@@ -3,7 +3,7 @@ defmodule CncfDashboardApi.CloudsTest do
 
   alias CncfDashboardApi.Clouds
 
-  @valid_attrs %{cloud_name: "some content"}
+  @valid_attrs %{cloud_name: "some content", order: 1}
   @invalid_attrs %{}
 
   test "changeset with valid attributes" do

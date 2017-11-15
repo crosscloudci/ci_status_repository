@@ -16,6 +16,8 @@ defmodule CncfDashboardApi.DashboardBadgeStatus do
   def changeset(struct, params \\ %{}) do
     struct
     |> cast(params, [:status, :cloud_id, :ref_monitor_id, :order])
-    |> validate_required([:status, :cloud_id, :ref_monitor_id, :order])
+    # |> validate_required([:status, :cloud_id, :ref_monitor_id, :order])
+    # build badges dont have a cloud_id
+    |> validate_required([:status, :ref_monitor_id, :order])
   end
 end

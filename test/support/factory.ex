@@ -5,6 +5,7 @@ defmodule CncfDashboardApi.Factory do
   def cloud_factory do
     %CncfDashboardApi.Clouds{
       cloud_name: "aws",
+      order: 1, 
       active: true 
     }
   end
