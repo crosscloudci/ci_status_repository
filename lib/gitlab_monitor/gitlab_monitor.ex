@@ -56,9 +56,10 @@ defmodule CncfDashboardApi.GitlabMonitor do
     CncfDashboardApi.GitlabMigrations.upsert_pipeline_jobs(monitor.source_project_id |> String.to_integer, 
                                                            monitor.source_pipeline_id |> String.to_integer)
 
+    # TODO if no build job status and cloud job status records for passed project, create/default to running or N/A
+
     # TODO start polling
-    #
-     
+    
     # Call dashboard channel
     CncfDashboardApi.Endpoint.broadcast! "dashboard:*", "new_cross_cloud_call", %{reply: dashboard_response} 
 
@@ -89,6 +90,8 @@ defmodule CncfDashboardApi.GitlabMonitor do
     response = CncfDashboardApi.DashboardView.render("index.json", dashboard: with_cloud)
   end
 
+  # projec name is either cross-cloud (cross-cloud handles the deploy pipelines)
+  # or other (a build pipeline)
   def is_deploy_pipeline_type(project_id) do
     project = CncfDashboardApi.Repo.all(from skp in CncfDashboardApi.Projects, 
                                         where: skp.id == ^project_id) |> List.first
@@ -98,5 +101,21 @@ defmodule CncfDashboardApi.GitlabMonitor do
       false
     end
 
+  end
+
+  # projects, clouds, pipleines, and pipeline jobs should be recently migrated before calling build check
+  def build_check(pipeline_id) do
+    container = CncfDashboardApi.Repo.all(from pj in CncfDashboardApi.PipelineJobs, 
+                                          where: pj.pipeline_id == ^pipeline_id)
+                |> Enum.find(fn(x) -> x.name =~ "container" end) 
+    if container && (container.status == "success" || container.status == "failed") do
+      # TODO set running for pipeline monitor where current pipeline_id to false
+      # TODO check if build job status = container.status
+      #   if not 
+      #      update build job status = container.status 
+      #      update last updated field on dashboard
+      #      message dashboard channel
+      #      stop polling process (possible?)
+    end
   end
 end
