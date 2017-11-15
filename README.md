@@ -29,7 +29,7 @@ export PORT=YOUR_DASHBOARD_PORT
 ```
 
 ## To run using Docker
-Set DOCKER_IMAGE, DOCKER_TAG & GITLAB_TOKEN
+Set PORT, GITLAB_API, GITLAB_CI_YML, DOCKER_IMAGE, DOCKER_TAG & GITLAB_TOKEN environment variables (can go in .env)
 
 ```
 export DOCKER_IMAGE=registry.cncf.ci/cncf/cncf_ci_dashboard_backend
