@@ -1,16 +1,23 @@
-FROM elixir:1.5-alpine
-MAINTAINER "Joshua Darius <sup@joshuadarius.com>"
+# FROM buildpack-deps:stretch
+FROM bitwalker/alpine-elixir-phoenix:latest
+MAINTAINER "Denver Williams <denver@debian.nz>"
 
-ADD https://github.com/Yelp/dumb-init/releases/download/v1.1.1/dumb-init_1.1.1_amd64 /usr/local/bin/dumb-init
-RUN chmod +x /usr/local/bin/dumb-init
- 
-WORKDIR /cncf
-COPY cncf_ci_dashboard_backend/ /cncf
+COPY . /backend
 
-RUN mix local.hex --force
-RUN mix local.rebar --force
-RUN mix deps.get
-RUN mix ecto.create && mix ecto.migrate
+COPY entrypoint.sh /
+RUN chmod +x /entrypoint.sh
+
+COPY Dockerfiles/dev.secret.exs /backend/config/dev.secret.exs
+
+WORKDIR /backend
+
+RUN mix local.hex --force \
+    && mix local.rebar --force \
+    && mix deps.get \
+    && npm install
 
 EXPOSE 4000
-CMD ["dumb-init", "mix", "phoenix.server"]
+
+EXPOSE 4009
+
+ENTRYPOINT ["/entrypoint.sh"]

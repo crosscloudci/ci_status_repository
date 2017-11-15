@@ -1,8 +1,9 @@
-# CNCF Dashboard API
+# CNCF Dashboard API server
 
-To start the CNCF DashBoard API server
+**Prerequisites:** Erlang 20, Elixir 1.5, Ruby 2.2.1, Node v7.6.0
 
-  * Install Elixir and Erlang
+## Build & start the Dashboard API server
+
   * Install dependencies with `mix deps.get`
   * Create and migrate your database with `mix ecto.create && mix ecto.migrate`
   * Load initial project and cloud data:
@@ -14,7 +15,6 @@ To start the CNCF DashBoard API server
   * Start Phoenix endpoint with `. .env ; mix phoenix.server`
 
 Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
-
 
 ## Dashboard Backend configuration
 
