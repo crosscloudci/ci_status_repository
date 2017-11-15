@@ -19,11 +19,36 @@ defmodule CncfDashboardApi.GitlabMonitor do
 
     # TODO call pipeline Data migration
     {:ok, upsert_count, pipeline_map} = CncfDashboardApi.GitlabMigrations.upsert_pipeline(monitor.source_project_id, monitor.source_pipeline_id) 
+    # TODO get the local pipeline
+    source_key_pipeline = CncfDashboardApi.Repo.all(from skp in CncfDashboardApi.SourceKeyPipelines, 
+                                                   where: skp.source_id == ^monitor.source_pipeline_id) |> List.first
     # # TODO set the project id in the pipeline monitor source of truth
-    # changeset = CncfDashboardApi.PipelineMonitor.changeset(%CncfDashboardApi.PipelineMonitor{}, %{project_id: source_key_project.new_id})
-    # CncfDashboardApi.Repo.insert(changeset)
+    # field :source_project_id, :string
+    # field :source_pipeline_id, :string
+    # field :source_pipeline_job_id, :string
+    # field :pipeline_release_type, :string
+    # field :active, :boolean, default: true
+    # 
+    # field :pipeline_id, :integer
+    # field :running, :boolean, default: false
+    # field :release_type, :string
+    # field :pipeline_type, :string
+    # field :project_id, :integer
+    # pipeline_type = if (CncfDashboardApi.GitlabMonitor.is_deploy_pipeline_type(source_key_project.new_id)), do: "deploy", else: "build"
+    case CncfDashboardApi.GitlabMonitor.is_deploy_pipeline_type(source_key_project.new_id) do
+      true -> pipeline_type = "deploy"
+      _ -> pipeline_type = "build"
+    end
+    changeset = CncfDashboardApi.PipelineMonitor.changeset(%CncfDashboardApi.PipelineMonitor{}, 
+                                                           %{project_id: source_key_project.new_id,
+                                                             pipeline_id: source_key_pipeline.new_id,
+                                                             running: true,
+                                                             release_type: monitor.pipeline_release_type,
+                                                             pipeline_type: pipeline_type 
+                                                           })
+    CncfDashboardApi.Repo.insert(changeset)
 
-    # TODO get local pipeline id
+    # TODO Get all of the jobs for the pipeline 
 
     # TODO start polling
      
@@ -54,5 +79,16 @@ defmodule CncfDashboardApi.GitlabMonitor do
     # field :pipeline_type, :string
     # field :project_id, :integer
     # call monitor pipleine
+  end
+
+  def is_deploy_pipeline_type(project_id) do
+    project = CncfDashboardApi.Repo.all(from skp in CncfDashboardApi.Projects, 
+                                        where: skp.id == ^project_id) |> List.first
+    if project.name =~ "cross-cloud" do
+      true
+    else
+      false
+    end
+
   end
 end
