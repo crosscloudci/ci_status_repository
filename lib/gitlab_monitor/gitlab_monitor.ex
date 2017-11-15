@@ -47,9 +47,12 @@ defmodule CncfDashboardApi.GitlabMonitor do
                                                              release_type: monitor.pipeline_release_type,
                                                              pipeline_type: pipeline_type 
                                                            })
+                                                           
+    # TODO insert only if pipeline, project, and release type do not exist
+    # else update
     CncfDashboardApi.Repo.insert(changeset)
 
-    # TODO Get all of the jobs for the pipeline 
+    # migrate all jobs for the pipeline 
     CncfDashboardApi.GitlabMigrations.upsert_pipeline_jobs(monitor.source_project_id |> String.to_integer, 
                                                            monitor.source_pipeline_id |> String.to_integer)
 

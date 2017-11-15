@@ -13,6 +13,8 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitorController do
 
     case Repo.insert(changeset) do
       {:ok, source_key_project_monitor} ->
+        # start polling
+        CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(source_key_project_monitor.id)
         conn
         |> put_status(:created)
         |> put_resp_header("location", source_key_project_monitor_path(conn, :show, source_key_project_monitor))
