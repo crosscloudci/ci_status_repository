@@ -54,6 +54,7 @@ defmodule CncfDashboardApi.GitlabMigrations do
         display_name: :display_name,
         sub_title: :sub_title,
         yml_gitlab_name: :yml_gitlab_name,
+        project_url: :project_url,
         order: :order,
       }
     )
