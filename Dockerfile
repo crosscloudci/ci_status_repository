@@ -205,7 +205,8 @@ RUN source $HOME/.kiex/scripts/kiex && \
 RUN mix local.hex --force &&  \
     mix local.rebar --force && \
     mix deps.get && \
-    npm install
+    npm install && \
+    bundle install --path /backend/lib/
 
 EXPOSE 4000
 # CMD ["/bin/bash"]
