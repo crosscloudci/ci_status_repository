@@ -1,5 +1,6 @@
 # FROM buildpack-deps:stretch
 FROM bitwalker/alpine-elixir-phoenix:latest
+MAINTAINER "Denver Williams <denver@debian.nz>"
 
 COPY . /backend
 
@@ -20,4 +21,3 @@ EXPOSE 4000
 EXPOSE 4009
 
 ENTRYPOINT ["/entrypoint.sh"]
-

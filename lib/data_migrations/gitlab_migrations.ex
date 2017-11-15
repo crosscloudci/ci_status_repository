@@ -23,7 +23,8 @@ defmodule CncfDashboardApi.GitlabMigrations do
       false,
       CncfDashboardApi.Clouds,
       %{cloud_name: :cloud_name,
-        active: :active}
+        active: :active,
+        order: :order}
     )
     {:ok, upsert_count, cloud_map}
   end
@@ -52,14 +53,25 @@ defmodule CncfDashboardApi.GitlabMigrations do
         logo_url: :logo_url,
         display_name: :display_name,
         sub_title: :sub_title,
-        yml_gitlab_name: :yml_gitlab_name
+        yml_gitlab_name: :yml_gitlab_name,
+        order: :order,
       }
     )
     {:ok, upsert_count, project_map}
   end
 
+  def upsert_project(source_project_id) do
+    project_map_orig = GitLabProxy.get_gitlab_project(source_project_id)
+    upsert_projects([project_map_orig])
+  end
+
   def upsert_projects do
     project_map_orig = GitLabProxy.get_gitlab_projects()
+    upsert_projects(project_map_orig)
+	end
+
+  def upsert_projects(map) do
+    project_map_orig = map
     if Mix.env == :test do
       project_map =  Enum.take(project_map_orig, 2)
     else
@@ -76,28 +88,45 @@ defmodule CncfDashboardApi.GitlabMigrations do
     {:ok, upsert_count, project_map}
   end
 
+  # must be called after project already upserted
+  def upsert_pipeline(source_project_id, source_pipeline_id) do
+    skp = CncfDashboardApi.Repo.get_by(CncfDashboardApi.SourceKeyProjects, source_id: source_project_id) 
+    # put local project id in the pipeline upsert
+    pipeline_map = GitLabProxy.get_gitlab_pipeline(source_project_id, source_pipeline_id)
+    pipeline_map_with_project = Enum.reduce([pipeline_map], [], fn (x,acc) -> [Enum.into(x, %{"project_id" => Integer.to_string(skp.new_id)}) | acc] end) 
+    upsert_count =CncfDashboardApi.DataMigrations.upsert_from_map(
+      CncfDashboardApi.Repo,
+      pipeline_map_with_project,
+      CncfDashboardApi.SourceKeyPipelines,
+      CncfDashboardApi.Pipelines,
+      %{ref: :ref, 
+        status: :status,
+        sha: :sha,
+        project_id: :project_id}
+    )
+    {:ok, upsert_count, pipeline_map_with_project}
+  end
+
   def upsert_pipelines(source_projects) do
     Enum.map(source_projects, fn (%{"id" => source_project_id}) ->
       Logger.info fn ->
         "source_project_id is: " <> inspect(source_project_id)
       end
       pipeline_map = GitLabProxy.get_gitlab_pipelines(source_project_id)
-      skp = CncfDashboardApi.Repo.get_by(CncfDashboardApi.SourceKeyProjects, 
-                                         source_id: source_project_id |> Integer.to_string) 
-                                         pipeline_map_with_projects = Enum.reduce(pipeline_map, [], 
-                                                                                  fn (x,acc) -> 
-                                                                                    [Enum.into(x, %{"project_id" => Integer.to_string(skp.new_id)}) | acc] 
-                                                                                  end) 
-                                                                                  CncfDashboardApi.DataMigrations.upsert_from_map(
-                                                                                    CncfDashboardApi.Repo,
-                                                                                    pipeline_map_with_projects,
-                                                                                    CncfDashboardApi.SourceKeyPipelines,
-                                                                                    CncfDashboardApi.Pipelines,
-                                                                                    %{ref: :ref, 
-                                                                                      status: :status,
-                                                                                      sha: :sha,
-                                                                                      project_id: :project_id}
-                                                                                  )
+      # get the local project ids from the project list
+      skp = CncfDashboardApi.Repo.get_by(CncfDashboardApi.SourceKeyProjects, source_id: source_project_id |> Integer.to_string) 
+      # put local project id in the pipeline upsert
+      pipeline_map_with_projects = Enum.reduce(pipeline_map, [], fn (x,acc) -> [Enum.into(x, %{"project_id" => Integer.to_string(skp.new_id)}) | acc] end) 
+      CncfDashboardApi.DataMigrations.upsert_from_map(
+        CncfDashboardApi.Repo,
+        pipeline_map_with_projects,
+        CncfDashboardApi.SourceKeyPipelines,
+        CncfDashboardApi.Pipelines,
+        %{ref: :ref, 
+          status: :status,
+          sha: :sha,
+          project_id: :project_id}
+      )
     end
     )
   end

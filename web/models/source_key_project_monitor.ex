@@ -4,6 +4,7 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitor do
   schema "source_key_project_monitor" do
     field :source_project_id, :string
     field :source_pipeline_id, :string
+    field :source_pipeline_job_id, :string
     field :pipeline_release_type, :string
     field :active, :boolean, default: true
     # causes errors
@@ -17,7 +18,7 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitor do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:source_project_id, :source_pipeline_id, :pipeline_release_type, :active])
+    |> cast(params, [:source_project_id, :source_pipeline_id, :source_pipeline_job_id, :pipeline_release_type, :active])
     |> validate_required([:source_project_id, :source_pipeline_id, :pipeline_release_type])
   end
 end

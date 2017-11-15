@@ -24,9 +24,24 @@ defmodule GitLabProxy do
     Poison.decode!(projects) 
   end
 
+  @doc """
+  Returns all projects 
+
+  """
   def get_gitlab_projects do
     {:ok, ruby} = Ruby.start(ruby_lib: Path.expand("lib/gitlab"))
     {:ok, projects} = ruby |> Ruby.call("gitlab_proxy", "get_projects", [])
+    ruby |> Ruby.stop()
+    Poison.decode!(projects) 
+  end
+
+  @doc """
+  Returns one project 
+
+  """
+  def get_gitlab_project(source_project_id) do
+    {:ok, ruby} = Ruby.start(ruby_lib: Path.expand("lib/gitlab"))
+    {:ok, projects} = ruby |> Ruby.call("gitlab_proxy", "get_project", [source_project_id])
     ruby |> Ruby.stop()
     Poison.decode!(projects) 
   end
@@ -47,6 +62,13 @@ defmodule GitLabProxy do
   def get_gitlab_pipelines(project_id) do
     {:ok, ruby} = Ruby.start(ruby_lib: Path.expand("lib/gitlab"))
     {:ok, pipelines} = ruby |> Ruby.call("gitlab_proxy", "get_pipelines", [project_id])
+    ruby |> Ruby.stop()
+    Poison.decode!(pipelines) 
+  end
+
+  def get_gitlab_pipeline(project_id, pipeline_id) do
+    {:ok, ruby} = Ruby.start(ruby_lib: Path.expand("lib/gitlab"))
+    {:ok, pipelines} = ruby |> Ruby.call("gitlab_proxy", "get_pipeline", [project_id, pipeline_id])
     ruby |> Ruby.stop()
     Poison.decode!(pipelines) 
   end

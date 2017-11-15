@@ -4,6 +4,9 @@ defmodule CncfDashboardApi.GitLabProxyTest do
   use ExUnit.Case
 
   def project_id do
+    # projects = GitLabProxy.get_gitlab_projects 
+    # %{"id" => a } = List.first(projects)
+    # a 
     "1"
 	end
 
@@ -22,6 +25,22 @@ defmodule CncfDashboardApi.GitLabProxyTest do
         "test: projects: #{inspect(projects)}"
       end
     assert %{"id" => a } = List.first(projects)
+  end
+
+  @tag :wip
+  test "get_gitlab_project" do 
+    project = GitLabProxy.get_gitlab_project(project_id)
+      Logger.info fn ->
+        "test: project: #{inspect(project)}"
+      end
+    assert %{"id" => a } = project
+  end
+
+  @tag :wip
+  test "get_gitlab_pipeline" do 
+    pipeline = GitLabProxy.get_gitlab_pipeline(CncfDashboardApi.GitLabProxyTest.project_id, 
+                                               CncfDashboardApi.GitLabProxyTest.pipeline_id)
+    assert %{"id" => a } = pipeline
   end
 
   test "get_gitlab_pipelines" do 
