@@ -42,4 +42,20 @@ defmodule CncfDashboardApi.Factory do
     }
 	end
 
+    # field :source_project_id, :string
+    # field :source_pipeline_id, :string
+    # field :source_pipeline_job_id, :string
+    # field :pipeline_release_type, :string
+    # field :active, :boolean, default: true
+  def source_key_project_monitor_factory do
+    %CncfDashboardApi.SourceKeyProjectMonitor{
+      source_project_id: "1",
+      source_pipeline_id: "1",
+      source_pipeline_job_id: "1",
+      pipeline_release_type: "stable",
+      active: true, 
+    }
+
+	end
+
 end

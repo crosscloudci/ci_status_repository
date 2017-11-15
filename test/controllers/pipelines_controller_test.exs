@@ -16,7 +16,6 @@ defmodule CncfDashboardApi.PipelinesControllerTest do
     assert json_response(conn, 200)["data"] == []
   end
 
-  @tag :wip
   @tag timeout: 300_000 
   test "shows chosen resource", %{conn: conn} do
     # pipelines = Repo.insert! %Pipelines{}
@@ -39,7 +38,6 @@ defmodule CncfDashboardApi.PipelinesControllerTest do
         "status" => "success"}]} = json_response(conn, 200)["data"]
   end
 
-  @tag :wip
   test "renders page not found when id is nonexistent", %{conn: conn} do
     conn = get conn, pipelines_path(conn, :show, -1)
     assert %{"errors" => _} = json_response(conn, 404) 

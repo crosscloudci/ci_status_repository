@@ -17,7 +17,7 @@ defmodule CncfDashboardApi.YmlReader.GitlabCiTest do
     project_list = CncfDashboardApi.YmlReader.GitlabCi.project_list()
     assert Enum.find_value(project_list, fn(x) -> x["yml_name"] == "kubernetes" end) 
     assert Enum.find_value(project_list, fn(x) -> x["active"] == true end) 
-    assert Enum.find_value(project_list, fn(x) -> x["logo_url"] == "https://raw.githubusercontent.com/cncf/artwork/master/kubernetes/logo.png" end) 
+    # assert Enum.find_value(project_list, fn(x) -> x["logo_url"] == "https://raw.githubusercontent.com/cncf/artwork/master/kubernetes/logo.png" end) 
     assert Enum.find_value(project_list, fn(x) -> x["display_name"] == "Kubernetes" end) 
     assert Enum.find_value(project_list, fn(x) -> x["sub_title"] == "Orchestration" end) 
     assert Enum.find_value(project_list, fn(x) -> x["yml_gitlab_name"] == "Kubernetes" end) 

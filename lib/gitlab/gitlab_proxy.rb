@@ -27,6 +27,10 @@ def get_pipelines(project_id)
   Tuple.new([:ok, gitlab_client.pipelines(project_id).auto_paginate.reduce([]) {|x,y| x << y.to_hash}.to_json ])
 end 
 
+def get_pipeline(project_id, pipeline_id)
+  Tuple.new([:ok, gitlab_client.pipeline(project_id, pipeline_id).to_hash.to_json ])
+end 
+
 def get_pipeline_jobs(project_id, pipeline_id)
   Tuple.new([:ok, gitlab_client.pipeline_jobs(project_id, pipeline_id).auto_paginate.reduce([]) {|x,y| x << y.to_hash}.to_json ])
 end 
