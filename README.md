@@ -28,6 +28,20 @@ export GITLAB_CI_YML="https://YOUR_GITLAB_CROSS_CLOUD_HOST/cncf/cross-cloud/raw/
 export PORT=YOUR_DASHBOARD_PORT
 ```
 
+## To run using Docker
+Set PORT, GITLAB_API, GITLAB_CI_YML, DOCKER_IMAGE, DOCKER_TAG & GITLAB_TOKEN environment variables (can go in .env)
+
+```
+export DOCKER_IMAGE=registry.cncf.ci/cncf/cncf_ci_dashboard_backend
+export DOCKER_TAG=latest
+export GITLAB_TOKEN=secret
+docker-compose config
+```
+Start the Backend Container
+
+```
+docker-compose -p Backend up
+```
 
 ## To run tests
 
