@@ -47,15 +47,13 @@ docker-compose -p Backend up
 
 Start Postgres DB
 ```
-helm install --name backend_db stable/postgresql --set postgresUser=backend,postgresPassword=secretbackend,postgresDatabase=backend --set service.type=ClusterIP --set imageTag=9.6
+helm install --name backend-db stable/postgresql --set postgresUser=backend,postgresPassword=secretbackend,postgresDatabase=backend --set service.type=ClusterIP --set imageTag=9.6
 ```
 
 Start Backend
 ```
-helm install --name staging cncf/backend --set db.user=backend --set db.password=secretbackend --set db.name=backend --set.host=backend_db-postgres --set api=https://gitlab.dev.cncf.ci/api/v4 --set token=secret --set yaml=ttps://gitlab.cncf.ci/cncf/cross-cloud/raw/ci-stable-v0.1.0/.gitlab-ci.yml
+helm install --name staging cncf/backend --set db.user=backend --set db.password=secretbackend --set db.name=backend --set db.host=backend-db-postgres --set api=https://gitlab.dev.cncf.ci/api/v4 --set token=secret --set yaml=https://gitlab.cncf.ci/cncf/cross-cloud/raw/ci-stable-v0.1.0/.gitlab-ci.yml
 ```
-
-
 ## To run tests
 
 After setup for running sever above ^^^
