@@ -34,10 +34,10 @@ services:
       # VIRTUAL_HOST: api.dev.cncf.ci
       # VIRTUAL_PORT: 80
       # VIRTUAL_PROTO: http
-      GITLAB_API: https://gitlab.dev.cncf.ci/api/v4
+      GITLAB_API: "${GITLAB_API}"
       GITLAB_TOKEN: "${GITLAB_TOKEN}"
-      GITLAB_CI_YML: https://gitlab.cncf.ci/cncf/cross-cloud/raw/ci-stable-v0.1.0/.gitlab-ci.yml
+      GITLAB_CI_YML: "${GITLAB_CI_YML}"
       PORT: 4000
     ports:
-      - "4000:4000"
+      - "${PORT}:4000"
 
