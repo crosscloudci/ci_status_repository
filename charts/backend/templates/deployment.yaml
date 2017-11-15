@@ -44,6 +44,14 @@ spec:
           value: {{ .Values.token }}
         - name: GITLAB_CI_YAML
           value: {{ .Values.yaml }}
+        - name: DB_USER
+          value: {{ .Values.db.user }}
+        - name: DB_PASSWORD
+          value: {{ .Values.db.password }}
+        - name: DB_NAME
+          value: {{ .Values.db.name }}
+        - name: DB_HOST
+          value: {{ .Values.db.host }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         resources:
