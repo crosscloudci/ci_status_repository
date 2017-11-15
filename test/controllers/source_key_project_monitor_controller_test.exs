@@ -2,7 +2,7 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitorControllerTest do
   use CncfDashboardApi.ConnCase
 
   alias CncfDashboardApi.SourceKeyProjectMonitor
-  @valid_attrs %{source_pipeline_id: "some content", source_project_id: "some content", pipeline_release_type: "some content"}
+  @valid_attrs %{source_pipeline_id: "1", source_project_id: "1", pipeline_release_type: "stable"}
   @invalid_attrs %{}
 
   setup %{conn: conn} do
