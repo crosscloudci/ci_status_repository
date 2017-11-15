@@ -1,4 +1,4 @@
-test # CNCF Dashboard API server
+# CNCF Dashboard API server
 
 **Prerequisites:** Erlang 20, Elixir 1.5, Ruby 2.2.1, Node v7.6.0
 
