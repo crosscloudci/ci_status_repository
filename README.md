@@ -32,7 +32,7 @@ export PORT=YOUR_DASHBOARD_PORT
 Set DOCKER_IMAGE, DOCKER_TAG & GITLAB_TOKEN
 
 ```
-export DOCKER_IMAGE=registry.cncf.ci/cncf/cncf_ci_dashboard_backend:latest
+export DOCKER_IMAGE=registry.cncf.ci/cncf/cncf_ci_dashboard_backend
 export DOCKER_TAG=latest
 export GITLAB_TOKEN=secret
 docker-compose config
