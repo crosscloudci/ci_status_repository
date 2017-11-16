@@ -43,7 +43,19 @@ defmodule CncfDashboardApi.GitlabMonitor do
     # field :release_type, :string
     # field :pipeline_type, :string
     # field :project_id, :integer
-    
+
+
+    alternate_release = if (monitor.pipeline_release_type == "stable"), do: "head", else: "stable"
+
+    {pm_found, pm_record} = %CncfDashboardApi.PipelineMonitor{pipeline_id: source_key_pipeline.new_id, 
+      project_id: source_key_project.new_id,
+      release_type: alternate_release} 
+      |> find_by([:pipeline_id, :project_id, :release_type])
+
+      case pm_found do
+        :found -> raise "You may not monitor the same project and pipeline for two different branches"
+        _ ->
+      end
                                                            
     # Insert only if pipeline, project, and release type do not exist
     # else update

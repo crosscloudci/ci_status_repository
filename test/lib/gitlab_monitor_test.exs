@@ -32,6 +32,18 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert 0 < source_pipeline_jobs_count
   end
 
+  @tag :wip
+  test "upsert_pipeline_monitor should not allow the same project and pipeline to monitor two different branches" do 
+    skpm = insert(:source_key_project_monitor)
+    {:ok, upsert_count, cloud_map} = CncfDashboardApi.GitlabMigrations.upsert_clouds()
+    projects = insert(:project)
+    CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm.id)
+    skpm = insert(:source_key_project_monitor, %{pipeline_release_type: "head"})
+    assert_raise RuntimeError, ~r/^You may not monitor the same project and pipeline for two different branches/, fn ->
+      CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm.id)
+    end
+  end
+
   test "is_deploy_pipeline_type" do 
     project = insert(:project)
     assert CncfDashboardApi.GitlabMonitor.is_deploy_pipeline_type(project.id) == false
@@ -39,8 +51,7 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert CncfDashboardApi.GitlabMonitor.is_deploy_pipeline_type(cross_cloud.id) == true 
   end
 
-  @tag :wip
-  test "upsert_ref_monitor" do 
+  test "Use upsert_ref_monitor to insert a ref monitor" do 
 
     # try with no ref_monitors
     project = insert(:project, %{ref_monitors: []})
@@ -55,6 +66,9 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     dbs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.DashboardBadgeStatus, :count, :id)  
     assert 0 < dbs_count
 
+  end
+
+  test "Use upsert_ref_monitor to update a ref monitor" do 
     # try with 1 ref_monitor
     project = insert(:project)
     pipeline = project.pipelines |> List.first
@@ -69,7 +83,6 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert 0 < dbs_count
   end
 
-  @tag :wip
   test "initialize_ref_monitor" do 
     project = insert(:project, %{ref_monitors: []})
     CncfDashboardApi.GitlabMonitor.initialize_ref_monitor(project.id)
