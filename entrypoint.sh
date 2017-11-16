@@ -1,6 +1,6 @@
 #!/bin/bash
 
-while ! nc -z postgres 5432 ;
+while ! nc -z $DB_HOST 5432 ;
 do
 	echo "sleeping"
 	sleep 1
