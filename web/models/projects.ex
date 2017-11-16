@@ -5,6 +5,7 @@ defmodule CncfDashboardApi.Projects do
     field :name, :string
     field :ssh_url_to_repo, :string
     field :http_url_to_repo, :string
+    field :web_url, :string
     field :active, :boolean
     field :logo_url, :string
     field :display_name, :string
@@ -25,7 +26,7 @@ defmodule CncfDashboardApi.Projects do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :ssh_url_to_repo, :http_url_to_repo, :active, :logo_url, :display_name, :sub_title, :yml_name, :yml_gitlab_name, :project_url, :order])
+    |> cast(params, [:name, :ssh_url_to_repo, :http_url_to_repo, :web_url, :active, :logo_url, :display_name, :sub_title, :yml_name, :yml_gitlab_name, :project_url, :order])
     # |> validate_required([:name, :ssh_url_to_repo, :http_url_to_repo])
     |> validate_required([:name])
   end

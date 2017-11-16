@@ -52,6 +52,7 @@ defmodule CncfDashboardApi.Factory do
       http_url_to_repo: "http://kubernetes.io/",
       active: true,
       logo_url: "https://www.cncf.io/wp-content/uploads/2016/09/ico_kubernetes-100x100.png",
+      web_url: "https://gitlab.dev.cncf.ci/coredns/coredns",
       display_name: "Kubernetes",
       sub_title: "Kub",
       yml_name: "Kubernetes",

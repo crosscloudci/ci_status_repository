@@ -3,6 +3,7 @@ defmodule CncfDashboardApi.DashboardBadgeStatus do
 
   schema "dashboard_badge_status" do
     field :status, :string
+    field :url, :string
     # field :cloud_id, :integer
     belongs_to :cloud, CncfDashboardApi.Clouds
     # field :ref_monitor_id, :integer
@@ -17,7 +18,7 @@ defmodule CncfDashboardApi.DashboardBadgeStatus do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:status, :cloud_id, :ref_monitor_id, :order])
+    |> cast(params, [:status, :url, :cloud_id, :ref_monitor_id, :order])
     # |> validate_required([:status, :cloud_id, :ref_monitor_id, :order])
     # build badges dont have a cloud_id
     |> validate_required([:status, :ref_monitor_id, :order])
