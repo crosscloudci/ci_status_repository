@@ -185,7 +185,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
                 |> Enum.find(fn(x) -> x.name =~ "compile" end) 
     if compile do
       # e.g.   https://gitlab.dev.cncf.ci/coredns/coredns/-/jobs/31525
-      "#{project.web_url}-/jobs/#{compile.id}"
+      "#{project.web_url}/-/jobs/#{compile.id}"
     end
   end
 
