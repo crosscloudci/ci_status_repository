@@ -5,6 +5,25 @@ defmodule CncfDashboardApi.GitlabMonitor do
   alias CncfDashboardApi.Repo
   use EctoConditionals, repo: CncfDashboardApi.Repo
 
+  def source_models(source_key_project_monitor_id) do
+    monitor = Repo.all(from skpm in CncfDashboardApi.SourceKeyProjectMonitor, 
+                                        where: skpm.id == ^source_key_project_monitor_id) |> List.first
+    source_key_project = Repo.all(from skp in CncfDashboardApi.SourceKeyProjects, 
+                                                   where: skp.source_id == ^monitor.source_project_id) |> List.first
+    source_key_pipeline = Repo.all(from skp in CncfDashboardApi.SourceKeyPipelines, 
+                                                   where: skp.source_id == ^monitor.source_pipeline_id) |> List.first
+    {:ok, monitor, source_key_project, source_key_pipeline}
+  end
+
+  def pipeline_monitor(source_key_project_monitor_id) do
+    {:ok, monitor, source_key_project, source_key_pipeline} = source_models(source_key_project_monitor_id)
+
+    {pm_found, pm_record} = %CncfDashboardApi.PipelineMonitor{pipeline_id: source_key_pipeline.new_id, 
+      project_id: source_key_project.new_id,
+      release_type: monitor.pipeline_release_type} 
+      |> find_by([:pipeline_id, :project_id, :release_type])
+  end
+
   def migrate_source_key_monitor(source_key_project_monitor_id) do
     monitor = Repo.all(from skpm in CncfDashboardApi.SourceKeyProjectMonitor, 
                                         where: skpm.id == ^source_key_project_monitor_id) |> List.first
@@ -106,7 +125,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
 
     # TODO if no build job status and cloud job status records for passed project, create/default to running or N/A
 
-    # TODO start polling
+    # TODO put polling in caller i.e. controller
     #
     # TODO populate ref_monitor
     upsert_ref_monitor(source_key_project.new_id,source_key_pipeline.new_id)
@@ -184,6 +203,9 @@ defmodule CncfDashboardApi.GitlabMonitor do
                                           where: pj.pipeline_id == ^pipeline_id)
                 |> Enum.find(fn(x) -> x.name =~ "compile" end) 
     if compile do
+      Logger.info fn ->
+        "compile pipeline_id: #{pipeline_id} job: #{inspect(compile)}"
+      end
       # e.g.   https://gitlab.dev.cncf.ci/coredns/coredns/-/jobs/31525
       "#{project.web_url}/-/jobs/#{compile.id}"
     end

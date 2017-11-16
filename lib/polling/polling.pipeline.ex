@@ -1,5 +1,6 @@
 require Logger;
 defmodule CncfDashboardApi.Polling.Pipeline do
+  use EctoConditionals, repo: CncfDashboardApi.Repo
 
   # TODO Watcher: run for 2 hours for a source_key_project_monitor
   # TODO Watcher: Get the pipeline_monitor (project_id, pipeline_id, release_type) for the source_key_project_monitor 
@@ -25,12 +26,18 @@ defmodule CncfDashboardApi.Polling.Pipeline do
   #
   #
 
-  def is_pipeline_complete() do
-      # TODO Get the pipeline_monitor (project_id, pipeline_id, release_type) for the source_key_project_monitor 
-      # TODO check if pipeline_monitor is running, 
+  def is_pipeline_complete(source_key_project_monitor_id) do
+
+    {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.pipeline_monitor(source_key_project_monitor_id) 
+      # check if pipeline_monitor is running, 
       #       if running, 
       #          call upsert_pipeline_monitor with source_key_project_monitor
-    {:ok, :running}
+    if pm_record.running do
+      CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(source_key_project_monitor_id)
+      {:ok, :running}
+    else
+      {:ok, :complete}
+    end
   end
 
   def poll_pipeline_until_complete(source_key_project_monitor_id) do
@@ -41,23 +48,24 @@ defmodule CncfDashboardApi.Polling.Pipeline do
         Logger.info fn ->
           "poll_pipeline_until_complete "
         end
-        :timer.sleep(:timer.seconds(2))
+        :timer.sleep(:timer.seconds(5))
         inifinite_poll_loop()
-      {:ok, :complete} -> {:ok, :complete}
+      {:ok, :complete} ->
+        {:ok, :complete}
     end
   end
 
-  def monitor(job_data) do
+  def monitor(source_key_project_monitor_id) do
     reciever = self()
     pid = spawn_link(fn -> 
-      CncfDashboardApi.Polling.Pipeline.poll_pipeline_until_complete
-      send reciever, { :ok, job_data } 
+      CncfDashboardApi.Polling.Pipeline.poll_pipeline_until_complete(source_key_project_monitor_id)
+      send reciever, { :ok, source_key_project_monitor_id } 
     end)
     receive do
       { :ok, response } -> 
         IO.puts("Got a response!")
         response
-    after 5_000 ->
+    after 15_000 ->
       IO.puts("Killing due to timeout.. sigh")
       Process.exit(pid, :kill)
       { :error, "Job timed out" }

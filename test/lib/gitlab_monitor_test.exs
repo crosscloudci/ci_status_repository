@@ -100,7 +100,7 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     pipeline = project.pipelines |> List.first
     pipeline_job = pipeline.pipeline_jobs |> List.first
     url = CncfDashboardApi.GitlabMonitor.compile_url(pipeline.id)
-    temp_url = "#{project.web_url}-/jobs/#{pipeline_job.id}"
+    temp_url = "#{project.web_url}/-/jobs/#{pipeline_job.id}"
     assert ^temp_url = url
   end
 end
