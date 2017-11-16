@@ -78,6 +78,13 @@ defmodule CncfDashboardApi.Factory do
     }
   end
 
+  def source_key_pipeline_job_factory do
+    %CncfDashboardApi.SourceKeyPipelineJobs{
+      source_id: "1",
+      new_id: 1,
+    }
+  end
+
   def pipeline_monitor_factory do
     %CncfDashboardApi.PipelineMonitor{
       project_id: 1,

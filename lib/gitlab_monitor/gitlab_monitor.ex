@@ -203,11 +203,13 @@ defmodule CncfDashboardApi.GitlabMonitor do
                                           where: pj.pipeline_id == ^pipeline_id)
                 |> Enum.find(fn(x) -> x.name =~ "compile" end) 
     if compile do
+      source_key_pipeline_jobs = Repo.all(from skpj in CncfDashboardApi.SourceKeyPipelineJobs, 
+                                                   where: skpj.new_id == ^compile.id) |> List.first
       Logger.info fn ->
-        "compile pipeline_id: #{pipeline_id} job: #{inspect(compile)}"
+        "compile local pipeline_id: #{pipeline_id} source key: #{inspect(source_key_pipeline_jobs)}"
       end
       # e.g.   https://gitlab.dev.cncf.ci/coredns/coredns/-/jobs/31525
-      "#{project.web_url}/-/jobs/#{compile.id}"
+      "#{project.web_url}/-/jobs/#{source_key_pipeline_jobs.source_id}"
     end
   end
 

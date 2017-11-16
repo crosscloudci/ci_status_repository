@@ -18,7 +18,7 @@ defmodule CncfDashboardApi.Polling.Pipeline do
   # TODO poll_loop 
   # TODO Get the pipeline_monitor (project_id, pipeline_id, release_type) for the source_key_project_monitor 
   # TODO check if pipeline_monitor is running, 
-  #       if running, 
+  #       if running,
   #          call upsert_pipeline_monitor with source_key_project_monitor
   #            if running sleep for 2 minutes
   #               call poll_loop
@@ -54,6 +54,13 @@ defmodule CncfDashboardApi.Polling.Pipeline do
         {:ok, :complete}
     end
   end
+
+  # def set_run_to_fail do
+  #   {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.pipeline_monitor(source_key_project_monitor_id) 
+  #   {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: project_id,
+  #     release_type: pipeline_monitor.release_type} 
+  #     |> find_by([:project_id, :release_type])
+  # end
 
   def monitor(source_key_project_monitor_id) do
     reciever = self()
