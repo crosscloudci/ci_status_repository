@@ -5,9 +5,28 @@ defmodule CncfDashboardApi.Factory do
   def cloud_factory do
     %CncfDashboardApi.Clouds{
       cloud_name: "aws",
+      order: 1, 
       active: true 
     }
   end
+  def dashboard_badge_status_factory do
+    %CncfDashboardApi.DashboardBadgeStatus{
+      # name: "Kubernetes",
+      status: "success",
+      # ref: "ci_master",
+      cloud: build(:cloud),
+    }
+	end
+  def ref_monitor_factory do
+    %CncfDashboardApi.RefMonitor{
+      ref: "ci_master",
+      status: "success",
+      sha: "2342342342343243sdfsdfsdfs",
+      release_type: "build",
+      dashboard_badge_statuses: [build(:dashboard_badge_status)],
+    }
+
+	end
   def pipeline_job_factory do
     %CncfDashboardApi.PipelineJobs{
       name: "Kubernetes",
@@ -39,6 +58,7 @@ defmodule CncfDashboardApi.Factory do
       yml_gitlab_name: "kubernetes",
       project_url: "http://kubernetes.io/",
       pipelines: [build(:pipeline)],
+      ref_monitors: [build(:ref_monitor)],
     }
 	end
 
@@ -55,7 +75,17 @@ defmodule CncfDashboardApi.Factory do
       pipeline_release_type: "stable",
       active: true, 
     }
+  end
 
-	end
+  def pipeline_monitor_factory do
+    %CncfDashboardApi.PipelineMonitor{
+      project_id: 1,
+      pipeline_id: 1,
+      running: true,
+      release_type: "stable",
+      pipeline_type: "build"
+    }
+  end
+
 
 end

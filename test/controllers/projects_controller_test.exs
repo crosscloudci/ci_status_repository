@@ -40,6 +40,7 @@ defmodule CncfDashboardApi.ProjectsControllerTest do
           "status" => _}]}]}] = json_response(conn, 200)["data"]
   end
 
+  @tag :wip
   test "shows chosen resource", %{conn: conn} do
     projects = insert(:project)
     conn = get conn, projects_path(conn, :show, projects)
