@@ -12,7 +12,6 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
   use ExUnit.Case
   # use CncfDashboardApi.ModelCase
   
-  @tag :wip
   # test "upsert_pipeline_monitor", %{socket: socket} do 
   test "upsert_pipeline_monitor" do 
     skpm = insert(:source_key_project_monitor)
@@ -31,12 +30,6 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     source_pipeline_jobs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyPipelineJobs, :count, :id)  
     assert 0 < pipeline_jobs_count  
     assert 0 < source_pipeline_jobs_count
-    # assert 1 < project_count  
-    # assert 1 < source_project_count
-    # # check update -- should not increase
-    # {:ok, upsert, project_map} = CncfDashboardApi.GitlabMigrations.upsert_projects()
-    # assert project_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.Projects, :count, :id)  
-    # assert source_project_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyProjects, :count, :id)  
   end
 
   test "is_deploy_pipeline_type" do 
@@ -44,5 +37,45 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert CncfDashboardApi.GitlabMonitor.is_deploy_pipeline_type(project.id) == false
     cross_cloud = insert(:project, %{name: "cross-cloud"})
     assert CncfDashboardApi.GitlabMonitor.is_deploy_pipeline_type(cross_cloud.id) == true 
+  end
+
+  @tag :wip
+  test "upsert_ref_monitor" do 
+
+    # try with no ref_monitors
+    project = insert(:project, %{ref_monitors: []})
+    pipeline = project.pipelines |> List.first
+    pipeline_monitor = insert(:pipeline_monitor, %{
+      project_id: project.id,
+      pipeline_id: pipeline.id})
+
+    CncfDashboardApi.GitlabMonitor.upsert_ref_monitor(project.id, pipeline.id)
+    ref_monitor_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.RefMonitor, :count, :id)  
+    assert 0 < ref_monitor_count  
+    dbs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.DashboardBadgeStatus, :count, :id)  
+    assert 0 < dbs_count
+
+    # try with 1 ref_monitor
+    project = insert(:project)
+    pipeline = project.pipelines |> List.first
+    pipeline_monitor = insert(:pipeline_monitor, %{
+      project_id: project.id,
+      pipeline_id: pipeline.id})
+
+    CncfDashboardApi.GitlabMonitor.upsert_ref_monitor(project.id, pipeline.id)
+    ref_monitor_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.RefMonitor, :count, :id)  
+    assert 0 < ref_monitor_count  
+    dbs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.DashboardBadgeStatus, :count, :id)  
+    assert 0 < dbs_count
+  end
+
+  @tag :wip
+  test "initialize_ref_monitor" do 
+    project = insert(:project, %{ref_monitors: []})
+    CncfDashboardApi.GitlabMonitor.initialize_ref_monitor(project.id)
+    ref_monitor_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.RefMonitor, :count, :id)  
+    assert 2 = ref_monitor_count  
+    dbs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.DashboardBadgeStatus, :count, :id)  
+    assert 4 = dbs_count
   end
 end

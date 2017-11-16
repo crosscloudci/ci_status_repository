@@ -27,7 +27,6 @@ defmodule CncfDashboardApi.GitLabProxyTest do
     assert %{"id" => a } = List.first(projects)
   end
 
-  @tag :wip
   test "get_gitlab_project" do 
     project = GitLabProxy.get_gitlab_project(project_id)
       Logger.info fn ->
@@ -36,7 +35,6 @@ defmodule CncfDashboardApi.GitLabProxyTest do
     assert %{"id" => a } = project
   end
 
-  @tag :wip
   test "get_gitlab_pipeline" do 
     pipeline = GitLabProxy.get_gitlab_pipeline(CncfDashboardApi.GitLabProxyTest.project_id, 
                                                CncfDashboardApi.GitLabProxyTest.pipeline_id)

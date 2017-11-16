@@ -15,6 +15,6 @@ defmodule CncfDashboardApi.Clouds do
   def changeset(struct, params \\ %{}) do
     struct
     |> cast(params, [:cloud_name, :active, :order])
-    |> validate_required([:cloud_name])
+    |> validate_required([:cloud_name, :order])
   end
 end

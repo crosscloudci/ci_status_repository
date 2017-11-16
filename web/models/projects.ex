@@ -14,6 +14,7 @@ defmodule CncfDashboardApi.Projects do
     field :project_url, :string
     field :order, :integer
     has_many :pipelines, CncfDashboardApi.Pipelines, foreign_key: :project_id
+    has_many :ref_monitors, CncfDashboardApi.RefMonitor, foreign_key: :project_id
     has_many :pipeline_jobs, CncfDashboardApi.PipelineJobs, foreign_key: :project_id
 
     timestamps()

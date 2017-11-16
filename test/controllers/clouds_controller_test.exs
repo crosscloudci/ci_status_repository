@@ -2,7 +2,7 @@ defmodule CncfDashboardApi.CloudsControllerTest do
   use CncfDashboardApi.ConnCase
 
   alias CncfDashboardApi.Clouds
-  @valid_attrs %{cloud_name: "some content"}
+  @valid_attrs %{cloud_name: "some content", order: 1}
   @invalid_attrs %{}
 
   setup %{conn: conn} do

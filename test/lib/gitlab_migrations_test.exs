@@ -100,7 +100,6 @@ require CncfDashboardApi.DataMigrations;
     assert source_pipeline_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyPipelines, :count, :id)  
   end
 
-  @tag :wip
   test "upsert_pipeline" do 
     # check insert 
     {:ok, upsert_count, project_map} = CncfDashboardApi.GitlabMigrations.upsert_projects()

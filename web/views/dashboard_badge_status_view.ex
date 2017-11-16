@@ -11,9 +11,16 @@ defmodule CncfDashboardApi.DashboardBadgeStatusView do
 
   def render("dashboard_badge_status.json", %{dashboard_badge_status: dashboard_badge_status}) do
     %{id: dashboard_badge_status.id,
-      status: dashboard_badge_status.status,
+      pipeline_id: dashboard_badge_status.ref_monitor_id,
+      # project_id: dashboard_badge_status.ref_monitor.project.id,
+      # belongs_to preload doesn't work
+      project_id: (rm1 = CncfDashboardApi.Repo.get_by(CncfDashboardApi.RefMonitor, id: 1) |> CncfDashboardApi.Repo.preload(:project) ; rm1 && rm1.project.id),
+      job_id: dashboard_badge_status.id,
       cloud_id: dashboard_badge_status.cloud_id,
-      ref_monitor_id: dashboard_badge_status.ref_monitor_id,
+      name: "N/A",
+      status: dashboard_badge_status.status,
+      # ref_monitor_id: dashboard_badge_status.ref_monitor_id,
+      ref: "N/A",
       order: dashboard_badge_status.order}
   end
 end
