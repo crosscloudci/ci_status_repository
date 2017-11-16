@@ -24,13 +24,17 @@ defmodule CncfDashboardApi.RefMonitorControllerTest do
       "release_type" => ref_monitor.release_type,
       "project_id" => ref_monitor.project_id,
       "order" => ref_monitor.order,
-      "pipeline_id" => ref_monitor.pipeline_id}
+      "pipeline_id" => ref_monitor.pipeline_id,
+      "head_commit" => nil, "jobs" => [], "stable_tag" => nil
+    }
   end
 
   test "renders page not found when id is nonexistent", %{conn: conn} do
-    assert_error_sent 404, fn ->
-      get conn, ref_monitor_path(conn, :show, -1)
-    end
+    conn =  get conn, ref_monitor_path(conn, :show, -1)
+    assert %{"errors" => _} = json_response(conn, 404) 
+    # assert_error_sent 404, fn ->
+    #   get conn, ref_monitor_path(conn, :show, -1)
+    # end
   end
 
   test "creates and renders resource when data is valid", %{conn: conn} do
@@ -44,6 +48,7 @@ defmodule CncfDashboardApi.RefMonitorControllerTest do
     assert json_response(conn, 422)["errors"] != %{}
   end
 
+  @tag :wip
   test "updates and renders chosen resource when data is valid", %{conn: conn} do
     ref_monitor = Repo.insert! %RefMonitor{}
     conn = put conn, ref_monitor_path(conn, :update, ref_monitor), ref_monitor: @valid_attrs

@@ -9,7 +9,23 @@ defmodule CncfDashboardApi.ProjectsController do
     projects = CncfDashboardApi.Repo.all(from projects in CncfDashboardApi.Projects,      
                                          left_join: pipelines in assoc(projects, :pipelines),
                                          left_join: pipeline_jobs in assoc(pipelines, :pipeline_jobs),
-                                         preload: [pipelines: :pipeline_jobs] ) 
+                                         left_join: ref_monitors in assoc(projects, :ref_monitors),
+                                         left_join: dashboard_badge_statuses in assoc(ref_monitors, :dashboard_badge_statuses),
+                                         left_join: cloud in assoc(dashboard_badge_statuses, :cloud),
+                                         preload: [pipelines: :pipeline_jobs,
+                                                   ref_monitors: {ref_monitors, dashboard_badge_statuses: dashboard_badge_statuses, 
+                                                     dashboard_badge_statuses: {dashboard_badge_statuses, cloud: cloud },
+                                                   }] ) 
+
+    # projects = CncfDashboardApi.Repo.all(from projects in CncfDashboardApi.Projects,      
+    #                                      left_join: ref_monitors in assoc(projects, :ref_monitors),
+    #                                      left_join: dashboard_badge_statuses in assoc(ref_monitors, :dashboard_badge_statuses),
+    #                                      left_join: cloud in assoc(dashboard_badge_statuses, :cloud),
+    #                                      where: projects.active == true,
+    #                                      preload: [ref_monitors: 
+    #                                                {ref_monitors, dashboard_badge_statuses: dashboard_badge_statuses, 
+    #                                                  dashboard_badge_statuses: {dashboard_badge_statuses, cloud: cloud },
+    #                                                }] )
     render(conn, "index.json", projects: projects)
   end
 
@@ -18,10 +34,17 @@ defmodule CncfDashboardApi.ProjectsController do
 
     case Repo.insert(changeset) do
       {:ok, projects} ->
-        projects = CncfDashboardApi.Repo.all(from projects in CncfDashboardApi.Projects,      
+    projects = CncfDashboardApi.Repo.all(from projects in CncfDashboardApi.Projects,      
                                          left_join: pipelines in assoc(projects, :pipelines),
                                          left_join: pipeline_jobs in assoc(pipelines, :pipeline_jobs),
-                                         where: projects.id == ^projects.id, preload: [pipelines: :pipeline_jobs] ) 
+                                         left_join: ref_monitors in assoc(projects, :ref_monitors),
+                                         left_join: dashboard_badge_statuses in assoc(ref_monitors, :dashboard_badge_statuses),
+                                         left_join: cloud in assoc(dashboard_badge_statuses, :cloud),
+                                         where: projects.id == ^projects.id, preload: [pipelines: :pipeline_jobs],  
+                                         preload: [pipelines: :pipeline_jobs,
+                                                   ref_monitors: {ref_monitors, dashboard_badge_statuses: dashboard_badge_statuses, 
+                                                     dashboard_badge_statuses: {dashboard_badge_statuses, cloud: cloud },
+                                                   }] ) 
                                          |> List.first
         conn
         |> put_status(:created)
@@ -39,7 +62,14 @@ defmodule CncfDashboardApi.ProjectsController do
     projects = CncfDashboardApi.Repo.all(from projects in CncfDashboardApi.Projects,      
                                          left_join: pipelines in assoc(projects, :pipelines),
                                          left_join: pipeline_jobs in assoc(pipelines, :pipeline_jobs),
-                                         where: projects.id == ^id, preload: [pipelines: :pipeline_jobs] ) 
+                                         left_join: ref_monitors in assoc(projects, :ref_monitors),
+                                         left_join: dashboard_badge_statuses in assoc(ref_monitors, :dashboard_badge_statuses),
+                                         left_join: cloud in assoc(dashboard_badge_statuses, :cloud),
+                                         where: projects.id == ^id, preload: [pipelines: :pipeline_jobs],  
+                                         preload: [pipelines: :pipeline_jobs,
+                                                   ref_monitors: {ref_monitors, dashboard_badge_statuses: dashboard_badge_statuses, 
+                                                     dashboard_badge_statuses: {dashboard_badge_statuses, cloud: cloud },
+                                                   }] ) 
                                          |> List.first
     case projects do
       %{} -> 
@@ -56,7 +86,14 @@ defmodule CncfDashboardApi.ProjectsController do
     projects = CncfDashboardApi.Repo.all(from projects in CncfDashboardApi.Projects,      
                                          left_join: pipelines in assoc(projects, :pipelines),
                                          left_join: pipeline_jobs in assoc(pipelines, :pipeline_jobs),
-                                         where: projects.id == ^id, preload: [pipelines: :pipeline_jobs] ) 
+                                         left_join: ref_monitors in assoc(projects, :ref_monitors),
+                                         left_join: dashboard_badge_statuses in assoc(ref_monitors, :dashboard_badge_statuses),
+                                         left_join: cloud in assoc(dashboard_badge_statuses, :cloud),
+                                         where: projects.id == ^id, preload: [pipelines: :pipeline_jobs],  
+                                         preload: [pipelines: :pipeline_jobs,
+                                                   ref_monitors: {ref_monitors, dashboard_badge_statuses: dashboard_badge_statuses, 
+                                                     dashboard_badge_statuses: {dashboard_badge_statuses, cloud: cloud },
+                                                   }] ) 
                                          |> List.first
     changeset = Projects.changeset(projects, projects_params)
 

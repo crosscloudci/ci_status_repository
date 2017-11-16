@@ -14,9 +14,14 @@ defmodule CncfDashboardApi.RefMonitorView do
       ref: ref_monitor.ref,
       status: ref_monitor.status,
       sha: ref_monitor.sha,
+      head_commit: ref_monitor.sha,
       release_type: ref_monitor.release_type,
+      stable_tag: ref_monitor.release_type,
       project_id: ref_monitor.project_id,
       order: ref_monitor.order,
-      pipeline_id: ref_monitor.pipeline_id}
+      pipeline_id: ref_monitor.pipeline_id,
+      jobs: render_many(ref_monitor.dashboard_badge_statuses, CncfDashboardApi.DashboardBadgeStatusView, "dashboard_badge_status.json"),
+    }
+      # badges: render_many(ref_monitor.dashboard_badge_statuses, CncfDashboardApi.DashboardBadgeStatusView, "dashboard_badge_status.json"),
   end
 end

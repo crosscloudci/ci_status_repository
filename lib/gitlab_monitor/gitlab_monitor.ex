@@ -42,13 +42,6 @@ defmodule CncfDashboardApi.GitlabMonitor do
     # field :pipeline_type, :string
     # field :project_id, :integer
     
-    changeset = CncfDashboardApi.PipelineMonitor.changeset(%CncfDashboardApi.PipelineMonitor{}, 
-                                                           %{project_id: source_key_project.new_id,
-                                                             pipeline_id: source_key_pipeline.new_id,
-                                                             running: true,
-                                                             release_type: monitor.pipeline_release_type,
-                                                             pipeline_type: pipeline_type 
-                                                           })
                                                            
     # Insert only if pipeline, project, and release type do not exist
     # else update
@@ -56,6 +49,14 @@ defmodule CncfDashboardApi.GitlabMonitor do
       project_id: source_key_project.new_id,
       release_type: monitor.pipeline_release_type} 
       |> find_by([:pipeline_id, :project_id, :release_type])
+
+    changeset = CncfDashboardApi.PipelineMonitor.changeset(pm_record, 
+                                                           %{project_id: source_key_project.new_id,
+                                                             pipeline_id: source_key_pipeline.new_id,
+                                                             running: true,
+                                                             release_type: monitor.pipeline_release_type,
+                                                             pipeline_type: pipeline_type 
+                                                           })
 
     case pm_found do
       :found ->
@@ -88,14 +89,24 @@ defmodule CncfDashboardApi.GitlabMonitor do
                                            where: cd1.active == true,
                                            select: %{id: cd1.id, cloud_id: cd1.id, 
                                              name: cd1.cloud_name, cloud_name: cd1.cloud_name}) 
+    # projects = CncfDashboardApi.Repo.all(from projects in CncfDashboardApi.Projects,      
+    #                                      left_join: pipelines in assoc(projects, :pipelines),
+    #                                      left_join: pipeline_jobs in assoc(pipelines, :pipeline_jobs),
+    #                                      left_join: cloud in assoc(pipeline_jobs, :cloud),
+    #                                      where: projects.active == true,
+    #                                      preload: [pipelines: 
+    #                                                {pipelines, pipeline_jobs: pipeline_jobs, 
+    #                                                  pipeline_jobs: {pipeline_jobs, cloud: cloud },
+    #                                                }] )
+    #
     projects = CncfDashboardApi.Repo.all(from projects in CncfDashboardApi.Projects,      
-                                         left_join: pipelines in assoc(projects, :pipelines),
-                                         left_join: pipeline_jobs in assoc(pipelines, :pipeline_jobs),
-                                         left_join: cloud in assoc(pipeline_jobs, :cloud),
+                                         left_join: ref_monitors in assoc(projects, :ref_monitors),
+                                         left_join: dashboard_badge_statuses in assoc(ref_monitors, :dashboard_badge_statuses),
+                                         left_join: cloud in assoc(dashboard_badge_statuses, :cloud),
                                          where: projects.active == true,
-                                         preload: [pipelines: 
-                                                   {pipelines, pipeline_jobs: pipeline_jobs, 
-                                                     pipeline_jobs: {pipeline_jobs, cloud: cloud },
+                                         preload: [ref_monitors: 
+                                                   {ref_monitors, dashboard_badge_statuses: dashboard_badge_statuses, 
+                                                     dashboard_badge_statuses: {dashboard_badge_statuses, cloud: cloud },
                                                    }] )
 
     with_cloud = %{"clouds" => cloud_list, "projects" => projects} 
@@ -176,7 +187,12 @@ defmodule CncfDashboardApi.GitlabMonitor do
     else
       pipeline_order = 2
     end
-    changeset = CncfDashboardApi.RefMonitor.changeset(%CncfDashboardApi.RefMonitor{}, 
+
+    {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: project_id,
+      release_type: pipeline.release_type} 
+      |> find_by([:project_id, :release_type])
+
+    changeset = CncfDashboardApi.RefMonitor.changeset(rm_record,  
                %{ref: pipeline.ref,
                  status: pipeline.status,
                  sha: pipeline.sha,
@@ -185,10 +201,6 @@ defmodule CncfDashboardApi.GitlabMonitor do
                  pipeline_id: pipeline.id,
                  order: pipeline_order
                })
-
-    {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: project_id,
-      release_type: pipeline.release_type} 
-      |> find_by([:project_id, :release_type])
 
     # if ref_monitor for project with a release type already exists, update
     #    else insert
@@ -211,16 +223,17 @@ defmodule CncfDashboardApi.GitlabMonitor do
      #
      # et the dashboard badge for the build job
      #   i.e. get the dashboard badge with order = 1
-    changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(%CncfDashboardApi.DashboardBadgeStatus{}, 
+
+     # upsert the build status badge based on ref_monitor and order (always 1)
+    {dbs_found, dbs_record} = %CncfDashboardApi.DashboardBadgeStatus{ref_monitor_id: rm_record.id, order: 1} 
+      |> find_by([:ref_monitor_id, :order])
+
+    changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(dbs_record, 
                %{ref: pipeline.ref,
                  status: build_status(pipeline_id),
                  ref_monitor_id: rm_record.id,
                  order: 1 # build badge always 1 
                })
-
-     # upsert the build status badge based on ref_monitor and order (always 1)
-    {dbs_found, dbs_record} = %CncfDashboardApi.DashboardBadgeStatus{ref_monitor_id: rm_record.id, order: 1} 
-      |> find_by([:ref_monitor_id, :order])
 
     case dbs_found do
       :found ->

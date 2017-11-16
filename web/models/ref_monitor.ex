@@ -6,9 +6,11 @@ defmodule CncfDashboardApi.RefMonitor do
     field :status, :string
     field :sha, :string
     field :release_type, :string
-    field :project_id, :integer
+    # field :project_id, :integer
+    belongs_to :project, CncfDashboardApi.Projects
     field :order, :integer
     field :pipeline_id, :integer
+    has_many :dashboard_badge_statuses, CncfDashboardApi.DashboardBadgeStatus, foreign_key: :ref_monitor_id
 
     timestamps()
   end
