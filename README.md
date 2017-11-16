@@ -45,6 +45,11 @@ docker-compose -p Backend up
 
 ## To run using helm 
 
+Start the Ingress Controller
+```
+helm install --name nginx-staging stable/nginx-ingress
+```
+
 Start Postgres DB
 ```
 helm install --name backend-db stable/postgresql --set postgresUser=backend,postgresPassword=secretbackend,postgresDatabase=backend --set service.type=ClusterIP --set imageTag=9.6
