@@ -1,0 +1,72 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    {{- if .Values.isClusterService }}
+    k8s-app: {{ .Chart.Name | quote }}
+    kubernetes.io/cluster-service: "true"
+    kubernetes.io/name: "Backend"
+    {{- else }}
+    app: {{ .Values.name }}
+    {{- end }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- if .Values.isClusterService }}
+      k8s-app: {{ .Chart.Name | quote }}
+      {{- else }}
+      app: {{ .Values.name }}
+      {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- if .Values.isClusterService }}
+        k8s-app: {{ .Chart.Name | quote }}
+        {{- else }}
+        app: {{ .Values.name }}
+        {{- end }}
+        release: {{ .Release.Name | quote }}
+      annotations:
+        {{- if .Values.isClusterService }}
+        scheduler.alpha.kubernetes.io/critical-pod: ''
+        scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
+        {{- end }}
+    spec:
+      containers:
+      - name: "{{ .Values.name }}"
+        env:
+        - name: GITLAB_API
+          value: {{ .Values.api }}
+        - name: GITLAB_TOKEN
+          value: {{ .Values.token }}
+        - name: GITLAB_CI_YAML
+          value: {{ .Values.yaml }}
+        - name: DB_USER
+          value: {{ .Values.db.user }}
+        - name: DB_PASSWORD
+          value: {{ .Values.db.password }}
+        - name: DB_NAME
+          value: {{ .Values.db.name }}
+        - name: DB_HOST
+          value: {{ .Values.db.host }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+      imagePullSecrets:
+      - name: {{ .Values.name }}
+        resources:
+{{ toYaml .Values.resources | indent 10 }}
+        ports:
+        - containerPort: 4000
+          name: backend
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 4000
+            scheme: HTTP
+          initialDelaySeconds: 60
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 5

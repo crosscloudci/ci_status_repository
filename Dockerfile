@@ -210,7 +210,7 @@ RUN mix local.hex --force &&  \
 
 RUN npm install
 
-RUN BUNDLE_GEMFILE=lib/gitlab/Gemfile bundle install
+RUN bundle install --gemfile /backend/lib/gitlab/Gemfile
 
 EXPOSE 4000
 # CMD ["/bin/bash"]

@@ -5,8 +5,8 @@ do
 	echo "sleeping"
 	sleep 1
 done
+sleep 5
 echo "Connected!"
-
 
 mix ecto.create && mix ecto.migrate
 mix gitlab_data.load_clouds

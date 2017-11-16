@@ -1,0 +1,9 @@
+name: backend
+version: 0.0.1
+description: Chart for the CNCF CI Backend
+keywords:
+- backend
+home: https://cncf.io
+maintainers:
+- name: Denver
+  email: denver@debian.nz

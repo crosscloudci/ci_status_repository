@@ -1,0 +1,36 @@
+# Default values for backend.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+name: backend
+
+image:
+  repository: registry.cncf.ci/cncf/cncf_ci_dashboard_backend
+  tag: "latest"
+  secret: SET DOCKER SECRET
+  pullPolicy: Always
+
+db:
+  user: DATABASE USER
+  password: DATABASE PASSWORD
+  name: DATABASE NAME
+  host: DATABASE_HOST
+
+resources:
+  requests:
+    cpu: 1000m
+    memory: 1000Mi
+
+# isClusterService specifies whether chart should be deployed as cluster-service or normal k8s app.
+isClusterService: true
+
+# serviceType specifies type of service to be created for this chart.
+serviceType: "ClusterIP"
+
+api: SET GITLAB APISERVER
+token: SET GITLAB TOKEN
+yaml: SET YAML
+
+
