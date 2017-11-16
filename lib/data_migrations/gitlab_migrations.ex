@@ -15,24 +15,34 @@ defmodule CncfDashboardApi.GitlabMigrations do
   end
 
 	def upsert_clouds do
-    cloud_map = CncfDashboardApi.YmlReader.GitlabCi.cloud_list()
+    cloud_map = CncfDashboardApi.YmlReader.GitlabCi.cloud_list() |> Enum.reduce([], fn(x, acc) -> 
+      local_cloud = CncfDashboardApi.Repo.all(from p in CncfDashboardApi.Clouds, 
+                                                where: p.cloud_name == ^x["cloud_name"])
+                                                |> List.first
+                                   
+      if local_cloud do  
+        [%{x | "id" => local_cloud.id} | acc] 
+      else
+        [x|acc]
+      end
+    end)
 
     upsert_count = CncfDashboardApi.DataMigrations.upsert_from_map(
       CncfDashboardApi.Repo,
       cloud_map,
       false,
       CncfDashboardApi.Clouds,
-      %{cloud_name: :cloud_name,
+      %{ cloud_name: :cloud_name,
         active: :active,
         order: :order}
     )
     {:ok, upsert_count, cloud_map}
   end
 
+  # need to upsert projects before yml projects
 	def upsert_yml_projects do
-    # need to pull local ids into the prject map
-    project_map = CncfDashboardApi.YmlReader.GitlabCi.project_list()
-    |> Enum.reduce([], fn(x, acc) -> 
+    # need to pull local ids into the project map
+    project_map = CncfDashboardApi.YmlReader.GitlabCi.project_list() |> Enum.reduce([], fn(x, acc) -> 
       local_project = CncfDashboardApi.Repo.all(from p in CncfDashboardApi.Projects, 
                                                 where: p.name == ^x["yml_gitlab_name"])
                                                 |> List.first
