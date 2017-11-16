@@ -44,7 +44,7 @@ spec:
           value: {{ .Values.token }}
         - name: GITLAB_CI_YAML
           value: {{ .Values.yaml }}
-        - name: DB_USER
+        - name: DB_USERNAME
           value: {{ .Values.db.user }}
         - name: DB_PASSWORD
           value: {{ .Values.db.password }}
@@ -52,21 +52,21 @@ spec:
           value: {{ .Values.db.name }}
         - name: DB_HOST
           value: {{ .Values.db.host }}
+        - name: DB_POOL_SIZE
+          value: "{{ .Values.db.pool }}"
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-      imagePullSecrets:
-      - name: {{ .Values.name }}
-        resources:
-{{ toYaml .Values.resources | indent 10 }}
         ports:
-        - containerPort: 4000
+        - containerPort: 4001
           name: backend
         livenessProbe:
           httpGet:
-            path: /health
-            port: 4000
+            path: /
+            port: 4001
             scheme: HTTP
-          initialDelaySeconds: 60
+          initialDelaySeconds: 180
           timeoutSeconds: 5
           successThreshold: 1
-          failureThreshold: 5
+          failureThreshold: 10
+      imagePullSecrets:
+      - name: {{ .Values.imagePullSecrets }}
