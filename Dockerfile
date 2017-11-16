@@ -186,6 +186,8 @@ RUN apk -U upgrade && \
     curl -sSL https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s  
 
 
+RUN apk -U upgrade
+
 COPY . /backend
 COPY entrypoint.sh /
 RUN chmod +x /entrypoint.sh
@@ -204,9 +206,11 @@ RUN source $HOME/.kiex/scripts/kiex && \
 
 RUN mix local.hex --force &&  \
     mix local.rebar --force && \
-    mix deps.get && \
-    npm install && \
-    bundle install --path /backend/lib/
+    mix deps.get
+
+RUN npm install
+
+RUN BUNDLE_GEMFILE=lib/gitlab/Gemfile bundle install
 
 EXPOSE 4000
 # CMD ["/bin/bash"]

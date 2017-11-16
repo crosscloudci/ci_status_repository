@@ -1,8 +1,8 @@
 version: '2'
-networks:
-  default:
-    external:
-      name: nginx-proxy
+# networks:
+#   default:
+#     external:
+#       name: nginx-proxy
 
 services:
   # nginx-proxy:
@@ -23,13 +23,15 @@ services:
       POSTGRES_DB: backend
       POSTGRES_USER: user
       POSTGRES_PASSWORD: database
+    volumes:
+      - ./volumes/postgres:/var/lib/postgresql/data
+
 
   backend:
     image: "${DOCKER_IMAGE}:${DOCKER_TAG}" 
     links:
       - postgres:postgres
     container_name: backend
-    
     environment:
       # VIRTUAL_HOST: api.dev.cncf.ci
       # VIRTUAL_PORT: 80
