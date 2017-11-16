@@ -28,6 +28,8 @@ defmodule CncfDashboardApi.GitlabMonitor do
       _ -> pipeline_type = "build"
     end
 
+    #Update pipeline_release_type
+
     # saved curl data (source key project monitor)                                                
     # field :source_project_id, :string
     # field :source_pipeline_id, :string
@@ -72,6 +74,9 @@ defmodule CncfDashboardApi.GitlabMonitor do
     # TODO if no build job status and cloud job status records for passed project, create/default to running or N/A
 
     # TODO start polling
+    #
+    # TODO populate ref_monitor
+    CncfDashboardApi.GitlabMonitor.upsert_ref_monitor(source_key_project.new_id,source_key_pipeline.new_id)
     
     # Call dashboard channel
     CncfDashboardApi.Endpoint.broadcast! "dashboard:*", "new_cross_cloud_call", %{reply: dashboard_response} 
@@ -89,16 +94,6 @@ defmodule CncfDashboardApi.GitlabMonitor do
                                            where: cd1.active == true,
                                            select: %{id: cd1.id, cloud_id: cd1.id, 
                                              name: cd1.cloud_name, cloud_name: cd1.cloud_name}) 
-    # projects = CncfDashboardApi.Repo.all(from projects in CncfDashboardApi.Projects,      
-    #                                      left_join: pipelines in assoc(projects, :pipelines),
-    #                                      left_join: pipeline_jobs in assoc(pipelines, :pipeline_jobs),
-    #                                      left_join: cloud in assoc(pipeline_jobs, :cloud),
-    #                                      where: projects.active == true,
-    #                                      preload: [pipelines: 
-    #                                                {pipelines, pipeline_jobs: pipeline_jobs, 
-    #                                                  pipeline_jobs: {pipeline_jobs, cloud: cloud },
-    #                                                }] )
-    #
     projects = CncfDashboardApi.Repo.all(from projects in CncfDashboardApi.Projects,      
                                          left_join: ref_monitors in assoc(projects, :ref_monitors),
                                          left_join: dashboard_badge_statuses in assoc(ref_monitors, :dashboard_badge_statuses),
@@ -159,7 +154,14 @@ defmodule CncfDashboardApi.GitlabMonitor do
 
   # project, pipeline, and pipeline jobs should be migrated before
   # calling upsert_ref_monitor
+  # 1. source_key_project_monitor is called from a http post
+  # 2. pipeline_monitor is created/updated during the http_post
+  # 3. upsert_ref_monitor is called to set up the dashboard
   def upsert_ref_monitor(project_id, pipeline_id) do
+
+    # initialize the dashboard
+    CncfDashboardApi.GitlabMonitor.initialize_ref_monitor(project_id)
+
     # get project
     project = CncfDashboardApi.Repo.all(from p in CncfDashboardApi.Projects, 
                                         where: p.id == ^project_id) |> List.first
@@ -169,6 +171,9 @@ defmodule CncfDashboardApi.GitlabMonitor do
     # get pipeline jobs
     pipeline_jobs = CncfDashboardApi.Repo.all(from pj in CncfDashboardApi.PipelineJobs, 
                                           where: pj.pipeline_id == ^pipeline_id)
+
+    {pm_found, pipeline_monitor} = %CncfDashboardApi.PipelineMonitor{pipeline_id: pipeline.id, 
+      project_id: project_id} |> find_by([:pipeline_id, :project_id])
 
     #  get all clouds
     clouds = CncfDashboardApi.Repo.all(from c in CncfDashboardApi.Clouds)
@@ -188,15 +193,17 @@ defmodule CncfDashboardApi.GitlabMonitor do
       pipeline_order = 2
     end
 
+    # TODO if never given a release status for the pipeline, raise an error
+
     {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: project_id,
-      release_type: pipeline.release_type} 
+      release_type: pipeline_monitor.release_type} 
       |> find_by([:project_id, :release_type])
 
     changeset = CncfDashboardApi.RefMonitor.changeset(rm_record,  
                %{ref: pipeline.ref,
                  status: pipeline.status,
                  sha: pipeline.sha,
-                 release_type: pipeline.release_type,
+                 release_type: pipeline_monitor.release_type,
                  project_id: project_id,
                  pipeline_id: pipeline.id,
                  order: pipeline_order
@@ -209,9 +216,9 @@ defmodule CncfDashboardApi.GitlabMonitor do
     end
     case rm_found do
       :found ->
-        {_, rm_record} = CncfDashboardApi.Repo.update(changeset) 
+        {:ok, rm_record} = CncfDashboardApi.Repo.update(changeset) 
       :not_found ->
-        {_, rm_record} = CncfDashboardApi.Repo.insert(changeset) 
+        {:ok, rm_record} = CncfDashboardApi.Repo.insert(changeset) 
     end
      
      # build dashboard_badget_status
@@ -225,6 +232,9 @@ defmodule CncfDashboardApi.GitlabMonitor do
      #   i.e. get the dashboard badge with order = 1
 
      # upsert the build status badge based on ref_monitor and order (always 1)
+    Logger.info fn ->
+      "upsert_ref_monitor rm_record.id : #{inspect(rm_record)}"
+    end
     {dbs_found, dbs_record} = %CncfDashboardApi.DashboardBadgeStatus{ref_monitor_id: rm_record.id, order: 1} 
       |> find_by([:ref_monitor_id, :order])
 

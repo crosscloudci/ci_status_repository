@@ -39,11 +39,15 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert CncfDashboardApi.GitlabMonitor.is_deploy_pipeline_type(cross_cloud.id) == true 
   end
 
+  @tag :wip
   test "upsert_ref_monitor" do 
 
     # try with no ref_monitors
     project = insert(:project, %{ref_monitors: []})
     pipeline = project.pipelines |> List.first
+    pipeline_monitor = insert(:pipeline_monitor, %{
+      project_id: project.id,
+      pipeline_id: pipeline.id})
 
     CncfDashboardApi.GitlabMonitor.upsert_ref_monitor(project.id, pipeline.id)
     ref_monitor_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.RefMonitor, :count, :id)  
@@ -54,6 +58,9 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     # try with 1 ref_monitor
     project = insert(:project)
     pipeline = project.pipelines |> List.first
+    pipeline_monitor = insert(:pipeline_monitor, %{
+      project_id: project.id,
+      pipeline_id: pipeline.id})
 
     CncfDashboardApi.GitlabMonitor.upsert_ref_monitor(project.id, pipeline.id)
     ref_monitor_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.RefMonitor, :count, :id)  

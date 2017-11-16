@@ -75,7 +75,17 @@ defmodule CncfDashboardApi.Factory do
       pipeline_release_type: "stable",
       active: true, 
     }
+  end
 
-	end
+  def pipeline_monitor_factory do
+    %CncfDashboardApi.PipelineMonitor{
+      project_id: 1,
+      pipeline_id: 1,
+      running: true,
+      release_type: "stable",
+      pipeline_type: "build"
+    }
+  end
+
 
 end
