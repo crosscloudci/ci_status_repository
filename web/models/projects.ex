@@ -5,6 +5,7 @@ defmodule CncfDashboardApi.Projects do
     field :name, :string
     field :ssh_url_to_repo, :string
     field :http_url_to_repo, :string
+    field :web_url, :string
     field :active, :boolean
     field :logo_url, :string
     field :display_name, :string

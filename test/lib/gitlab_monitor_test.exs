@@ -32,7 +32,6 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert 0 < source_pipeline_jobs_count
   end
 
-  @tag :wip
   test "upsert_pipeline_monitor should not allow the same project and pipeline to monitor two different branches" do 
     skpm = insert(:source_key_project_monitor)
     {:ok, upsert_count, cloud_map} = CncfDashboardApi.GitlabMigrations.upsert_clouds()
@@ -90,5 +89,17 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert 2 = ref_monitor_count  
     dbs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.DashboardBadgeStatus, :count, :id)  
     assert 4 = dbs_count
+  end
+
+  @tag :wip
+  test "compile_url" do 
+    project = insert(:project, %{pipelines: 
+      [build(:pipeline, %{pipeline_jobs:
+        [build(:pipeline_job, %{name: "compile"}) ]})]} )
+    pipeline = project.pipelines |> List.first
+    pipeline_job = pipeline.pipeline_jobs |> List.first
+    url = CncfDashboardApi.GitlabMonitor.compile_url(pipeline.id)
+    temp_url = "#{project.web_url}-/jobs/#{pipeline_job.id}"
+    assert ^temp_url = url
   end
 end

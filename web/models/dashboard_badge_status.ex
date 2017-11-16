@@ -3,6 +3,7 @@ defmodule CncfDashboardApi.DashboardBadgeStatus do
 
   schema "dashboard_badge_status" do
     field :status, :string
+    field :url, :string
     # field :cloud_id, :integer
     belongs_to :cloud, CncfDashboardApi.Clouds
     # field :ref_monitor_id, :integer

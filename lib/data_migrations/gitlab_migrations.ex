@@ -84,7 +84,10 @@ defmodule CncfDashboardApi.GitlabMigrations do
       project_map,
       CncfDashboardApi.SourceKeyProjects,
       CncfDashboardApi.Projects,
-      %{name: :name}
+      %{name: :name,
+        web_url: :web_url,
+        ssh_url_to_repo: :ssh_url_to_repo,
+        http_url_to_repo: :http_url_to_repo }
     )
     {:ok, upsert_count, project_map}
   end

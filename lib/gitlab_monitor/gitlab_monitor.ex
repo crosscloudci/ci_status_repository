@@ -149,6 +149,25 @@ defmodule CncfDashboardApi.GitlabMonitor do
     end
   end
 
+  def compile_url(pipeline_id) do
+     # determine the build status
+     #    i.e. get the build job (name = compile)
+     #    if exists, dashboard badge status status = build job status
+     #    if doesn't exist, dashboard badge status = running
+     project = CncfDashboardApi.Repo.all(from projects in CncfDashboardApi.Projects, 
+                                          left_join: pipelines in assoc(projects, :pipelines),     
+                                          where: pipelines.id == ^pipeline_id) 
+                                          |> List.first
+
+    compile = CncfDashboardApi.Repo.all(from pj in CncfDashboardApi.PipelineJobs, 
+                                          where: pj.pipeline_id == ^pipeline_id)
+                |> Enum.find(fn(x) -> x.name =~ "compile" end) 
+    if compile do
+      # e.g.   https://gitlab.dev.cncf.ci/coredns/coredns/-/jobs/31525
+      "#{project.web_url}-/jobs/#{compile.id}"
+    end
+  end
+
   # projects, clouds, pipleines, and pipeline jobs should be recently migrated before calling build check
   def build_check(pipeline_id) do
     case build_status(pipeline_id) do
@@ -205,7 +224,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
       pipeline_order = 2
     end
 
-    # TODO if never given a release status for the pipeline, raise an error
+    # if never given a release status for the pipeline, raise an error
 
     {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: project_id,
       release_type: pipeline_monitor.release_type} 
@@ -243,6 +262,9 @@ defmodule CncfDashboardApi.GitlabMonitor do
      # et the dashboard badge for the build job
      #   i.e. get the dashboard badge with order = 1
 
+     # TODO get url from compile job
+     # TODO update ref_monitor with compile url
+     #
      # upsert the build status badge based on ref_monitor and order (always 1)
     Logger.info fn ->
       "upsert_ref_monitor rm_record.id : #{inspect(rm_record)}"
@@ -254,6 +276,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
                %{ref: pipeline.ref,
                  status: build_status(pipeline_id),
                  ref_monitor_id: rm_record.id,
+                 url: CncfDashboardApi.GitlabMonitor.compile_url(pipeline_id),
                  order: 1 # build badge always 1 
                })
 
