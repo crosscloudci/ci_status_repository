@@ -39,6 +39,7 @@ defmodule CncfDashboardApi.Mixfile do
      {:cowboy, "~> 1.0"},
      {:mix_test_watch, "~> 0.3", only: :dev, runtime: false},
      {:quantum, ">= 2.1.0"},
+     {:sidetask, "~> 1.1"},
      {:timex, "~> 3.0"},
      {:ecto_conditionals, "~> 0.1.0"},
      {:yaml_elixir, "~> 1.3.1"},

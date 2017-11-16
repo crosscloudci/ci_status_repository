@@ -14,13 +14,14 @@ defmodule CncfDashboardApi.DashboardBadgeStatusControllerTest do
     assert json_response(conn, 200)["data"] == []
   end
 
+  @tag :wip
   test "shows chosen resource", %{conn: conn} do
     dashboard_badge_status = Repo.insert! %DashboardBadgeStatus{}
     conn = get conn, dashboard_badge_status_path(conn, :show, dashboard_badge_status)
     assert json_response(conn, 200)["data"] == %{"id" => dashboard_badge_status.id,
       "status" => dashboard_badge_status.status,
       "cloud_id" => dashboard_badge_status.cloud_id,
-      "job_id" => dashboard_badge_status.id, "name" => "N/A", "pipeline_id" => nil, "project_id" => nil, "ref" => "N/A",
+      "job_id" => dashboard_badge_status.id, "name" => "N/A", "pipeline_id" => nil, "project_id" => nil, "ref" => "N/A", "url" => nil,
       "order" => dashboard_badge_status.order}
   end
 

@@ -21,6 +21,7 @@ defmodule CncfDashboardApi.DashboardBadgeStatusView do
       status: dashboard_badge_status.status,
       # ref_monitor_id: dashboard_badge_status.ref_monitor_id,
       ref: "N/A",
+      url: dashboard_badge_status.url,
       order: dashboard_badge_status.order}
   end
 end
