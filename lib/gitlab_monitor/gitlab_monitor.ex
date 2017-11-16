@@ -262,8 +262,6 @@ defmodule CncfDashboardApi.GitlabMonitor do
      # et the dashboard badge for the build job
      #   i.e. get the dashboard badge with order = 1
 
-     # TODO get url from compile job
-     # TODO update ref_monitor with compile url
      #
      # upsert the build status badge based on ref_monitor and order (always 1)
     Logger.info fn ->
@@ -279,6 +277,10 @@ defmodule CncfDashboardApi.GitlabMonitor do
                  url: CncfDashboardApi.GitlabMonitor.compile_url(pipeline_id),
                  order: 1 # build badge always 1 
                })
+
+    Logger.info fn ->
+      "upsert_ref_monitor DashboardBadgeStatus.changeset : #{inspect(changeset)}"
+    end
 
     case dbs_found do
       :found ->
