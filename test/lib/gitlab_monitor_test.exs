@@ -96,11 +96,14 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
   test "compile_url" do 
     project = insert(:project, %{pipelines: 
       [build(:pipeline, %{pipeline_jobs:
-        [build(:pipeline_job, %{name: "compile"}) ]})]} )
+        [build(:pipeline_job, 
+               %{name: "compile"}) ]})]} )
     pipeline = project.pipelines |> List.first
     pipeline_job = pipeline.pipeline_jobs |> List.first
+    skpj = insert(:source_key_pipeline_job, %{new_id: pipeline_job.id})
+
     url = CncfDashboardApi.GitlabMonitor.compile_url(pipeline.id)
-    temp_url = "#{project.web_url}-/jobs/#{pipeline_job.id}"
+    temp_url = "#{project.web_url}/-/jobs/#{skpj.source_id}"
     assert ^temp_url = url
   end
 end
