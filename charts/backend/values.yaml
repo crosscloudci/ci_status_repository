@@ -20,6 +20,10 @@ db:
   host: DATABASE_HOST
   pool: DATABASE POOL SIZE
 
+ingress:
+  host: Set External Domain
+  port: Set Forwarding port
+
 resources:
   limits:
     cpu: 2000m

@@ -22,5 +22,5 @@ spec:
   {{- end }}
   ports:
   - name: backend
-    port: 4000
+    port: 4001
   type: {{ .Values.serviceType }}

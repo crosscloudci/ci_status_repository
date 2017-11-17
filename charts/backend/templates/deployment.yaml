@@ -42,7 +42,7 @@ spec:
           value: {{ .Values.api }}
         - name: GITLAB_TOKEN
           value: {{ .Values.token }}
-        - name: GITLAB_CI_YAML
+        - name: GITLAB_CI_YML
           value: {{ .Values.yaml }}
         - name: DB_USERNAME
           value: {{ .Values.db.user }}

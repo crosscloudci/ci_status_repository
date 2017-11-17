@@ -59,6 +59,12 @@ Start Backend
 ```
 helm install --name staging cncf/backend --set db.user=backend --set db.password=secretbackend --set db.name=backend --set db.host=backend-db-postgresql --set db.pool=5 --set api=https://gitlab.dev.cncf.ci/api/v4 --set token=secret --set imagePullSecrets=regsecret --set yaml=https://gitlab.cncf.ci/cncf/cross-cloud/raw/ci-stable-v0.1.0/.gitlab-ci.yml
 ```
+
+Update an existing Backend deployment
+```
+helm upgrade backend cncf/backend --install --force --set db.user=backend --set db.password=secretbackend --set db.name=backend --set db.host=backend-db-postgresql --set db.pool=5 --set api=https://gitlab.dev.cncf.ci/api/v4 --set token=secret --set imagePullSecrets=regsecret --set yaml=https://gitlab.cncf.ci/cncf/cross-cloud/raw/ci-stable-v0.1.0/cross-cloud.yml --set ingress.host=api.staging.cncf.ci --set ingress.port=4001
+```
+
 ## To run tests
 
 After setup for running sever above ^^^
