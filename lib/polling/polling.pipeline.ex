@@ -66,13 +66,11 @@ defmodule CncfDashboardApi.Polling.Pipeline do
         end
         response
     after 15_000 ->
-      IO.puts("Timeout: setting things to fail")
         Logger.info fn ->
           "Timeout: setting badges to fail for source_key_project_monitor_id: #{source_key_project_monitor_id}"
         end
       set_run_to_fail(source_key_project_monitor_id)
       Process.exit(pid, :kill)
-      # { :ok, "Job timed out" }
       { :error, "Job timed out" }
     end
   end
