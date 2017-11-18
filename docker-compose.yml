@@ -20,12 +20,11 @@ services:
     image: postgres:9.6
     container_name: postgres
     environment:
-      POSTGRES_DB: backend
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: database
+      POSTGRES_DB: "${DB_NAME}"
+      POSTGRES_USER: "${DB_USERNAME}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
     volumes:
       - ./volumes/postgres:/var/lib/postgresql/data
-
 
   backend:
     image: "${DOCKER_IMAGE}:${DOCKER_TAG}" 
@@ -39,6 +38,11 @@ services:
       GITLAB_API: "${GITLAB_API}"
       GITLAB_TOKEN: "${GITLAB_TOKEN}"
       GITLAB_CI_YML: "${GITLAB_CI_YML}"
+      DB_HOST: "postgres"
+      DB_NAME: "${DB_NAME}"
+      DB_USERNAME: "${DB_USERNAME}"
+      DB_PASSWORD: "${DB_PASSWORD}"
+      DB_POOL_SIZE: "${DB_POOL_SIZE}"
       PORT: 4000
     ports:
       - "${PORT}:4000"
