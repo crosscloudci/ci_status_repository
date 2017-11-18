@@ -25,10 +25,15 @@ defmodule CncfDashboardApi.GitlabMonitor do
   end
 
   def migrate_source_key_monitor(source_key_project_monitor_id) do
+    # migrate clouds
+    CncfDashboardApi.GitlabMigrations.upsert_clouds()
     monitor = Repo.all(from skpm in CncfDashboardApi.SourceKeyProjectMonitor, 
                                         where: skpm.id == ^source_key_project_monitor_id) |> List.first
     # migrate project
     {:ok, upsert_count, project_map} = CncfDashboardApi.GitlabMigrations.upsert_project(monitor.source_project_id) 
+
+    # upsert yml project properties
+    CncfDashboardApi.GitlabMigrations.upsert_yml_projects()
 
     # get the local project id
     source_key_project = Repo.all(from skp in CncfDashboardApi.SourceKeyProjects, 
@@ -45,22 +50,6 @@ defmodule CncfDashboardApi.GitlabMonitor do
 
   def upsert_pipeline_monitor(source_key_project_monitor_id) do
     {:ok, monitor, source_key_project, source_key_pipeline} = migrate_source_key_monitor(source_key_project_monitor_id)
-    # monitor = Repo.all(from skpm in CncfDashboardApi.SourceKeyProjectMonitor, 
-    #                                     where: skpm.id == ^source_key_project_monitor_id) |> List.first
-    # # migrate project
-    # {:ok, upsert_count, project_map} = CncfDashboardApi.GitlabMigrations.upsert_project(monitor.source_project_id) 
-    #
-    # # get the local project id
-    # source_key_project = Repo.all(from skp in CncfDashboardApi.SourceKeyProjects, 
-    #                                                where: skp.source_id == ^monitor.source_project_id) |> List.first
-    #
-    # # migrate pipeline 
-    # {:ok, upsert_count, pipeline_map} = CncfDashboardApi.GitlabMigrations.upsert_pipeline(monitor.source_project_id, monitor.source_pipeline_id) 
-    #
-    # # get the local pipeline
-    # source_key_pipeline = Repo.all(from skp in CncfDashboardApi.SourceKeyPipelines, 
-    #                                                where: skp.source_id == ^monitor.source_pipeline_id) |> List.first
-    #
     
     # determine pipeline type
     case is_deploy_pipeline_type(source_key_project.new_id) do
@@ -83,7 +72,6 @@ defmodule CncfDashboardApi.GitlabMonitor do
     # field :release_type, :string
     # field :pipeline_type, :string
     # field :project_id, :integer
-
 
     alternate_release = if (monitor.pipeline_release_type == "stable"), do: "head", else: "stable"
 

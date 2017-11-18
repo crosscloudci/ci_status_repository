@@ -1,37 +1,12 @@
 require Logger;
 defmodule CncfDashboardApi.Polling.Pipeline do
+  alias CncfDashboardApi.Repo
+  import Ecto.Query
   use EctoConditionals, repo: CncfDashboardApi.Repo
 
-  # TODO Watcher: run for 2 hours for a source_key_project_monitor
-  # TODO Watcher: Get the pipeline_monitor (project_id, pipeline_id, release_type) for the source_key_project_monitor 
-  # TODO Watcher: if time expires, get ref_monitor for project_id, pipeline_id
-  # TODO Watcher: if time expires, get all dashboard_badge_statuses for ref_monitor with status of running,
-  #               set to failed
-  #
-  # TODO Watcher: if time expires, set pipeline_monitor running to false  
-  #
-  # TODO in gitlab monitor, if all badge_status = success or failed, pipeline_monitor.running = false
-  # TODO in gitlab monitor, return pipeline_monitor.running
-  #
-  # TODO Get the passed source_key_project_monitor  
-  #
-  # TODO poll_loop 
-  # TODO Get the pipeline_monitor (project_id, pipeline_id, release_type) for the source_key_project_monitor 
-  # TODO check if pipeline_monitor is running, 
-  #       if running,
-  #          call upsert_pipeline_monitor with source_key_project_monitor
-  #            if running sleep for 2 minutes
-  #               call poll_loop
-  #       if not running, return success (kill watcher) for source_key_project_monitor 
-  #
-  #
-
   def is_pipeline_complete(source_key_project_monitor_id) do
-
+    CncfDashboardApi.GitlabMonitor.migrate_source_key_monitor(source_key_project_monitor_id)
     {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.pipeline_monitor(source_key_project_monitor_id) 
-      # check if pipeline_monitor is running, 
-      #       if running, 
-      #          call upsert_pipeline_monitor with source_key_project_monitor
     if pm_record.running do
       CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(source_key_project_monitor_id)
       {:ok, :running}
@@ -55,25 +30,46 @@ defmodule CncfDashboardApi.Polling.Pipeline do
     end
   end
 
-  # def set_run_to_fail do
-  #   {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.pipeline_monitor(source_key_project_monitor_id) 
-  #   {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: project_id,
-  #     release_type: pipeline_monitor.release_type} 
-  #     |> find_by([:project_id, :release_type])
-  # end
+  def set_run_to_fail(source_key_project_monitor_id) do
+    {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.pipeline_monitor(source_key_project_monitor_id) 
+
+    # stop monintor from running
+    pm_changeset = CncfDashboardApi.PipelineMonitor.changeset(pm_record, %{running: false })
+    {_, pm_record} = Repo.update(pm_changeset) 
+
+    {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: pm_record.project_id, release_type: pm_record.release_type} 
+      |> find_by([:project_id, :release_type])
+
+    {dbs_found, dbs_record} = %CncfDashboardApi.DashboardBadgeStatus{ref_monitor_id: rm_record.id, order: 1} 
+                              |> find_by([:ref_monitor_id, :order])
+
+    Repo.all(from dbs in CncfDashboardApi.DashboardBadgeStatus, where: dbs.ref_monitor_id == ^rm_record.id and dbs.status == "running") 
+    |> Enum.map(fn(x) -> 
+      changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(x, %{status: "failed"})
+
+      {_, dbs_record} = Repo.update(changeset) 
+      # TODO call broadcast dashboard
+    end)
+  end
 
   def monitor(source_key_project_monitor_id) do
     reciever = self()
     pid = spawn_link(fn -> 
-      CncfDashboardApi.Polling.Pipeline.poll_pipeline_until_complete(source_key_project_monitor_id)
-      send reciever, { :ok, source_key_project_monitor_id } 
+      case CncfDashboardApi.Polling.Pipeline.poll_pipeline_until_complete(source_key_project_monitor_id) do
+        {:ok, :complete} -> send reciever, { :ok, source_key_project_monitor_id } 
+      end
     end)
     receive do
       { :ok, response } -> 
-        IO.puts("Got a response!")
+        Logger.info fn ->
+          "Completed polling of source_key_project_monitor_id: #{response}"
+        end
         response
     after 15_000 ->
-      IO.puts("Killing due to timeout.. sigh")
+        Logger.info fn ->
+          "Timeout: setting badges to fail for source_key_project_monitor_id: #{source_key_project_monitor_id}"
+        end
+      set_run_to_fail(source_key_project_monitor_id)
       Process.exit(pid, :kill)
       { :error, "Job timed out" }
     end

@@ -329,6 +329,7 @@ defmodule CncfDashboardApi.DashboardControllerTest do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
+  @tag :wip
   test "lists all entries on index", %{conn: conn} do
     {:ok, upsert_count, cloud_map} = CncfDashboardApi.GitlabMigrations.upsert_clouds()
     projects = insert(:project)
@@ -347,6 +348,7 @@ defmodule CncfDashboardApi.DashboardControllerTest do
       "sub_title" => _,
       "ssh_url_to_repo" => _,
       "http_url_to_repo" => _,
+      "order" => _,
       "pipelines" => [%{"id" => _,
         "pipeline_id" => _,
         "project_id" => _,

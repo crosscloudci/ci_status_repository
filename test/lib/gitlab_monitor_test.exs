@@ -13,7 +13,6 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
   # use CncfDashboardApi.ModelCase
   
   # test "upsert_pipeline_monitor", %{socket: socket} do 
-  @tag :wip
   test "upsert_pipeline_monitor" do 
     skpm = insert(:source_key_project_monitor)
     # check insert 
@@ -92,7 +91,6 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert 4 = dbs_count
   end
 
-  @tag :wip
   test "compile_url" do 
     project = insert(:project, %{pipelines: 
       [build(:pipeline, %{pipeline_jobs:
