@@ -19,13 +19,29 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     # check insert 
     CncfDashboardApi.Endpoint.subscribe(self, "dashboard:*")
     {:ok, upsert_count, cloud_map} = CncfDashboardApi.GitlabMigrations.upsert_clouds()
-    projects = insert(:project)
+    projects = insert(:project, %{ref_monitors: []})
+    skpj = insert(:source_key_project, %{new_id: projects.id})
     CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm.id)
     pipeline_monitor_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.PipelineMonitor, :count, :id)  
     # source_project_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyProjects, :count, :id)  
     assert 1 = pipeline_monitor_count  
     assert_receive %Phoenix.Socket.Broadcast{ topic: "dashboard:*", 
       event: "new_cross_cloud_call", payload: %{reply: %{dashboard: dashboard}}}
+    %{clouds: _, projects: projects} =dashboard
+    head_badge = projects 
+                 |> List.first 
+                 |> Map.get(:pipelines) 
+                 |> Enum.find(fn(x) -> x.release_type =~ "head" end) 
+                 |> Map.get(:jobs) 
+                 |> Enum.find(fn(x) -> x.order == 1 end)
+    assert head_badge.status == "N/A"
+    stable_badge = projects 
+                 |> List.first 
+                 |> Map.get(:pipelines) 
+                 |> Enum.find(fn(x) -> x.release_type =~ "stable" end) 
+                 |> Map.get(:jobs) 
+                 |> Enum.find(fn(x) -> x.order == 1 end)
+    assert stable_badge.status == "success"
 
     pipeline_jobs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.PipelineJobs, :count, :id)  
     source_pipeline_jobs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyPipelineJobs, :count, :id)  
@@ -33,20 +49,35 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert 0 < source_pipeline_jobs_count
   end
 
-  @tag :wip
+  @tag timeout: 300_000 
   test "head update: upsert_pipeline_monitor" do 
     skpm = insert(:head_source_key_project_monitor)
     # check insert 
     CncfDashboardApi.Endpoint.subscribe(self, "dashboard:*")
     {:ok, upsert_count, cloud_map} = CncfDashboardApi.GitlabMigrations.upsert_clouds()
-    projects = insert(:project)
+    projects = insert(:project, %{ref_monitors: []})
+    skpj = insert(:source_key_project, %{new_id: projects.id})
     CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm.id)
     pipeline_monitor_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.PipelineMonitor, :count, :id)  
     # source_project_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyProjects, :count, :id)  
     assert 1 = pipeline_monitor_count  
     assert_receive %Phoenix.Socket.Broadcast{ topic: "dashboard:*", 
       event: "new_cross_cloud_call", payload: %{reply: %{dashboard: dashboard}}}
-
+    %{clouds: _, projects: projects} =dashboard
+    head_badge = projects 
+                 |> List.first 
+                 |> Map.get(:pipelines) 
+                 |> Enum.find(fn(x) -> x.release_type =~ "head" end) 
+                 |> Map.get(:jobs) 
+                 |> Enum.find(fn(x) -> x.order == 1 end)
+    assert head_badge.status == "success"
+    stable_badge = projects 
+                 |> List.first 
+                 |> Map.get(:pipelines) 
+                 |> Enum.find(fn(x) -> x.release_type =~ "stable" end) 
+                 |> Map.get(:jobs) 
+                 |> Enum.find(fn(x) -> x.order == 1 end)
+    assert stable_badge.status == "N/A"
     pipeline_jobs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.PipelineJobs, :count, :id)  
     source_pipeline_jobs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyPipelineJobs, :count, :id)  
     assert 0 < pipeline_jobs_count  

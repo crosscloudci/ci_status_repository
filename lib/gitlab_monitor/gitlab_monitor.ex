@@ -201,27 +201,15 @@ defmodule CncfDashboardApi.GitlabMonitor do
     end
   end
 
-  # projects, clouds, pipleines, and pipeline jobs should be recently migrated before calling build check
-  def build_check(pipeline_id) do
-    case build_status(pipeline_id) do
-      _ ->
-      # TODO set running for pipeline monitor where current pipeline_id to false
-      # TODO check if build job status = container.status
-      #   if not 
-      #      update build job status = container.status 
-      #      update last updated field on dashboard
-      #      message dashboard channel
-      #      stop polling process (possible?)
-    end
-  end
-
-
   # project, pipeline, and pipeline jobs should be migrated before
   # calling upsert_ref_monitor
   # 1. source_key_project_monitor is called from a http post
   # 2. pipeline_monitor is created/updated during the http_post
   # 3. upsert_ref_monitor is called to set up the dashboard
   def upsert_ref_monitor(project_id, pipeline_id) do
+      Logger.info fn ->
+        "upsert_ref_monitor project id: #{project_id} pipeline_id: #{pipeline_id}"
+      end
 
     # initialize the dashboard
     initialize_ref_monitor(project_id)
@@ -332,6 +320,9 @@ defmodule CncfDashboardApi.GitlabMonitor do
 
   # projects and clouds must be migrated before calling initialize_ref_monitor
   def initialize_ref_monitor(project_id) do
+      Logger.info fn ->
+        "initialize_ref_monitor: initializing"
+      end
       
     {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: project_id, release_type: "stable"} 
       |> find_by([:project_id, :release_type])
@@ -339,6 +330,9 @@ defmodule CncfDashboardApi.GitlabMonitor do
       :not_found ->
         new_n_a_ref_monitor(project_id, "stable", 1) # stable order is always 1
      _ -> 
+      Logger.info fn ->
+        "initialize_ref_monitor: Stable already exists for project_id: #{project_id} release type 'stable'"
+      end
     end
 
     {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: project_id, release_type: "head"} 
@@ -347,6 +341,9 @@ defmodule CncfDashboardApi.GitlabMonitor do
       :not_found ->
         new_n_a_ref_monitor(project_id, "head", 2) # head order is always 2
      _ -> 
+      Logger.info fn ->
+        "initialize_ref_monitor: Stable already exists for project_id: #{project_id} release type 'head'"
+      end
     end
 
   end

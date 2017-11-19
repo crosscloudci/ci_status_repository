@@ -42,6 +42,12 @@ defmodule CncfDashboardApi.GitlabMigrations do
   # need to upsert projects before yml projects
 	def upsert_yml_projects do
     # need to pull local ids into the project map
+    Logger.info fn ->
+      "upsert_yml_projects project_list before update: #{inspect(CncfDashboardApi.YmlReader.GitlabCi.project_list())}"
+    end
+    Logger.info fn ->
+      "upsert_yml_projects saved projects before update: #{inspect(CncfDashboardApi.Repo.all(CncfDashboardApi.Projects))}"
+    end
     project_map = CncfDashboardApi.YmlReader.GitlabCi.project_list() |> Enum.reduce([], fn(x, acc) -> 
       local_project = CncfDashboardApi.Repo.all(from p in CncfDashboardApi.Projects, 
                                                 where: p.name == ^x["yml_gitlab_name"])
@@ -53,12 +59,16 @@ defmodule CncfDashboardApi.GitlabMigrations do
         acc
       end
     end)
+    Logger.info fn ->
+      "upsert_yml_projects project_map before update: #{inspect(project_map)}"
+    end
     upsert_count = CncfDashboardApi.DataMigrations.upsert_from_map(
       CncfDashboardApi.Repo,
       project_map,
       false,
       CncfDashboardApi.Projects,
-      %{yml_name: :yml_name,
+      %{id: :id,
+        yml_name: :yml_name,
         active: :active,
         logo_url: :logo_url,
         display_name: :display_name,
