@@ -34,6 +34,8 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
         "sub_title" => v["sub_title"],
         "yml_gitlab_name" => v["gitlab_name"],
         "project_url" => v["project_url"],
+        "repository_url" => v["repository_url"],
+        "timeout" => v["timeout"],
         "order" => (idx + 1)} | acc] 
 		end) 
 	end

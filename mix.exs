@@ -18,7 +18,7 @@ defmodule CncfDashboardApi.Mixfile do
   # Type `mix help compile.app` for more information.
   def application do
     [mod: {CncfDashboardApi, []},
-     applications: [:ex_machina, :phoenix, :phoenix_pubsub, :phoenix_html, :cowboy, :logger, :gettext, :phoenix_ecto, :postgrex, :yaml_elixir]]
+     applications: [:ex_machina, :phoenix, :phoenix_pubsub, :phoenix_html, :cowboy, :logger, :gettext, :phoenix_ecto, :postgrex, :yaml_elixir, :timex, :timex_ecto]]
   end
 
   # Specifies which paths to compile per environment.
@@ -41,6 +41,7 @@ defmodule CncfDashboardApi.Mixfile do
      {:quantum, ">= 2.1.0"},
      {:sidetask, "~> 1.1"},
      {:timex, "~> 3.0"},
+     {:timex_ecto, "~> 3.0"},
      {:ecto_conditionals, "~> 0.1.0"},
      {:yaml_elixir, "~> 1.3.1"},
      {:cors_plug, "~> 1.2"},

@@ -1,5 +1,6 @@
 defmodule CncfDashboardApi.DashboardBadgeStatusControllerTest do
   use CncfDashboardApi.ConnCase
+  import CncfDashboardApi.Factory
 
   alias CncfDashboardApi.DashboardBadgeStatus
   @valid_attrs %{cloud_id: 42, order: 42, ref_monitor_id: 42, status: "some content"}
@@ -14,13 +15,17 @@ defmodule CncfDashboardApi.DashboardBadgeStatusControllerTest do
     assert json_response(conn, 200)["data"] == []
   end
 
+  @tag :wip
   test "shows chosen resource", %{conn: conn} do
-    dashboard_badge_status = Repo.insert! %DashboardBadgeStatus{}
+    # dashboard_badge_status = Repo.insert! %DashboardBadgeStatus{}
+    project = insert(:project)
+    dashboard_badge_status = CncfDashboardApi.Repo.all(CncfDashboardApi.DashboardBadgeStatus)  |> List.first
+    pipelines = CncfDashboardApi.Repo.all(CncfDashboardApi.DashboardBadgeStatus)  |> List.first
     conn = get conn, dashboard_badge_status_path(conn, :show, dashboard_badge_status)
     assert json_response(conn, 200)["data"] == %{"id" => dashboard_badge_status.id,
       "status" => dashboard_badge_status.status,
       "cloud_id" => dashboard_badge_status.cloud_id,
-      "job_id" => dashboard_badge_status.id, "name" => "N/A", "pipeline_id" => nil, "project_id" => nil, "ref" => "N/A", "url" => nil,
+      "job_id" => dashboard_badge_status.id, "name" => "N/A", "pipeline_id" => dashboard_badge_status.ref_monitor_id, "project_id" => project.id, "ref" => "N/A", "url" => nil,
       "order" => dashboard_badge_status.order}
   end
 

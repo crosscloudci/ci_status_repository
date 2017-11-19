@@ -13,6 +13,7 @@ defmodule CncfDashboardApi.YmlReader.GitlabCiTest do
     assert Enum.find_value(cloud_list, fn(x) -> x["active"] == true end) 
   end
 
+  @tag :wip
   test "project_list" do 
     project_list = CncfDashboardApi.YmlReader.GitlabCi.project_list()
     assert Enum.find_value(project_list, fn(x) -> x["yml_name"] == "kubernetes" end) 
@@ -21,6 +22,9 @@ defmodule CncfDashboardApi.YmlReader.GitlabCiTest do
     assert Enum.find_value(project_list, fn(x) -> x["display_name"] == "Kubernetes" end) 
     assert Enum.find_value(project_list, fn(x) -> x["sub_title"] == "Orchestration" end) 
     assert Enum.find_value(project_list, fn(x) -> x["yml_gitlab_name"] == "Kubernetes" end) 
+    assert Enum.find_value(project_list, fn(x) -> x["order"] == 1 end) 
+    assert Enum.find_value(project_list, fn(x) -> x["repository_url"] == "https://gitlab.dev.cncf.ci/prometheus/prometheus" end) 
+    assert Enum.find_value(project_list, fn(x) -> x["timeout"] == 900 end) 
     assert Enum.find_value(project_list, fn(x) -> x["project_url"] == "https://github.com/kubernetes/kubernetes" end) 
   end
 end
