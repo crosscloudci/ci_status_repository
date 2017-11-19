@@ -13,8 +13,29 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
   # use CncfDashboardApi.ModelCase
   
   # test "upsert_pipeline_monitor", %{socket: socket} do 
-  test "upsert_pipeline_monitor" do 
+  @tag :wip
+  test "stable update: upsert_pipeline_monitor" do 
     skpm = insert(:source_key_project_monitor)
+    # check insert 
+    CncfDashboardApi.Endpoint.subscribe(self, "dashboard:*")
+    {:ok, upsert_count, cloud_map} = CncfDashboardApi.GitlabMigrations.upsert_clouds()
+    projects = insert(:project)
+    CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm.id)
+    pipeline_monitor_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.PipelineMonitor, :count, :id)  
+    # source_project_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyProjects, :count, :id)  
+    assert 1 = pipeline_monitor_count  
+    assert_receive %Phoenix.Socket.Broadcast{ topic: "dashboard:*", 
+      event: "new_cross_cloud_call", payload: %{reply: %{dashboard: dashboard}}}
+
+    pipeline_jobs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.PipelineJobs, :count, :id)  
+    source_pipeline_jobs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyPipelineJobs, :count, :id)  
+    assert 0 < pipeline_jobs_count  
+    assert 0 < source_pipeline_jobs_count
+  end
+
+  @tag :wip
+  test "head update: upsert_pipeline_monitor" do 
+    skpm = insert(:head_source_key_project_monitor)
     # check insert 
     CncfDashboardApi.Endpoint.subscribe(self, "dashboard:*")
     {:ok, upsert_count, cloud_map} = CncfDashboardApi.GitlabMigrations.upsert_clouds()

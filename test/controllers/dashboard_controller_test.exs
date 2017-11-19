@@ -348,6 +348,7 @@ defmodule CncfDashboardApi.DashboardControllerTest do
       "sub_title" => _,
       "ssh_url_to_repo" => _,
       "http_url_to_repo" => _,
+      "repository_url" => _,
       "order" => _,
       "pipelines" => [%{"id" => _,
         "pipeline_id" => _,

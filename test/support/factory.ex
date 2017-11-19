@@ -58,6 +58,8 @@ defmodule CncfDashboardApi.Factory do
       yml_name: "Kubernetes",
       yml_gitlab_name: "kubernetes",
       project_url: "http://kubernetes.io/",
+      repository_url: "https://gitlab.dev.cncf.ci/prometheus/prometheus",
+      timeout: 900,
       order: 1,
       pipelines: [build(:pipeline)],
       ref_monitors: [build(:ref_monitor)],
@@ -75,6 +77,16 @@ defmodule CncfDashboardApi.Factory do
       source_pipeline_id: "1",
       source_pipeline_job_id: "1",
       pipeline_release_type: "stable",
+      active: true, 
+    }
+  end
+
+  def head_source_key_project_monitor_factory do
+    %CncfDashboardApi.SourceKeyProjectMonitor{
+      source_project_id: "1",
+      source_pipeline_id: "1",
+      source_pipeline_job_id: "1",
+      pipeline_release_type: "head",
       active: true, 
     }
   end
