@@ -206,7 +206,8 @@ RUN source $HOME/.kiex/scripts/kiex && \
 
 RUN mix local.hex --force &&  \
     mix local.rebar --force && \
-    mix deps.get
+    mix deps.get && \
+    mix compile
 
 RUN npm install
 
