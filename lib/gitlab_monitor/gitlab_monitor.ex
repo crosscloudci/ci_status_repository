@@ -139,7 +139,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
                                          left_join: dashboard_badge_statuses in assoc(ref_monitors, :dashboard_badge_statuses),
                                          left_join: cloud in assoc(dashboard_badge_statuses, :cloud),
                                          where: projects.active == true,
-                                         order_by: [projects.order,dashboard_badge_statuses.order], 
+                                         order_by: [projects.order, ref_monitors.order, dashboard_badge_statuses.order], 
                                          preload: [ref_monitors: 
                                                    {ref_monitors, dashboard_badge_statuses: dashboard_badge_statuses, 
                                                      dashboard_badge_statuses: {dashboard_badge_statuses, cloud: cloud },
