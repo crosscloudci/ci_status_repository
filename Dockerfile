@@ -180,7 +180,7 @@ RUN apk add --no-cache --virtual .build-deps-yarn curl gnupg tar \
 
 # Install Erlang/Elixir
 RUN apk -U upgrade && \
-    apk --update --no-cache add ncurses-libs git make g++ wget ca-certificates openssl curl bash \
+    apk --update --no-cache add inotify-tools ncurses-libs git make g++ wget ca-certificates openssl curl bash \
     && \
     update-ca-certificates --fresh && \
     curl -sSL https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s  

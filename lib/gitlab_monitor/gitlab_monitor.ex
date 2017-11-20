@@ -153,6 +153,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
                                          left_join: dashboard_badge_statuses in assoc(ref_monitors, :dashboard_badge_statuses),
                                          left_join: cloud in assoc(dashboard_badge_statuses, :cloud),
                                          where: projects.active == true,
+                                         order_by: [projects.order, ref_monitors.order, dashboard_badge_statuses.order], 
                                          preload: [ref_monitors: 
                                                    {ref_monitors, dashboard_badge_statuses: dashboard_badge_statuses, 
                                                      dashboard_badge_statuses: {dashboard_badge_statuses, cloud: cloud },
@@ -388,7 +389,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
       Logger.info fn ->
         "initialize_ref_monitor cloud: #{inspect(x)}"
       end
-      cloud_order = x.order + 2 # clouds start with 2 wrt badge status
+      cloud_order = x.order + 1 # clouds start with 2 wrt badge status
       changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(%CncfDashboardApi.DashboardBadgeStatus{}, 
                                                                   %{ref: "N/A",
                                                                     status: "N/A",
