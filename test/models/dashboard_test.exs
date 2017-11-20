@@ -3,7 +3,7 @@ defmodule CncfDashboardApi.DashboardTest do
 
   alias CncfDashboardApi.Dashboard
 
-  @valid_attrs %{last_check: %{day: 17, month: 4, year: 2010}}
+  @valid_attrs %{last_check: Ecto.DateTime.utc, gitlab_ci_yml: "some content"}
   @invalid_attrs %{}
 
   test "changeset with valid attributes" do

@@ -1,9 +1,12 @@
 defmodule CncfDashboardApi.DashboardChannel do
   use CncfDashboardApi.Web, :channel
+  use EctoConditionals, repo: CncfDashboardApi.Repo
 
   alias CncfDashboardApi.Dashboard
 
   def join("dashboard:*", payload, socket) do
+    yml = System.get_env("GITLAB_CI_YML")
+    {d_found, d_record} = %CncfDashboardApi.Dashboard{gitlab_ci_yml: yml } |> find_by([:gitlab_ci_yml])
     cloud_list = CncfDashboardApi.Repo.all(from cd1 in CncfDashboardApi.Clouds, 
                                            where: cd1.active == true,
                                            select: %{id: cd1.id, cloud_id: cd1.id, 
@@ -20,8 +23,7 @@ defmodule CncfDashboardApi.DashboardChannel do
                                                      dashboard_badge_statuses: {dashboard_badge_statuses, cloud: cloud },
                                                    }] )
 
-    with_cloud = %{"clouds" => cloud_list, "projects" => projects} 
-      # dashboard_json = Poison.decode!(dashboard)
+    with_cloud = %{"dashboard" => d_record, "clouds" => cloud_list, "projects" => projects} 
       response = CncfDashboardApi.DashboardView.render("dashboard.json", %{dashboard: with_cloud})
       {:ok, %{reply: response}, socket}
 

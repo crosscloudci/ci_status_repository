@@ -2,7 +2,7 @@ defmodule CncfDashboardApi.Dashboard do
   use CncfDashboardApi.Web, :model
 
   schema "dashboard" do
-    field :last_check, :utc_datetime
+    field :last_check, Timex.Ecto.DateTime 
     field :gitlab_ci_yml, :string
 
     timestamps()
