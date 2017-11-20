@@ -2,7 +2,8 @@ defmodule CncfDashboardApi.Dashboard do
   use CncfDashboardApi.Web, :model
 
   schema "dashboard" do
-    field :last_check, Timex.Ecto.Date
+    field :last_check, :utc_datetime
+    field :gitlab_ci_yml, :string
 
     timestamps()
   end
@@ -12,7 +13,7 @@ defmodule CncfDashboardApi.Dashboard do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:last_check])
-    |> validate_required([:last_check])
+    |> cast(params, [:last_check, :gitlab_ci_yml])
+    |> validate_required([:gitlab_ci_yml])
   end
 end

@@ -5,6 +5,19 @@ defmodule CncfDashboardApi.GitlabMonitor do
   alias CncfDashboardApi.Repo
   use EctoConditionals, repo: CncfDashboardApi.Repo
 
+
+  def last_checked do
+    yml = System.get_env("GITLAB_CI_YML")
+    {d_found, d_record} = %CncfDashboardApi.Dashboard{gitlab_ci_yml: yml } |> find_by([:gitlab_ci_yml])
+    changeset = CncfDashboardApi.Dashboard.changeset(d_record, %{last_check: Ecto.DateTime.utc, gitlab_ci_yml: yml, })
+    case d_found do
+      :found ->
+        {_, d_record} = Repo.update!(changeset) 
+      :not_found ->
+        {_, d_record} = Repo.insert!(changeset) 
+    end
+  end
+
   def source_models(source_key_project_monitor_id) do
     monitor = Repo.all(from skpm in CncfDashboardApi.SourceKeyProjectMonitor, 
                                         where: skpm.id == ^source_key_project_monitor_id) |> List.first
@@ -49,6 +62,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
   end
 
   def upsert_pipeline_monitor(source_key_project_monitor_id) do
+    last_checked
     {:ok, monitor, source_key_project, source_key_pipeline} = migrate_source_key_monitor(source_key_project_monitor_id)
     
     # determine pipeline type

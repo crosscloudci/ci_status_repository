@@ -7,6 +7,7 @@ defmodule CncfDashboardApi.DashboardView do
   end
   def render("dashboard.json", %{dashboard: dashboard}) do
     %{
+      last_check: if(dashboard["dashboard"] && Timex.is_valid?(dashboard["dashboard"].last_check), do: Timex.format(dashboard["dashboard"].last_check, "{relative}", :relative) |> elem(1)),
       clouds: render_many(dashboard["clouds"], CncfDashboardApi.CloudsView, "clouds.json"),
       projects: render_many(dashboard["projects"], CncfDashboardApi.ProjectsView, "projects.json"),
     }
