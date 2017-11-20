@@ -22,7 +22,7 @@ defmodule CncfDashboardApi.Factory do
       ref: "ci_master",
       status: "success",
       sha: "2342342342343243sdfsdfsdfs",
-      release_type: "build",
+      release_type: "stable",
       dashboard_badge_statuses: [build(:dashboard_badge_status)],
     }
 
@@ -72,9 +72,15 @@ defmodule CncfDashboardApi.Factory do
     # field :pipeline_release_type, :string
     # field :active, :boolean, default: true
   def source_key_project_monitor_factory do
+    first_active_project =CncfDashboardApi.YmlReader.GitlabCi.project_list |> Enum.find(fn(x) -> x["active"] == true end)
+    projects = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == first_active_project["yml_name"] end)
+    # use a real pipeline id 
+    pipelines = GitLabProxy.get_gitlab_pipelines(projects["id"]) |> List.first
     %CncfDashboardApi.SourceKeyProjectMonitor{
-      source_project_id: "1",
-      source_pipeline_id: "1",
+      # source_project_id: "1",
+      source_project_id: projects["id"] |> Integer.to_string,
+      # source_pipeline_id: "1",
+      source_pipeline_id: pipelines["id"] |> Integer.to_string,
       source_pipeline_job_id: "1",
       pipeline_release_type: "stable",
       active: true, 
@@ -82,9 +88,16 @@ defmodule CncfDashboardApi.Factory do
   end
 
   def head_source_key_project_monitor_factory do
+    # use a real source key project id 
+    first_active_project =CncfDashboardApi.YmlReader.GitlabCi.project_list |> Enum.find(fn(x) -> x["active"] == true end)
+    projects = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == first_active_project["yml_name"] end)
+    # use a real pipeline id 
+    pipelines = GitLabProxy.get_gitlab_pipelines(projects["id"]) |> List.first
     %CncfDashboardApi.SourceKeyProjectMonitor{
-      source_project_id: "1",
-      source_pipeline_id: "1",
+      # source_project_id: "1",
+      source_project_id: projects["id"] |> Integer.to_string,
+      # source_pipeline_id: "1",
+      source_pipeline_id: pipelines["id"] |> Integer.to_string,
       source_pipeline_job_id: "1",
       pipeline_release_type: "head",
       active: true, 
@@ -94,6 +107,17 @@ defmodule CncfDashboardApi.Factory do
   def source_key_pipeline_job_factory do
     %CncfDashboardApi.SourceKeyPipelineJobs{
       source_id: "1",
+      new_id: 1,
+    }
+  end
+
+  def source_key_project_factory do
+    # use a real source key project id 
+    first_active_project =CncfDashboardApi.YmlReader.GitlabCi.project_list |> Enum.find(fn(x) -> x["active"] == true end)
+    projects = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == first_active_project["yml_name"] end)
+    %CncfDashboardApi.SourceKeyProjects{
+      # source_id: "1",
+      source_id: projects["id"] |> Integer.to_string,
       new_id: 1,
     }
   end
