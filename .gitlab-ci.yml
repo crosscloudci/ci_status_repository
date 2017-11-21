@@ -6,7 +6,7 @@ Dashboard-Backend:
   stage: Build
   script:
     - docker login -u "gitlab-ci-token" -p "$CI_JOB_TOKEN" $CI_REGISTRY
-    - docker build --pull -t "$CI_REGISTRY_IMAGE/backend-${ENV}:$CI_COMMIT_SHA" .
+    - docker build --pull -t "$CI_REGISTRY_IMAGE/backend-$CI_COMMIT_REF_NAME:$CI_COMMIT_SHA" .
     - docker push "$CI_REGISTRY_IMAGE/backend-$CI_COMMIT_REF_NAME:$CI_COMMIT_SHA"
 
 
