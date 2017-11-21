@@ -22,7 +22,7 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
 
   def cloud_list do
     yml = CncfDashboardApi.YmlReader.GitlabCi.get() |> YamlElixir.read_from_string 
-    yml["clouds2"] 
+    yml["clouds"] 
     |> Stream.with_index 
     |> Enum.reduce([], fn ({{k, v}, idx}, acc) -> 
       # [%{"id" => (idx + 1), 
