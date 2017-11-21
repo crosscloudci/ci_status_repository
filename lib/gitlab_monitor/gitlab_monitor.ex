@@ -42,9 +42,12 @@ defmodule CncfDashboardApi.GitlabMonitor do
   def migrate_source_key_monitor(source_key_project_monitor_id) do
     # migrate clouds
     CncfDashboardApi.GitlabMigrations.upsert_clouds()
+    # need to upsert all the projects to keep the dashboard listing all current projects
+    CncfDashboardApi.GitlabMigrations.upsert_projects()
     monitor = Repo.all(from skpm in CncfDashboardApi.SourceKeyProjectMonitor, 
                                         where: skpm.id == ^source_key_project_monitor_id) |> List.first
-    # migrate project
+
+    # make sure the immediate project is upserted
     {:ok, upsert_count, project_map} = CncfDashboardApi.GitlabMigrations.upsert_project(monitor.source_project_id) 
 
     # upsert yml project properties
