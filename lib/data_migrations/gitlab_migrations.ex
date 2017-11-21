@@ -34,6 +34,7 @@ defmodule CncfDashboardApi.GitlabMigrations do
       CncfDashboardApi.Clouds,
       %{ cloud_name: :cloud_name,
         active: :active,
+        display_name: :display_name,
         order: :order}
     )
     {:ok, upsert_count, cloud_map}

@@ -9,7 +9,7 @@ defmodule CncfDashboardApi.YmlReader.GitlabCiTest do
 
   test "cloud_list" do 
     cloud_list = CncfDashboardApi.YmlReader.GitlabCi.cloud_list()
-    assert Enum.find_value(cloud_list, fn(x) -> x["cloud_name"] == "AWS" end) 
+    assert Enum.find_value(cloud_list, fn(x) -> x["cloud_name"] == "aws" end) 
     assert Enum.find_value(cloud_list, fn(x) -> x["active"] == true end) 
   end
 

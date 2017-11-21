@@ -9,8 +9,7 @@ defmodule CncfDashboardApi.DashboardChannel do
     {d_found, d_record} = %CncfDashboardApi.Dashboard{gitlab_ci_yml: yml } |> find_by([:gitlab_ci_yml])
     cloud_list = CncfDashboardApi.Repo.all(from cd1 in CncfDashboardApi.Clouds, 
                                            where: cd1.active == true,
-                                           select: %{id: cd1.id, cloud_id: cd1.id, 
-                                             name: cd1.cloud_name, cloud_name: cd1.cloud_name}) 
+                                           order_by: [cd1.order]) 
 
     projects = CncfDashboardApi.Repo.all(from projects in CncfDashboardApi.Projects,      
                                          left_join: ref_monitors in assoc(projects, :ref_monitors),

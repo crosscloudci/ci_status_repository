@@ -3,6 +3,7 @@ defmodule CncfDashboardApi.Clouds do
 
   schema "clouds" do
     field :cloud_name, :string
+    field :display_name, :string
     field :active, :boolean
     field :order, :integer
 
@@ -14,7 +15,7 @@ defmodule CncfDashboardApi.Clouds do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:cloud_name, :active, :order])
+    |> cast(params, [:cloud_name, :display_name, :active, :order])
     |> validate_required([:cloud_name, :order])
   end
 end
