@@ -7,6 +7,19 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
 		{{_, 200, 'OK'}, _headers, body} = resp
     body
   end
+  # def cloud_list do
+  #   yml = CncfDashboardApi.YmlReader.GitlabCi.get() |> YamlElixir.read_from_string 
+  #   yml["clouds"] 
+  #   |> Stream.with_index 
+  #   |> Enum.reduce([], fn ({{k, v}, idx}, acc) -> 
+  #     # [%{"id" => (idx + 1), 
+  #     [%{"id" => 0, 
+  #       "cloud_name" => k, 
+  #       "active" => v,
+  #       "order" => (idx + 1)} | acc] 
+  #   end) 
+	# end
+
   def cloud_list do
     yml = CncfDashboardApi.YmlReader.GitlabCi.get() |> YamlElixir.read_from_string 
     yml["clouds"] 
@@ -15,8 +28,10 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
       # [%{"id" => (idx + 1), 
       [%{"id" => 0, 
         "cloud_name" => k, 
-        "active" => v,
-        "order" => (idx + 1)} | acc] 
+        "active" => v["active"],
+        "display_name" => v["display_name"],
+        # "order" => (idx + 1)} | acc] 
+        "order" => v["order"]} | acc] 
     end) 
 	end
 
@@ -36,7 +51,8 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
         "project_url" => v["project_url"],
         "repository_url" => v["repository_url"],
         "timeout" => v["timeout"],
-        "order" => (idx + 1)} | acc] 
+        # "order" => (idx + 1)} | acc] 
+        "order" => v["order"]} | acc] 
 		end) 
 	end
 end

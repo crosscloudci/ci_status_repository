@@ -12,6 +12,7 @@ defmodule CncfDashboardApi.CloudsView do
   def render("clouds.json", %{clouds: clouds}) do
     %{id: clouds.id,
       cloud_id: clouds.id,
-      cloud_name: clouds.cloud_name}
+      order: clouds.order,
+      cloud_name: clouds.display_name}
   end
 end

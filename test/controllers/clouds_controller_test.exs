@@ -2,7 +2,7 @@ defmodule CncfDashboardApi.CloudsControllerTest do
   use CncfDashboardApi.ConnCase
 
   alias CncfDashboardApi.Clouds
-  @valid_attrs %{cloud_name: "some content", order: 1}
+  @valid_attrs %{cloud_name: "some content", display_name: "hi", order: 1}
   @invalid_attrs %{}
 
   setup %{conn: conn} do
@@ -14,11 +14,13 @@ defmodule CncfDashboardApi.CloudsControllerTest do
     assert json_response(conn, 200)["data"] == []
   end
 
+  @tag :wip
   test "shows chosen resource", %{conn: conn} do
     clouds = Repo.insert! %Clouds{}
     conn = get conn, clouds_path(conn, :show, clouds)
     assert json_response(conn, 200)["data"] == %{"id" => clouds.id,
       "cloud_id" => clouds.id,
+      "order" => clouds.order,
       "cloud_name" => clouds.cloud_name}
   end
 
