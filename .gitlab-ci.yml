@@ -2,7 +2,7 @@ stages:
   - Build
   - Deploy
 
-Dashboard-Frontend:
+Dashboard-Backend:
   stage: Build
   script:
     - docker login -u "gitlab-ci-token" -p "$CI_JOB_TOKEN" $CI_REGISTRY
@@ -10,7 +10,7 @@ Dashboard-Frontend:
     - docker push "$CI_REGISTRY_IMAGE/backend-staging:$CI_COMMIT_SHA"
 
 
-Deploy-Frontend:
+Deploy-Backend:
   stage: Deploy
   image: registry.dev.cncf.ci/cncf/cncf-ci-dashboard:helm
   script:
