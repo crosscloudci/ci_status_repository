@@ -2,15 +2,15 @@ stages:
   - Build
   - Deploy
 
-Dashboard-Frontend:
+Dashboard-Backend:
   stage: Build
   script:
     - docker login -u "gitlab-ci-token" -p "$CI_JOB_TOKEN" $CI_REGISTRY
-    - docker build --pull -t "$CI_REGISTRY_IMAGE/frontend-dev:$CI_COMMIT_SHA" .
-    - docker push "$CI_REGISTRY_IMAGE/frontend-dev:$CI_COMMIT_SHA"
+    - docker build --pull -t "$CI_REGISTRY_IMAGE/backend-${ENV}:$CI_COMMIT_SHA" .
+    - docker push "$CI_REGISTRY_IMAGE/backend-${ENV}:$CI_COMMIT_SHA"
 
 
-Deploy-Frontend:
+Deploy-Backend:
   stage: Deploy
   image: registry.dev.cncf.ci/cncf/cncf-ci-dashboard:helm
   script:
@@ -18,5 +18,6 @@ Deploy-Frontend:
     - export KUBECONFIG=/kubeconfig
     - helm init
     - helm repo add cncf http://cncf.gitlab.io/stable
-    - helm upgrade front-dev cncf/frontend --install --force --wait --timeout 3600 --set imagePullSecrets=devsecret --set ingress.host=dev.cncf.ci --set ingress.port=8080 --set api.url=http://devapi.cncf.ci/api --set node.port=8080 --set node.host=0.0.0.0 --set image.repository="$CI_REGISTRY_IMAGE/frontend-dev" --set image.tag="$CI_COMMIT_SHA" 
-
+    - helm upgrade nginx-"$ENV" --install --force stable/nginx-ingress
+    - helm upgrade db-"$ENV" stable/postgresql --install --force --set postgresUser=backend,postgresPassword=secretbackend,postgresDatabase=backend --set service.type=ClusterIP --set imageTag=9.6
+    - helm upgrade backend-"$ENV" cncf/backend --install --force --wait --timeout 3600 --set db.user=backend --set db.password=secretbackend --set db.name=backend --set db.host=db-staging-postgresql --set db.pool=5 --set api=https://gitlab.dev.cncf.ci/api/v4 --set token="$GITLAB_TOKEN" --set imagePullSecrets=devsecret --set yaml=https://gitlab.cncf.ci/cncf/cross-cloud/raw/ci-stable-v0.1.0/cross-cloud.yml --set ingress.host="$ENV"api.cncf.ci --set ingress.port=4001 --set image.repository="$CI_REGISTRY_IMAGE/backend-${ENV}" --set image.tag="$CI_COMMIT_SHA"
