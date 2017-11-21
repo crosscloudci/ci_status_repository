@@ -8,10 +8,14 @@ defimpl Poison.Encoder, for: Tuple do
 end
 defmodule CncfDashboardApi.DashboardController do
   use CncfDashboardApi.Web, :controller
+  use EctoConditionals, repo: CncfDashboardApi.Repo
 
   alias CncfDashboardApi.Dashboard
 
   def index(conn, _params) do
+    yml = System.get_env("GITLAB_CI_YML")
+    {d_found, d_record} = %CncfDashboardApi.Dashboard{gitlab_ci_yml: yml } |> find_by([:gitlab_ci_yml])
+    
     cloud_list = CncfDashboardApi.Repo.all(from cd1 in CncfDashboardApi.Clouds, 
                                            where: cd1.active == true,
                                            select: %{id: cd1.id, cloud_id: cd1.id, 
@@ -28,7 +32,7 @@ defmodule CncfDashboardApi.DashboardController do
                                                      dashboard_badge_statuses: {dashboard_badge_statuses, cloud: cloud },
                                                    }] )
 
-    with_cloud = %{"clouds" => cloud_list, "projects" => projects} 
+    with_cloud = %{"dashboard" => d_record, "clouds" => cloud_list, "projects" => projects} 
     render(conn, "index.json", dashboard: with_cloud)
   end
 

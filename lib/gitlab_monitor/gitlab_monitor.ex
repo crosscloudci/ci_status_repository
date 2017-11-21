@@ -5,6 +5,21 @@ defmodule CncfDashboardApi.GitlabMonitor do
   alias CncfDashboardApi.Repo
   use EctoConditionals, repo: CncfDashboardApi.Repo
 
+
+  def last_checked do
+    yml = System.get_env("GITLAB_CI_YML")
+    {d_found, d_record} = %CncfDashboardApi.Dashboard{gitlab_ci_yml: yml } |> find_by([:gitlab_ci_yml])
+    changeset = CncfDashboardApi.Dashboard.changeset(d_record, %{last_check: Ecto.DateTime.utc, gitlab_ci_yml: yml, })
+    case d_found do
+      :found ->
+        # {_, d_record} = Repo.update!(changeset) 
+         Repo.update!(changeset) 
+      :not_found ->
+        # {_, d_record} = Repo.insert!(changeset) 
+         Repo.insert!(changeset) 
+    end
+  end
+
   def source_models(source_key_project_monitor_id) do
     monitor = Repo.all(from skpm in CncfDashboardApi.SourceKeyProjectMonitor, 
                                         where: skpm.id == ^source_key_project_monitor_id) |> List.first
@@ -49,6 +64,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
   end
 
   def upsert_pipeline_monitor(source_key_project_monitor_id) do
+    last_checked
     {:ok, monitor, source_key_project, source_key_pipeline} = migrate_source_key_monitor(source_key_project_monitor_id)
     
     # determine pipeline type
@@ -130,6 +146,8 @@ defmodule CncfDashboardApi.GitlabMonitor do
   end
 
   def dashboard_response do
+    yml = System.get_env("GITLAB_CI_YML")
+    {d_found, d_record} = %CncfDashboardApi.Dashboard{gitlab_ci_yml: yml } |> find_by([:gitlab_ci_yml])
     cloud_list = Repo.all(from cd1 in CncfDashboardApi.Clouds, 
                                            where: cd1.active == true,
                                            select: %{id: cd1.id, cloud_id: cd1.id, 
@@ -145,7 +163,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
                                                      dashboard_badge_statuses: {dashboard_badge_statuses, cloud: cloud },
                                                    }] )
 
-    with_cloud = %{"clouds" => cloud_list, "projects" => projects} 
+    with_cloud = %{"dashboard" => d_record, "clouds" => cloud_list, "projects" => projects} 
     response = CncfDashboardApi.DashboardView.render("index.json", dashboard: with_cloud)
   end
 
@@ -369,7 +387,8 @@ defmodule CncfDashboardApi.GitlabMonitor do
                                                                 })
     {_, dbs_record} = Repo.insert(changeset) 
     #  get all clouds
-    Repo.all(from c in CncfDashboardApi.Clouds, order_by: :order)
+    Repo.all(from c in CncfDashboardApi.Clouds, where: c.active == true,
+             order_by: :order)
     # insert one dashboard_badge for each cloud with status of N/A for the new ref_monitor
     |> Enum.map(fn(x) -> 
       Logger.info fn ->
