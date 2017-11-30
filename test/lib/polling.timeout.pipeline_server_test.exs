@@ -26,14 +26,11 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServerTest do
     # test the genserver
     {:ok, s_timeout} = CncfDashboardApi.Polling.Supervisor.Pipeline.start_link 
     # key create a new process that is unique for skpm.id
-    CncfDashboardApi.Polling.Supervisor.Pipeline.start_pipeline(skpm.id) 
-    CncfDashboardApi.Polling.Timeout.PipelineServer.monitor_pipeline(skpm.id,skpm.id, 1000)
+    CncfDashboardApi.Polling.Supervisor.Pipeline.start_pipeline(skpm.id, skpm.id, 1000) 
     # GenServer.stop(s_timeout)
     # Wait for the timeout to complete
-    Process.sleep(15000)
-    GenServer.stop(s_timeout)
-
-    # assert catch_exit(CncfDashboardApi.Polling.Timeout.PipelineServer.monitor(skpm.id, 1000) ) == "killed"
+    Process.sleep(13000)
+    # GenServer.stop(s_timeout)
 
     IEx.pry
     {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.pipeline_monitor(skpm.id) 
@@ -41,6 +38,7 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServerTest do
     assert  false == pm_record.running 
   end
 
+  @tag :wip
   test "set_run_to_fail" do 
     skpm = insert(:source_key_project_monitor)
     CncfDashboardApi.Endpoint.subscribe(self, "dashboard:*")

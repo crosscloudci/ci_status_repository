@@ -7,126 +7,63 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServer do
   import Ecto.Query
   use EctoConditionals, repo: CncfDashboardApi.Repo
 
-  def start_link(name, timeout \\ 15000) do
+  def start_link(name, skpm_id, timeout) do
+    Logger.info fn ->
+      "pipeline timeout start_link name, skpm_id, timeout: #{inspect(name)} #{inspect(skpm_id)} #{inspect(timeout)}"
+    end
     # Instead of passing an atom to the `name` option, we send 
     # a tuple. Here we extract this tuple to a private method
     # called `via_tuple` that can be reused for every function
-    GenServer.start_link(__MODULE__, [timeout], name: via_tuple(name))
+    GenServer.start_link(__MODULE__, [%{:skpm_id => skpm_id, :timeout => timeout}], name: via_tuple(name))
   end
 
   defp via_tuple(pipeline_monitor_id) do
     {:via, :gproc, {:n, :l, {:pipeline_monitor, pipeline_monitor_id}}}
   end
 
-  def monitor_pipeline(pipeline_monitor_id, pipeline_monitor_id2, timeout \\ 15000) do
-    IO.puts("monitor_pipeline: #{inspect(pipeline_monitor_id)}")
+  def init([%{:skpm_id => skpm_id, :timeout => timeout}]) do
+    timeout = 1000
     Logger.info fn ->
-      "monitor_pipeline: #{inspect(pipeline_monitor_id)}"
+      "pipeline timeout init skpm_id, timeout: #{inspect(skpm_id)} #{inspect(timeout)}"
     end
-    # And the `GenServer` callbacks will accept this tuple the same way it
-    # accepts a `pid` or an atom.
-    # TODO get timeout for pipeline
-    GenServer.cast(via_tuple(pipeline_monitor_id), {:monitor, %{:timeout => timeout, :skpm_id => pipeline_monitor_id2}})
-    # GenServer.cast(via_tuple(pipeline_monitor_id), {:monitor,  pipeline_monitor_id2})
-    # GenServer.cast(via_tuple(pipeline_monitor_id), {:monitor,  pipeline_monitor_id2})
+    :timer.send_after(timeout, :job_timeout)
+    {:ok, %{:skpm_id => skpm_id, :timeout => timeout}}
   end
 
-  # def handle_cast({:monitor, %{:timeout => timeout, :skpm_id => skpm_id}}, state) do
-  def handle_cast({:monitor, %{:timeout => timeout, :skpm_id => skpm_id}}, state) do
-    # def handle_cast({:monitor, skpm_id) do
-
-    IO.puts("handle_cast pipeline_server: #{inspect(skpm_id)}")
+  def handle_info(:job_timeout, state = %{:skpm_id => source_key_project_monitor_id, :timeout => timeout}) do
     Logger.info fn ->
-      "handle_cast pipeline_server: #{inspect(skpm_id)}"
+      "pipeline timeout job_timeout: #{inspect(state)}"
     end
-    # monitor(skpm_id, timeout)
-    ans = monitor(skpm_id, timeout)
-    {:noreply, ans}
-  end
-
-  def init(timeout) do
-    IO.puts("init: #{inspect(timeout)}")
-    Logger.info fn ->
-      "init: #{inspect(timeout)}"
+    case is_pipeline_complete(source_key_project_monitor_id) do
+      {:ok, :running} ->
+        # only set run to fail if wh
+        Logger.info fn ->
+          "is_pipeline_complete: still running"
+        end
+        set_run_to_fail(source_key_project_monitor_id)
+      {:ok, :complete} -> :ok 
     end
-    {:ok, timeout}
+    {:stop, :normal, state}
   end
 
   def is_pipeline_complete(source_key_project_monitor_id) do
-    IO.puts("is_pipeline_complete skpm: #{source_key_project_monitor_id}" )
     Logger.info fn ->
       "is_pipeline_complete skpm: #{source_key_project_monitor_id}"
     end
     CncfDashboardApi.GitlabMonitor.migrate_source_key_monitor(source_key_project_monitor_id)
     {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.pipeline_monitor(source_key_project_monitor_id) 
-    IO.puts("is_pipeline_complete pm_record.running: #{pm_record.running}" )
     Logger.info fn ->
       "is_pipeline_complete pm_record.running: #{pm_record.running}"
     end
     if pm_record.running do
       CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(source_key_project_monitor_id)
-      ret = {:ok, :running}
+      {:ok, :running}
     else
-      ret = {:ok, :complete}
-    end
-    ret
-  end
-
-  defp monitor(source_key_project_monitor_id, timeout \\ 15000) do
-    IO.puts("monitor skpm, timeout: #{source_key_project_monitor_id} #{timeout}" )
-    Logger.info fn ->
-      "monitor skpm: #{source_key_project_monitor_id} #{timeout}"
-    end
-    reciever = self()
-    # pid = spawn_link(fn -> 
-    #   case CncfDashboardApi.Polling.Pipeline.poll_pipeline_until_complete(source_key_project_monitor_id) do
-    #     {:ok, :complete} -> send reciever, { :ok, source_key_project_monitor_id } 
-    #   end
-    # end)
-    receive do
-      { :ok, response } -> 
-      Logger.info fn ->
-        "Completed polling of source_key_project_monitor_id: #{response}"
-      end
-      response
-      # TODO get timeout from yml
-    after timeout ->
-      Logger.info fn ->
-        "Timeout: setting badges to fail for source_key_project_monitor_id: #{source_key_project_monitor_id}"
-      end
-      ret = is_pipeline_complete(source_key_project_monitor_id)
-      IO.puts("is_pipeline_complete ret: #{inspect(ret)}")
-      Logger.info fn ->
-        "is_pipeline_complete ret: #{inspect(ret)}"
-      end
-      case ret do
-        {:ok, :running} ->
-          # only set run to fail if wh
-          IO.puts("is_pipeline_complete: still running")
-        # Logger.info fn ->
-          #   "is_pipeline_complete: still running"
-          # end
-          set_run_to_fail(source_key_project_monitor_id)
-        {:ok, :complete} ->
-          # stop(server, reason \\ :normal, timeout \\ :infinity)
-          # Process.exit(pid, :kill)
-          # IO.puts("is_pipeline_complete: exiting")
-        # Logger.info fn ->
-          #   "is_pipeline_complete: exiting"
-          # end
-      end
-      IO.puts("Timeout: exiting")
-      Logger.info fn ->
-        "Timeout: exiting"
-      end
-      Process.exit(self(), :kill)
       {:ok, :complete}
-      { :error, "Job timed out" }
     end
   end
 
   defp set_run_to_fail(source_key_project_monitor_id) do
-    IO.puts("set_run_to_fail")
     Logger.info fn ->
       "set_run_to_fail"
     end
