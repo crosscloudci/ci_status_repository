@@ -1,3 +1,4 @@
+require IEx;
 defmodule CncfDashboardApi.ProjectsControllerTest do
   use CncfDashboardApi.ConnCase
   import CncfDashboardApi.Factory
@@ -6,10 +7,28 @@ defmodule CncfDashboardApi.ProjectsControllerTest do
   @valid_attrs %{http_url_to_repo: "some content", name: "some content", ssh_url_to_repo: "some content"}
   @invalid_attrs %{}
 
-  setup %{conn: conn} do
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
+  # setup %{conn: conn} do
+  #   {:ok, conn: put_req_header(conn, "accept", "application/json")}
+  # end
+
+  # setup %{conn: conn} = config do
+  #   cond do
+  #     config[:login] ->
+  #       # user = insert_user()
+  #       signed_conn = Guardian.Plug.api_sign_in(conn, nil)
+  #       {:ok, conn: signed_conn}
+  #     true ->
+  #       :ok
+  #   end
+  # end
+
+  setup %{conn: conn} = config do
+    signed_conn = Guardian.Plug.api_sign_in(conn, nil)
+    {:ok, conn: signed_conn}
   end
 
+  @tag :wip
+  # @tag :login
   test "lists all entries on index", %{conn: conn} do
     projects = insert(:project)
     conn = get conn, projects_path(conn, :index)

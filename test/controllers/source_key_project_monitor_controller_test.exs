@@ -6,8 +6,9 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitorControllerTest do
   @valid_attrs %{source_pipeline_id: "1", source_project_id: "1", pipeline_release_type: "stable"}
   @invalid_attrs %{}
 
-  setup %{conn: conn} do
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
+  setup %{conn: conn} = config do
+    signed_conn = Guardian.Plug.api_sign_in(conn, nil)
+    {:ok, conn: signed_conn}
   end
 
   test "lists all entries on index", %{conn: conn} do
@@ -30,7 +31,6 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitorControllerTest do
     end
   end
 
-  @tag :wip
   test "creates and renders resource when data is valid", %{conn: conn} do
     valid_att = params_for(:source_key_project_monitor)
     conn = post conn, source_key_project_monitor_path(conn, :create), source_key_project_monitor: valid_att

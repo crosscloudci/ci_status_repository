@@ -19,10 +19,15 @@ defmodule CncfDashboardApi.Router do
     get "/", PageController, :index
   end
 
+  pipeline :guardian do
+    plug Guardian.Plug.VerifyHeader, realm: "Bearer"
+    plug Guardian.Plug.LoadResource
+    plug Guardian.Plug.EnsureAuthenticated
+  end 
 
   # Other scopes may use custom stacks.
   scope "/api", CncfDashboardApi do
-    pipe_through :api
+    pipe_through [:api, :guardian]
     resources "/projects", ProjectsController, except: [:new, :edit]   
     resources "/source_key_projects", SourceKeyProjectsController, except: [:new, :edit]   
     resources "/pipelines", PipelinesController, except: [:new, :edit]

@@ -47,6 +47,8 @@ defmodule CncfDashboardApi.Mixfile do
      {:cors_plug, "~> 1.2"},
      {:ex_machina, "~> 2.0"},
      {:gproc, "0.3.1"},
+     {:joken, "~> 1.2.1"},
+     {:guardian, "~> 0.12.0"},
      {:export, "~> 0.1.1"}]
 
   end

@@ -1,7 +1,6 @@
 require IEx;
 defmodule CncfDashboardApi.ProjectsController do
   use CncfDashboardApi.Web, :controller
-
   alias CncfDashboardApi.Projects
 
   def index(conn, _params) do
