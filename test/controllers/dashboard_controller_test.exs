@@ -7,21 +7,11 @@ defmodule CncfDashboardApi.DashboardControllerTest do
   @invalid_attrs %{}
 
 
-  # setup %{conn: conn} do
-  #   # {:ok, conn: CncfDashboardApi.ConnCase.guardian_login(%{user: :user}) |> put_req_header("accept", "application/json")}
-  #   {:ok, conn: put_req_header(conn, "accept", "application/json")}
-  # end
-  setup %{conn: conn} = config do
-    signed_conn = Guardian.Plug.api_sign_in(conn, nil)
-    {:ok, conn: signed_conn}
+  setup %{conn: conn} do
+    {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
-  # @tag :wip
-  # @tag :authenticated
-  @tag :login
   test "lists all entries on index", %{conn: conn} do
-    IO.puts "conn: #{inspect(conn)}"
-    # conn = conn.guardian_login(nil)
     {:ok, upsert_count, cloud_map} = CncfDashboardApi.GitlabMigrations.upsert_clouds()
     projects = insert(:project)
     conn = get conn, dashboard_path(conn, :index)
