@@ -17,13 +17,19 @@ defmodule CncfDashboardApi.YmlReader.GitlabCiTest do
     project_list = CncfDashboardApi.YmlReader.GitlabCi.project_list()
     assert Enum.find_value(project_list, fn(x) -> x["yml_name"] == "kubernetes" end) 
     assert Enum.find_value(project_list, fn(x) -> x["active"] == true end) 
-    # assert Enum.find_value(project_list, fn(x) -> x["logo_url"] == "https://raw.githubusercontent.com/cncf/artwork/master/kubernetes/logo.png" end) 
     assert Enum.find_value(project_list, fn(x) -> x["display_name"] == "Kubernetes" end) 
     assert Enum.find_value(project_list, fn(x) -> x["sub_title"] == "Orchestration" end) 
     assert Enum.find_value(project_list, fn(x) -> x["yml_gitlab_name"] == "Kubernetes" end) 
     assert Enum.find_value(project_list, fn(x) -> x["order"] == 1 end) 
-    assert Enum.find_value(project_list, fn(x) -> x["repository_url"] == "https://gitlab.dev.cncf.ci/prometheus/prometheus" end) 
+    assert Enum.find_value(project_list, fn(x) -> x["repository_url"] == "https://github.com/kubernetes/kubernetes" end) 
     assert Enum.find_value(project_list, fn(x) -> x["timeout"] == 900 end) 
     assert Enum.find_value(project_list, fn(x) -> x["project_url"] == "https://github.com/kubernetes/kubernetes" end) 
+  end
+
+  test "gitlab_pipeline_config" do 
+    cloud_list = CncfDashboardApi.YmlReader.GitlabCi.gitlab_pipeline_config()
+    assert Enum.find_value(cloud_list, fn(x) -> x["pipeline_name"] == "cross-project" end) 
+    assert Enum.find_value(cloud_list, fn(x) -> x["timeout"] == 7200 end) 
+    assert Enum.find_value(cloud_list, fn(x) -> x["status_jobs"] == ["e2e", "App-Deploy"] end) 
   end
 end

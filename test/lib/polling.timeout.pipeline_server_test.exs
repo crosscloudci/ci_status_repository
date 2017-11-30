@@ -12,7 +12,6 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServerTest do
   use ExUnit.Case
   # use CncfDashboardApi.ModelCase
   
-  @tag :wip
   test "let a pipeline timeout" do 
     skpm = insert(:source_key_project_monitor)
     # pm = insert(:pipeline_monitor)
@@ -24,21 +23,20 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServerTest do
     CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm.id)
 
     # test the genserver
-    {:ok, s_timeout} = CncfDashboardApi.Polling.Supervisor.Pipeline.start_link 
-    # key create a new process that is unique for skpm.id
+    # now in supervisor
+    # {:ok, s_timeout} = CncfDashboardApi.Polling.Supervisor.Pipeline.start_link 
+    # key create a new process that is unique for skpm.id and timesout in 1 second
     CncfDashboardApi.Polling.Supervisor.Pipeline.start_pipeline(skpm.id, skpm.id, 1000) 
     # GenServer.stop(s_timeout)
     # Wait for the timeout to complete
     Process.sleep(13000)
     # GenServer.stop(s_timeout)
 
-    IEx.pry
     {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.pipeline_monitor(skpm.id) 
     #TODO check if badges set to false
     assert  false == pm_record.running 
   end
 
-  @tag :wip
   test "set_run_to_fail" do 
     skpm = insert(:source_key_project_monitor)
     CncfDashboardApi.Endpoint.subscribe(self, "dashboard:*")

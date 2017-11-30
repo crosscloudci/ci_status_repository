@@ -22,7 +22,6 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServer do
   end
 
   def init([%{:skpm_id => skpm_id, :timeout => timeout}]) do
-    timeout = 1000
     Logger.info fn ->
       "pipeline timeout init skpm_id, timeout: #{inspect(skpm_id)} #{inspect(timeout)}"
     end
