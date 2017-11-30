@@ -14,7 +14,6 @@ defmodule CncfDashboardApi.CloudsControllerTest do
     assert json_response(conn, 200)["data"] == []
   end
 
-  @tag :wip
   test "shows chosen resource", %{conn: conn} do
     clouds = Repo.insert! %Clouds{}
     conn = get conn, clouds_path(conn, :show, clouds)

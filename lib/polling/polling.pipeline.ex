@@ -16,15 +16,16 @@ defmodule CncfDashboardApi.Polling.Pipeline do
   end
 
   def poll_pipeline_until_complete(source_key_project_monitor_id) do
-    case CncfDashboardApi.Polling.Pipeline.is_pipeline_complete(source_key_project_monitor_id) do
+    case is_pipeline_complete(source_key_project_monitor_id) do
       # if running sleep for 2 minutes
       {:ok, :running} ->
-        IO.puts("poll_pipeline_until_complete")
+        IO.puts("poll_pipeline_until_complete: still running")
         Logger.info fn ->
-          "poll_pipeline_until_complete "
+          "poll_pipeline_until_complete still running"
         end
-        :timer.sleep(:timer.seconds(5))
-        inifinite_poll_loop()
+        :timer.sleep(:timer.seconds(20))
+        # infinite_poll_loop()
+        poll_pipeline_until_complete(source_key_project_monitor_id)
       {:ok, :complete} ->
         {:ok, :complete}
     end
@@ -37,19 +38,27 @@ defmodule CncfDashboardApi.Polling.Pipeline do
     pm_changeset = CncfDashboardApi.PipelineMonitor.changeset(pm_record, %{running: false })
     {_, pm_record} = Repo.update(pm_changeset) 
 
+    # only two ref monitors, head and stable
     {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: pm_record.project_id, release_type: pm_record.release_type} 
       |> find_by([:project_id, :release_type])
 
+    # TODO, remove in favor of setting all badges that are still running to failed
     {dbs_found, dbs_record} = %CncfDashboardApi.DashboardBadgeStatus{ref_monitor_id: rm_record.id, order: 1} 
                               |> find_by([:ref_monitor_id, :order])
 
     Repo.all(from dbs in CncfDashboardApi.DashboardBadgeStatus, where: dbs.ref_monitor_id == ^rm_record.id and dbs.status == "running") 
     |> Enum.map(fn(x) -> 
       changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(x, %{status: "failed"})
-
       {_, dbs_record} = Repo.update(changeset) 
-      # TODO call broadcast dashboard
     end)
+
+    # Call dashboard channel
+    CncfDashboardApi.Endpoint.broadcast! "dashboard:*", "new_cross_cloud_call", %{reply: CncfDashboardApi.GitlabMonitor.dashboard_response} 
+
+    Logger.info fn ->
+      "Polling.Pipeline: Broadcasted json"
+    end
+
   end
 
   def monitor(source_key_project_monitor_id) do
@@ -61,36 +70,39 @@ defmodule CncfDashboardApi.Polling.Pipeline do
     end)
     receive do
       { :ok, response } -> 
-        Logger.info fn ->
-          "Completed polling of source_key_project_monitor_id: #{response}"
-        end
-        response
+      Logger.info fn ->
+        "Completed polling of source_key_project_monitor_id: #{response}"
+      end
+      response
+    # TODO get timeout from yml
     after 15_000 ->
-        Logger.info fn ->
-          "Timeout: setting badges to fail for source_key_project_monitor_id: #{source_key_project_monitor_id}"
-        end
+      Logger.info fn ->
+        "Timeout: setting badges to fail for source_key_project_monitor_id: #{source_key_project_monitor_id}"
+      end
       set_run_to_fail(source_key_project_monitor_id)
       Process.exit(pid, :kill)
       { :error, "Job timed out" }
     end
   end
 
-  def inifinite_poll_loop() do
+  def infinite_poll_loop() do
     case :error do
       :ok -> :ok
       :error ->
         IO.puts("Polling")
         :timer.sleep(:timer.seconds(1))
-        inifinite_poll_loop()
+        infinite_poll_loop()
     end
   end
 
   def timed_job_interval(job_data) do
-    reciever = self()
+    receiver = self()
     pid = spawn_link(fn -> 
-      CncfDashboardApi.Polling.Pipeline.inifinite_poll_loop
-      send reciever, { :ok, job_data } 
+      CncfDashboardApi.Polling.Pipeline.infinite_poll_loop
+      send receiver, { :ok, job_data } 
     end)
+    IO.puts("calling process: #{inspect(receiver)}")
+    IO.puts("new process: #{inspect(pid)}")
     receive do
       { :ok, response } -> 
         IO.puts("Got a response!")

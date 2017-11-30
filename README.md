@@ -70,5 +70,5 @@ helm upgrade staging-backend cncf/backend --install --force --set db.user=backen
 After setup for running sever above ^^^
 
   * Setup test DB `MIX_ENV=test mix ecto.migrate`
-  * Run tests `. .env; iex -S mix test --only wip --trace`
+  * Run tests `. .env; iex -S mix test`
 

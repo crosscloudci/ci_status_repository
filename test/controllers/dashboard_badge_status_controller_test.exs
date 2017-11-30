@@ -15,7 +15,6 @@ defmodule CncfDashboardApi.DashboardBadgeStatusControllerTest do
     assert json_response(conn, 200)["data"] == []
   end
 
-  @tag :wip
   test "shows chosen resource", %{conn: conn} do
     # dashboard_badge_status = Repo.insert! %DashboardBadgeStatus{}
     project = insert(:project)

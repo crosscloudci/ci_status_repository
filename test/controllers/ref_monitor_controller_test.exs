@@ -48,7 +48,6 @@ defmodule CncfDashboardApi.RefMonitorControllerTest do
     assert json_response(conn, 422)["errors"] != %{}
   end
 
-  @tag :wip
   test "updates and renders chosen resource when data is valid", %{conn: conn} do
     ref_monitor = Repo.insert! %RefMonitor{}
     conn = put conn, ref_monitor_path(conn, :update, ref_monitor), ref_monitor: @valid_attrs

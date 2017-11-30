@@ -13,7 +13,6 @@ defmodule CncfDashboardApi.YmlReader.GitlabCiTest do
     assert Enum.find_value(cloud_list, fn(x) -> x["active"] == true end) 
   end
 
-  @tag :wip
   test "project_list" do 
     project_list = CncfDashboardApi.YmlReader.GitlabCi.project_list()
     assert Enum.find_value(project_list, fn(x) -> x["yml_name"] == "kubernetes" end) 

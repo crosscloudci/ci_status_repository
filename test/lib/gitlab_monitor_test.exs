@@ -13,7 +13,6 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
   # use CncfDashboardApi.ModelCase
   
   # test "upsert_pipeline_monitor", %{socket: socket} do 
-  @tag :wip
   test "stable update: upsert_pipeline_monitor" do 
     skpm = insert(:source_key_project_monitor)
     # check insert 
