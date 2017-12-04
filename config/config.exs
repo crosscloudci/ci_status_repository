@@ -38,4 +38,12 @@ config :cncf_dashboard_api, CncfDashboardApi.Scheduler,
    # Runs every midnight:
    # {"@daily",         {Backup, :backup, []}}
  ]
+config :joken, config_module: Guardian.JWT
+
+config :guardian, Guardian,
+  # issuer: "CncfDashboardApi",
+  # ttl: { 30, :days },
+  # verify_issuer: false,
+  serializer: CncfDashboardApi.GuardianSerializer,
+  atoms: [:listen, :publish, :crews, :email, :name, :id]
 

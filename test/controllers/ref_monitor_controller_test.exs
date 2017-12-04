@@ -5,8 +5,9 @@ defmodule CncfDashboardApi.RefMonitorControllerTest do
   @valid_attrs %{order: 42, pipeline_id: 42, project_id: 42, ref: "some content", release_type: "some content", sha: "some content", status: "some content"}
   @invalid_attrs %{}
 
-  setup %{conn: conn} do
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
+  setup %{conn: conn} = config do
+    signed_conn = Guardian.Plug.api_sign_in(conn, nil)
+    {:ok, conn: signed_conn}
   end
 
   test "lists all entries on index", %{conn: conn} do
@@ -48,7 +49,6 @@ defmodule CncfDashboardApi.RefMonitorControllerTest do
     assert json_response(conn, 422)["errors"] != %{}
   end
 
-  @tag :wip
   test "updates and renders chosen resource when data is valid", %{conn: conn} do
     ref_monitor = Repo.insert! %RefMonitor{}
     conn = put conn, ref_monitor_path(conn, :update, ref_monitor), ref_monitor: @valid_attrs

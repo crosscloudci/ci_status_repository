@@ -20,6 +20,17 @@ defmodule CncfDashboardApi.GitlabMonitor do
     end
   end
 
+ @doc """
+  Get the source key models for the source key monitor, the project, and the pipeline 
+  based on `source_key_project_monitor_id`.
+
+  Source keys map the keys in gitlab to the keys in our database.
+
+  A migration from gitlab must have occured before calling this function in order to get 
+  valid data 
+
+  Returns `{:ok, monitor, source_key_project, source_key_pipeline}`
+  """
   def source_models(source_key_project_monitor_id) do
     monitor = Repo.all(from skpm in CncfDashboardApi.SourceKeyProjectMonitor, 
                                         where: skpm.id == ^source_key_project_monitor_id) |> List.first
@@ -30,6 +41,13 @@ defmodule CncfDashboardApi.GitlabMonitor do
     {:ok, monitor, source_key_project, source_key_pipeline}
   end
 
+ @doc """
+  Retrieve the pipeline monitor record based on the `source_key_project_monitor_id`.
+  The pipeline monitor record maintains the local keys for monitored pipelines and
+  is keyed based on project_id,  pipeline_id and release_type
+
+  Returns `{found, record}`.
+  """
   def pipeline_monitor(source_key_project_monitor_id) do
     {:ok, monitor, source_key_project, source_key_pipeline} = source_models(source_key_project_monitor_id)
 

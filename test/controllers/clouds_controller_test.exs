@@ -5,8 +5,9 @@ defmodule CncfDashboardApi.CloudsControllerTest do
   @valid_attrs %{cloud_name: "some content", display_name: "hi", order: 1}
   @invalid_attrs %{}
 
-  setup %{conn: conn} do
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
+  setup %{conn: conn} = config do
+    signed_conn = Guardian.Plug.api_sign_in(conn, nil)
+    {:ok, conn: signed_conn}
   end
 
   test "lists all entries on index", %{conn: conn} do
@@ -14,7 +15,6 @@ defmodule CncfDashboardApi.CloudsControllerTest do
     assert json_response(conn, 200)["data"] == []
   end
 
-  @tag :wip
   test "shows chosen resource", %{conn: conn} do
     clouds = Repo.insert! %Clouds{}
     conn = get conn, clouds_path(conn, :show, clouds)

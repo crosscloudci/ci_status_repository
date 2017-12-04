@@ -55,4 +55,18 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
         "order" => v["order"]} | acc] 
 		end) 
 	end
+
+	def gitlab_pipeline_config do
+		yml = CncfDashboardApi.YmlReader.GitlabCi.get() |> YamlElixir.read_from_string 
+		yml["gitlab_pipeline"] 
+		|> Stream.with_index 
+		|> Enum.reduce([], fn ({{k, v}, idx}, acc) -> 
+			# [%{"id" => (idx + 1), 
+			[%{"id" => 0, 
+        "pipeline_name" => k, 
+        "timeout" => v["timeout"],
+        "status_jobs" => v["status_jobs"],
+        } | acc] 
+		end) 
+	end
 end

@@ -5,8 +5,12 @@ defmodule CncfDashboardApi.BuildJobStatusControllerTest do
   @valid_attrs %{pipeline_id: 42, pipeline_monitor_id: 42, status: "some content"}
   @invalid_attrs %{}
 
-  setup %{conn: conn} do
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
+  # setup %{conn: conn} do
+  #   {:ok, conn: put_req_header(conn, "accept", "application/json")}
+  # end
+  setup %{conn: conn} = config do
+    signed_conn = Guardian.Plug.api_sign_in(conn, nil)
+    {:ok, conn: signed_conn}
   end
 
   test "lists all entries on index", %{conn: conn} do

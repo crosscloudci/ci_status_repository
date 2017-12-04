@@ -12,6 +12,8 @@ defmodule CncfDashboardApi do
       supervisor(CncfDashboardApi.Repo, []),
       # Start the endpoint when the application starts
       supervisor(CncfDashboardApi.Endpoint, []),
+      # {:ok, s_timeout} = CncfDashboardApi.Polling.Supervisor.Pipeline.start_link 
+      supervisor(CncfDashboardApi.Polling.Supervisor.Pipeline, []),
       # Start your own worker by calling: CncfDashboardApi.Worker.start_link(arg1, arg2, arg3)
       worker(CncfDashboardApi.Scheduler, []),
     ]
