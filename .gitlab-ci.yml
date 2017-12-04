@@ -62,7 +62,7 @@ Deploy-Backend-Staging:
   stage: Deploy
   only:
     - staging
-  image: registry.dev.cncf.ci/cncf/cncf-ci-dashboard:helm
+  image: registry.staging.cncf.ci/cncf/cncf-ci-dashboard:helm
   script:
     - >
       if [ "$BASE_URL" == "gitlab.staging.cncf.ci" ]; then
