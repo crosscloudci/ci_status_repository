@@ -288,8 +288,10 @@ defmodule CncfDashboardApi.GitlabMonitor do
                     end
                     {:cont, acc}
                   job.status =~ "success" ->
-                    # can only go to a running status from initial or running status
-                    if (acc =~ "success" || acc =~ "initial") do
+                    # The Backend Dashboard will NOT set the badge status to success when a 
+                    # child -- it's ignored for a child 
+                    # can only go to a success status from initial or success status
+                    if (child == false && (acc =~ "success" || acc =~ "initial")) do
                       acc = "success" 
                     end
                     {:cont, acc}
@@ -297,15 +299,9 @@ defmodule CncfDashboardApi.GitlabMonitor do
                     Logger.info fn ->
                       "unhandled job status: #{job}"
                     end
+                    {:cont, acc}
                 end 
              end) 
-
-    # can only go to success if parent pipeline
-    if (child == true && status == "success") do
-      ""
-    else
-      status
-    end
   end
 
   def compile_url(pipeline_id) do

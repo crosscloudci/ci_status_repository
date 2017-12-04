@@ -45,6 +45,20 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert CncfDashboardApi.GitlabMonitor.cloud_status(monitored_job_list, child, "aws", internal_pipeline_id) == "success"
   end
 
+  @tag :wip
+  test "running child cloud_status -- job status success ignored when a child" do
+    # The Backend Dashboard will NOT set the badge status to success when a 
+    # child -- it's ignored for a child 
+    monitored_job_list = ["e2e", "App-Deploy"]
+    child = true 
+    ccp = insert(:cross_cloud_pipeline, %{pipeline_jobs:
+      [build(:e2e_pipeline_job, %{status: "running"}) ,
+       build(:app_deploy_pipeline_job, %{status: "success"})
+      ]}) 
+    internal_pipeline_id = ccp.id
+    assert CncfDashboardApi.GitlabMonitor.cloud_status(monitored_job_list, child, "aws", internal_pipeline_id) == "running"
+  end
+
   # test "upsert_pipeline_monitor", %{socket: socket} do 
   test "stable update: upsert_pipeline_monitor" do 
     skpm = insert(:source_key_project_monitor)
