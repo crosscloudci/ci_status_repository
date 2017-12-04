@@ -11,7 +11,7 @@ Dashboard-Backend-Dev:
     - master
   script:
     - >
-      if [ "$BASE_URL" == "gitlab.dev.cncf.ci" ]; then
+      if [ "$BASE_URL" == "https://gitlab.dev.cncf.ci" ]; then
         continue
       else
         echo 'Wrong Environment'
@@ -28,7 +28,7 @@ Deploy-Backend-Dev:
   image: registry.dev.cncf.ci/cncf/cncf-ci-dashboard:helm
   script:
     - >
-      if [ "$BASE_URL" == "gitlab.dev.cncf.ci" ]; then
+      if [ "$BASE_URL" == "https://gitlab.dev.cncf.ci" ]; then
         continue
       else
         echo 'Wrong Environment'
@@ -49,7 +49,7 @@ Dashboard-Backend-Staging:
   script:
     - echo "$BASE_URL"
     - >
-      if [ "$BASE_URL" == "gitlab.staging.cncf.ci" ]; then
+      if [ "$BASE_URL" == "https://gitlab.staging.cncf.ci" ]; then
         continue
       else
         echo 'Wrong Environment'
@@ -67,7 +67,7 @@ Deploy-Backend-Staging:
   script:
     - echo "$BASE_URL"
     - >
-      if [ "$BASE_URL" == "gitlab.staging.cncf.ci" ]; then
+      if [ "$BASE_URL" == "https://gitlab.staging.cncf.ci" ]; then
         continue
       else
         echo 'Wrong Environment'
