@@ -47,7 +47,7 @@ Dashboard-Backend-Staging:
   only:
     - staging
   script:
-   - >
+    - >
       if [ "$BASE_URL" != "gitlab.staging.cncf.ci" ]; then
         continue
       else
@@ -64,7 +64,7 @@ Deploy-Backend-Staging:
     - staging
   image: registry.dev.cncf.ci/cncf/cncf-ci-dashboard:helm
   script:
-   - >
+    - >
       if [ "$BASE_URL" != "gitlab.staging.cncf.ci" ]; then
         continue
       else
