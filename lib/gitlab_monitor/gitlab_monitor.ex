@@ -216,6 +216,98 @@ defmodule CncfDashboardApi.GitlabMonitor do
     end
   end
 
+#  @doc """
+#   Get the url for the set of cross-cloud pipeline jobs based on the local `pipeline_id`.
+#
+#   Returns a string e.g. `"<url>"`
+#   """
+#   def cross_project_url(pipeline_id) do
+#     # the job names specified in the cross-cloud section of the cross-cloud.yml (status_jobs)
+#     cross_project_config = CncfDashboardApi.YmlReader.GitlabCi.gitlab_pipeline_config |> Enum.find(fn(x) -> x["pipeline_name"] =~ "cross-project" end)
+#     
+#      # determine the build status
+#      #    i.e. get the build job (name = compile)
+#      #    if exists, dashboard badge status status = build job status
+#      #    if doesn't exist, dashboard badge status = running
+#      project = Repo.all(from projects in CncfDashboardApi.Projects, 
+#                                           left_join: pipelines in assoc(projects, :pipelines),     
+#                                           where: pipelines.id == ^pipeline_id) 
+#                                           |> List.first
+#
+#     
+#     # retrieve the pipeline status from the jobs specified in the cross-cloud section of the cross-cloud.yml (status_jobs)
+#     # Loop through in the order recieved
+#     #
+#     # For cross-cloud jobs, a running or failed sends the url (not success)
+#     # For cross-project, running, failed, and success sends the url
+#     cross_project_config["status_jobs"] |> Enum.reduce([], fn(x, acc) ->
+#       monitored_job = Repo.all(from pj in CncfDashboardApi.PipelineJobs, 
+#                                where: pj.pipeline_id == ^pipeline_id)
+#                                |> Enum.find(fn(x) -> x.name =~ x end) 
+#       if monitored_job.status =~ "failed" do
+#       [x|acc]
+#       else
+#       end 
+#     end)
+#
+#     if compile do
+#       source_key_pipeline_jobs = Repo.all(from skpj in CncfDashboardApi.SourceKeyPipelineJobs, 
+#                                                    where: skpj.new_id == ^compile.id) |> List.first
+#       Logger.info fn ->
+#         "compile local pipeline_id: #{pipeline_id} source key: #{inspect(source_key_pipeline_jobs)}"
+#       end
+#       # e.g.   https://gitlab.dev.cncf.ci/coredns/coredns/-/jobs/31525
+#       "#{project.web_url}/-/jobs/#{source_key_pipeline_jobs.source_id}"
+#     end
+#   end
+
+  def cloud_status(monitor_job_list, child, _cloud, internal_pipeline_id) do
+    # get all the jobs for the internal pipeline
+      monitored_jobs = Repo.all(from pj in CncfDashboardApi.PipelineJobs, 
+                               where: pj.pipeline_id == ^internal_pipeline_id)
+
+    # loop through the jobs list in the order of precedence
+      # monitor_job_list e.g. ["e2e", "App-Deploy"]
+    # create status string e.g. "failure"
+    # If any job in the status jobs list has a status of failed, return failed
+    # else if any job in the list has a status of running, return running
+    # else 
+    #    if not child pipeline
+    #      if all jobs are a success, return success
+    status = monitor_job_list 
+             |> Enum.reduce_while("initial", fn(monitor_name, acc) ->
+                job = Enum.find(monitored_jobs, fn(x) -> x.name =~ monitor_name end) 
+                cond do
+                  job.status =~ "failed" ->
+                    acc = "failed"  
+                    {:halt, acc}
+                  job.status =~ "running" ->
+                    # can only go to a running status from initial, running, or success status
+                    if (acc =~ "running" || acc =~ "initial" || acc =~ "success") do
+                      acc = "running" 
+                    end
+                    {:cont, acc}
+                  job.status =~ "success" ->
+                    # can only go to a running status from initial or running status
+                    if (acc =~ "success" || acc =~ "initial") do
+                      acc = "success" 
+                    end
+                    {:cont, acc}
+                  true ->
+                    Logger.info fn ->
+                      "unhandled job status: #{job}"
+                    end
+                end 
+             end) 
+
+    # can only go to success if parent pipeline
+    if (child == true && status == "success") do
+      ""
+    else
+      status
+    end
+  end
+
   def compile_url(pipeline_id) do
      # determine the build status
      #    i.e. get the build job (name = compile)

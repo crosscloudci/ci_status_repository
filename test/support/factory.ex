@@ -35,6 +35,7 @@ defmodule CncfDashboardApi.Factory do
       cloud: build(:cloud),
     }
 	end
+
   def pipeline_factory do
     %CncfDashboardApi.Pipelines{
       ref: "ci_master",
@@ -45,6 +46,106 @@ defmodule CncfDashboardApi.Factory do
     }
 
 	end
+
+  def e2e_pipeline_job_factory do
+    %CncfDashboardApi.PipelineJobs{
+      name: "e2e",
+      status: "running",
+      ref: "ci_master",
+      cloud: build(:cloud),
+    }
+	end
+  def app_deploy_pipeline_job_factory do
+    %CncfDashboardApi.PipelineJobs{
+      name: "App-Deploy",
+      status: "running",
+      ref: "ci_master",
+      cloud: build(:cloud),
+    }
+  end
+  def k8_pipeline_job_factory do
+    %CncfDashboardApi.PipelineJobs{
+      name: "Kubernetes-Provisioning",
+      status: "running",
+      ref: "ci_master",
+      cloud: build(:cloud),
+    }
+	end
+  def build_pipeline_factory do
+    %CncfDashboardApi.Pipelines{
+      ref: "ci_master",
+      status: "success",
+      sha: "2342342342343243sdfsdfsdfs",
+      release_type: "build",
+      pipeline_jobs: [build(:pipeline_job)],
+    }
+
+	end
+  def cross_cloud_pipeline_factory do
+    %CncfDashboardApi.Pipelines{
+      ref: "ci_master",
+      status: "success",
+      sha: "2342342342343243sdfsdfsdfs",
+      release_type: "deploy",
+      pipeline_jobs: [build(:e2e_pipeline_job), build(:app_deploy_pipeline_job)],
+    }
+
+	end
+  def cross_project_pipeline_factory do
+    %CncfDashboardApi.Pipelines{
+      ref: "ci_master",
+      status: "success",
+      sha: "2342342342343243sdfsdfsdfs",
+      release_type: "deploy",
+      pipeline_jobs: [build(:k8_pipeline_job)],
+    }
+
+	end
+
+  def cross_cloud_source_key_project_monitor_factory do
+    # use a real source key project id 
+    projects = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == "cross-cloud" end)
+    working_project = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == "coredns" end)
+    # use a real pipeline id 
+    pipelines = GitLabProxy.get_gitlab_pipelines(projects["id"]) |> List.first
+    build_pipelines = GitLabProxy.get_gitlab_pipelines(working_project["id"]) |> List.first
+    %CncfDashboardApi.SourceKeyProjectMonitor{
+      # source_project_id: "1",
+      source_project_id: projects["id"] |> Integer.to_string,
+      # source_pipeline_id: "1",
+      source_pipeline_id: pipelines["id"] |> Integer.to_string,
+      source_pipeline_job_id: "1",
+      pipeline_release_type: "head",
+      active: true, 
+      cloud: "aws",
+      child_pipeline: true,
+      target_project_name: "coredns",
+      project_build_pipeline_id: build_pipelines["id"] |> Integer.to_string,
+    }
+  end
+
+  def cross_project_source_key_project_monitor_factory do
+    # use a real source key project id 
+    projects = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == "cross-project" end)
+    working_project = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == "coredns" end)
+    # use a real pipeline id 
+    pipelines = GitLabProxy.get_gitlab_pipelines(projects["id"]) |> List.first
+    build_pipelines = GitLabProxy.get_gitlab_pipelines(working_project["id"]) |> List.first
+    %CncfDashboardApi.SourceKeyProjectMonitor{
+      # source_project_id: "1",
+      source_project_id: projects["id"] |> Integer.to_string,
+      # source_pipeline_id: "1",
+      source_pipeline_id: pipelines["id"] |> Integer.to_string,
+      source_pipeline_job_id: "1",
+      pipeline_release_type: "head",
+      active: true, 
+      cloud: "aws",
+      child_pipeline: true,
+      target_project_name: "coredns",
+      project_build_pipeline_id: build_pipelines["id"] |> Integer.to_string,
+    }
+  end
+
   def project_factory do
     %CncfDashboardApi.Projects{
       name: "Kubernetes",
@@ -66,11 +167,6 @@ defmodule CncfDashboardApi.Factory do
     }
 	end
 
-    # field :source_project_id, :string
-    # field :source_pipeline_id, :string
-    # field :source_pipeline_job_id, :string
-    # field :pipeline_release_type, :string
-    # field :active, :boolean, default: true
   def source_key_project_monitor_factory do
     first_active_project =CncfDashboardApi.YmlReader.GitlabCi.project_list |> Enum.find(fn(x) -> x["active"] == true end)
     projects = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == first_active_project["yml_name"] end)
@@ -129,6 +225,36 @@ defmodule CncfDashboardApi.Factory do
       running: true,
       release_type: "stable",
       pipeline_type: "build"
+    }
+  end
+
+  def build_pipeline_monitor_factory do
+    %CncfDashboardApi.PipelineMonitor{
+      project_id: 1,
+      pipeline_id: 1,
+      running: true,
+      release_type: "stable",
+      pipeline_type: "build"
+    }
+  end
+
+  def cross_cloud_pipeline_monitor_factory do
+    %CncfDashboardApi.PipelineMonitor{
+      project_id: 1,
+      pipeline_id: 1,
+      running: true,
+      release_type: "stable",
+      pipeline_type: "deploy"
+    }
+  end
+
+  def cross_project_pipeline_monitor_factory do
+    %CncfDashboardApi.PipelineMonitor{
+      project_id: 1,
+      pipeline_id: 1,
+      running: true,
+      release_type: "stable",
+      pipeline_type: "deploy"
     }
   end
 

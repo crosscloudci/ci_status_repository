@@ -7,6 +7,11 @@ defmodule CncfDashboardApi.PipelineMonitor do
     field :release_type, :string
     field :pipeline_type, :string
     field :project_id, :integer
+    field :cloud, :string
+    field :child_pipeline, :boolean
+    field :target_project_name, :string
+    field :internal_build_pipeline_id, :string
+
 
     timestamps()
   end

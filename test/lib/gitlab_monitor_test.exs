@@ -12,6 +12,39 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
   use ExUnit.Case
   # use CncfDashboardApi.ModelCase
   
+  @tag :wip
+  test "running cloud_status" do
+    monitored_job_list = ["e2e", "App-Deploy"]
+    child = false 
+    ccp = insert(:cross_cloud_pipeline)
+    internal_pipeline_id = ccp.id
+    assert CncfDashboardApi.GitlabMonitor.cloud_status(monitored_job_list, child, "aws", internal_pipeline_id) == "running"
+  end
+
+  @tag :wip
+  test "failed cloud_status" do
+    monitored_job_list = ["e2e", "App-Deploy"]
+    child = false 
+    ccp = insert(:cross_cloud_pipeline, %{pipeline_jobs:
+      [build(:e2e_pipeline_job, %{status: "failed"}) ,
+       build(:app_deploy_pipeline_job, %{status: "success"})
+      ]}) 
+    internal_pipeline_id = ccp.id
+    assert CncfDashboardApi.GitlabMonitor.cloud_status(monitored_job_list, child, "aws", internal_pipeline_id) == "failed"
+  end
+
+  @tag :wip
+  test "success parent cloud_status" do
+    monitored_job_list = ["e2e", "App-Deploy"]
+    child = false 
+    ccp = insert(:cross_cloud_pipeline, %{pipeline_jobs:
+      [build(:e2e_pipeline_job, %{status: "success"}) ,
+       build(:app_deploy_pipeline_job, %{status: "success"})
+      ]}) 
+    internal_pipeline_id = ccp.id
+    assert CncfDashboardApi.GitlabMonitor.cloud_status(monitored_job_list, child, "aws", internal_pipeline_id) == "success"
+  end
+
   # test "upsert_pipeline_monitor", %{socket: socket} do 
   test "stable update: upsert_pipeline_monitor" do 
     skpm = insert(:source_key_project_monitor)

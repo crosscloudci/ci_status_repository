@@ -1,4 +1,5 @@
 require IEx;
+require Logger;
 defmodule CncfDashboardApi.SourceKeyProjectMonitorController do
   use CncfDashboardApi.Web, :controller
 
@@ -18,6 +19,9 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitorController do
         CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(source_key_project_monitor.id)
         {_pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.pipeline_monitor(source_key_project_monitor.id) 
         project = Repo.get!(CncfDashboardApi.Projects, pm_record.project_id)
+        Logger.info fn ->
+          "source_key_project_monitor create project: #{inspect(project)}"
+        end
         
         CncfDashboardApi.Polling.Supervisor.Pipeline.start_pipeline(source_key_project_monitor.id, source_key_project_monitor.id, project.timeout * 1000) 
         # Process.sleep(13000)
