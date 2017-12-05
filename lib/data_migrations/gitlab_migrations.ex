@@ -43,12 +43,12 @@ defmodule CncfDashboardApi.GitlabMigrations do
   # need to upsert projects before yml projects
 	def upsert_yml_projects do
     # need to pull local ids into the project map
-    Logger.info fn ->
-      "upsert_yml_projects project_list before update: #{inspect(CncfDashboardApi.YmlReader.GitlabCi.project_list())}"
-    end
-    Logger.info fn ->
-      "upsert_yml_projects saved projects before update: #{inspect(CncfDashboardApi.Repo.all(CncfDashboardApi.Projects))}"
-    end
+    # Logger.info fn ->
+    #   "upsert_yml_projects project_list before update: #{inspect(CncfDashboardApi.YmlReader.GitlabCi.project_list())}"
+    # end
+    # Logger.info fn ->
+    #   "upsert_yml_projects saved projects before update: #{inspect(CncfDashboardApi.Repo.all(CncfDashboardApi.Projects))}"
+    # end
     project_map = CncfDashboardApi.YmlReader.GitlabCi.project_list() |> Enum.reduce([], fn(x, acc) -> 
       local_project = CncfDashboardApi.Repo.all(from p in CncfDashboardApi.Projects, 
                                                 where: p.name == ^x["yml_gitlab_name"])
@@ -60,9 +60,9 @@ defmodule CncfDashboardApi.GitlabMigrations do
         acc
       end
     end)
-    Logger.info fn ->
-      "upsert_yml_projects project_map before update: #{inspect(project_map)}"
-    end
+    # Logger.info fn ->
+    #   "upsert_yml_projects project_map before update: #{inspect(project_map)}"
+    # end
     upsert_count = CncfDashboardApi.DataMigrations.upsert_from_map(
       CncfDashboardApi.Repo,
       project_map,
@@ -136,9 +136,9 @@ defmodule CncfDashboardApi.GitlabMigrations do
 
   def upsert_pipelines(source_projects) do
     Enum.map(source_projects, fn (%{"id" => source_project_id}) ->
-      Logger.info fn ->
-        "source_project_id is: " <> inspect(source_project_id)
-      end
+      # Logger.info fn ->
+      #   "source_project_id is: " <> inspect(source_project_id)
+      # end
       pipeline_map = GitLabProxy.get_gitlab_pipelines(source_project_id)
       # get the local project ids from the project list
       skp = CncfDashboardApi.Repo.get_by(CncfDashboardApi.SourceKeyProjects, source_id: source_project_id |> Integer.to_string) 
@@ -166,9 +166,9 @@ defmodule CncfDashboardApi.GitlabMigrations do
       source_key_projects = source_key_projects_orig
     end
     project_ids = Enum.map(source_key_projects, fn(%{source_id: id}) -> %{"id" => String.to_integer(id)}end) 
-    Logger.info fn ->
-      "upsert_all_piplelines project_ids are: " <> inspect(project_ids)
-    end
+    # Logger.info fn ->
+    #   "upsert_all_piplelines project_ids are: " <> inspect(project_ids)
+    # end
     CncfDashboardApi.GitlabMigrations.upsert_pipelines(project_ids) 
   end 
 
@@ -203,21 +203,17 @@ defmodule CncfDashboardApi.GitlabMigrations do
                                                   pipeline_id: :pipeline_id}
                                               )
     else
-      Logger.info fn ->
-        "Either Source key project or pipeline is nil"
-      end
+      # Logger.info fn ->
+      #   "Either Source key project or pipeline is nil"
+      # end
     end
   end 
 
   # pipeline_jobs depends on projects and pipelines being upserted previously
   def upsert_all_pipeline_jobs do
-    Logger.info fn ->
-      "upsert_all_pipeline_jobs"
-    end
-    # TODO 1. loop through all projects that exist remotely
-    # TODO 2. loop through each pipeline that exists for each project
-    # TODO 3. get the local id for the project
-    # TODO 4. get the local id for the pipleline
+    # Logger.info fn ->
+    #   "upsert_all_pipeline_jobs"
+    # end
     #
     pl = Ecto.Query.from pl in CncfDashboardApi.Pipelines, 
       join: skpl in CncfDashboardApi.SourceKeyPipelines, on: skpl.new_id == pl.id,
@@ -225,14 +221,14 @@ defmodule CncfDashboardApi.GitlabMigrations do
       join: skp in CncfDashboardApi.SourceKeyProjects, on: skp.new_id == p.id,
       select: {p, pl, skpl, skp}
     project_pipelines = CncfDashboardApi.Repo.all(pl) 
-    Logger.info fn ->
-      "upsert_all_pipeline_jobs count: " <> inspect(project_pipelines)
-    end
+    # Logger.info fn ->
+    #   "upsert_all_pipeline_jobs count: " <> inspect(project_pipelines)
+    # end
     Enum.map(project_pipelines, fn({project, pipeline, skpipeline, skproject}) ->
-      Logger.info fn ->
-        "load all pipeline jobs: source_project_id: " <> inspect(skproject.source_id) <> 
-          " load all pipeline jobs: source_pipeline_id: " <> inspect(skpipeline.source_id)
-      end
+      # Logger.info fn ->
+      #   "load all pipeline jobs: source_project_id: " <> inspect(skproject.source_id) <> 
+      #     " load all pipeline jobs: source_pipeline_id: " <> inspect(skpipeline.source_id)
+      # end
       CncfDashboardApi.GitlabMigrations.upsert_pipeline_jobs(skproject.source_id |> String.to_integer, 
                                                              skpipeline.source_id |> String.to_integer)
     end)

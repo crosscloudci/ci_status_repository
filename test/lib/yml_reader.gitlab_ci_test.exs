@@ -22,7 +22,7 @@ defmodule CncfDashboardApi.YmlReader.GitlabCiTest do
     assert Enum.find_value(project_list, fn(x) -> x["yml_gitlab_name"] == "Kubernetes" end) 
     assert Enum.find_value(project_list, fn(x) -> x["order"] == 1 end) 
     assert Enum.find_value(project_list, fn(x) -> x["repository_url"] == "https://github.com/kubernetes/kubernetes" end) 
-    assert Enum.find_value(project_list, fn(x) -> x["timeout"] == 900 end) 
+    assert Enum.find_value(project_list, fn(x) -> is_number(x["timeout"]) end) 
     assert Enum.find_value(project_list, fn(x) -> x["project_url"] == "https://github.com/kubernetes/kubernetes" end) 
   end
 

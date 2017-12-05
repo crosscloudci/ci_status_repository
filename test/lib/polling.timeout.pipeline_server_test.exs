@@ -17,7 +17,7 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServerTest do
     # pm = insert(:pipeline_monitor)
 
     # setup the initial pipeline 
-    {:ok, upsert_count, cloud_map} = CncfDashboardApi.GitlabMigrations.upsert_clouds()
+    # {:ok, upsert_count, cloud_map} = CncfDashboardApi.GitlabMigrations.upsert_clouds()
     projects = insert(:project, %{ref_monitors: []})
     skpj = insert(:source_key_project, %{new_id: projects.id})
     CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm.id)
@@ -40,7 +40,7 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServerTest do
   test "set_run_to_fail" do 
     skpm = insert(:source_key_project_monitor)
     CncfDashboardApi.Endpoint.subscribe(self, "dashboard:*")
-    {:ok, upsert_count, cloud_map} = CncfDashboardApi.GitlabMigrations.upsert_clouds()
+    # {:ok, upsert_count, cloud_map} = CncfDashboardApi.GitlabMigrations.upsert_clouds()
     projects = insert(:project)
     CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm.id)
     {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.pipeline_monitor(skpm.id) 

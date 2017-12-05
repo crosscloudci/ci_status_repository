@@ -23,7 +23,7 @@ defmodule CncfDashboardApi.Polling.PipelineTest do
   test "set_run_to_fail" do 
     skpm = insert(:source_key_project_monitor)
     CncfDashboardApi.Endpoint.subscribe(self, "dashboard:*")
-    {:ok, upsert_count, cloud_map} = CncfDashboardApi.GitlabMigrations.upsert_clouds()
+    # {:ok, upsert_count, cloud_map} = CncfDashboardApi.GitlabMigrations.upsert_clouds()
     projects = insert(:project)
     CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm.id)
     {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.pipeline_monitor(skpm.id) 
