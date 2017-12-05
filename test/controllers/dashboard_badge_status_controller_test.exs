@@ -25,7 +25,7 @@ defmodule CncfDashboardApi.DashboardBadgeStatusControllerTest do
     assert json_response(conn, 200)["data"] == %{"id" => dashboard_badge_status.id,
       "status" => dashboard_badge_status.status,
       "cloud_id" => dashboard_badge_status.cloud_id,
-      "job_id" => dashboard_badge_status.id, "name" => "N/A", "pipeline_id" => dashboard_badge_status.ref_monitor_id, "project_id" => project.id, "ref" => "N/A", "url" => nil,
+      "job_id" => dashboard_badge_status.id, "name" => "N/A", "pipeline_id" => dashboard_badge_status.ref_monitor_id, "project_id" => nil, "ref" => "N/A", "url" => nil,
       "order" => dashboard_badge_status.order}
   end
 

@@ -210,6 +210,10 @@ defmodule CncfDashboardApi.Factory do
       source_pipeline_job_id: "1",
       pipeline_release_type: "stable",
       active: true, 
+      cloud: "aws",
+      child_pipeline: false,
+      target_project_name: "prometheus",
+      project_build_pipeline_id: pipelines["id"] |> Integer.to_string
     }
   end
 
@@ -227,6 +231,10 @@ defmodule CncfDashboardApi.Factory do
       source_pipeline_job_id: "1",
       pipeline_release_type: "head",
       active: true, 
+      cloud: "aws",
+      child_pipeline: false,
+      target_project_name: "prometheus",
+      project_build_pipeline_id: pipelines["id"] |> Integer.to_string
     }
   end
 

@@ -25,7 +25,7 @@ defmodule CncfDashboardApi.RefMonitorControllerTest do
       "release_type" => ref_monitor.release_type,
       "project_id" => ref_monitor.project_id,
       "order" => ref_monitor.order,
-      "pipeline_id" => ref_monitor.pipeline_id,
+      "pipeline_id" => ref_monitor.id,
       "head_commit" => nil, "jobs" => [], "stable_tag" => nil
     }
   end
