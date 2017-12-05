@@ -235,12 +235,16 @@ defmodule CncfDashboardApi.GitlabMonitor do
   end
 
   def cloud_status(monitor_job_list, child_pipeline, _cloud, internal_pipeline_id) do
+
+    Logger.info fn ->
+      "cloud_status monitored_job_list: #{inspect(monitor_job_list)}"
+    end
     # get all the jobs for the internal pipeline
-      monitored_jobs = Repo.all(from pj in CncfDashboardApi.PipelineJobs, 
-                               where: pj.pipeline_id == ^internal_pipeline_id)
-      Logger.info fn ->
-        "cloud_status monitored_jobs: #{inspect(monitored_jobs)}"
-      end
+    monitored_jobs = Repo.all(from pj in CncfDashboardApi.PipelineJobs, 
+                              where: pj.pipeline_id == ^internal_pipeline_id)
+    Logger.info fn ->
+      "cloud_status monitored_jobs: #{inspect(monitored_jobs)}"
+    end
 
     # loop through the jobs list in the order of precedence
       # monitor_job_list e.g. ["e2e", "App-Deploy"]
@@ -253,6 +257,9 @@ defmodule CncfDashboardApi.GitlabMonitor do
     status = monitor_job_list 
              |> Enum.reduce_while("initial", fn(monitor_name, acc) ->
                 job = Enum.find(monitored_jobs, fn(x) -> x.name =~ monitor_name end) 
+                Logger.info fn ->
+                  "monitored job string: #{inspect(monitor_name)}. job: #{inspect(job)}"
+                end
                 cond do
                   job && (job.status =~ "failed" || job.status =~ "cancelled") ->
                     acc = "failed"  
@@ -495,14 +502,14 @@ defmodule CncfDashboardApi.GitlabMonitor do
         "cross_cloud_pipeline_monitor: #{inspect(cross_cloud_pipeline_monitor)}"
       end
       if cross_cloud_pipeline_monitor do
-        cc_status = CncfDashboardApi.GitlabMonitor.cloud_status(monitored_job_list("cross-cloud"), pipeline_monitor.child_pipeline, cloud.cloud_name, cross_cloud_pipeline_monitor.pipeline_id)
+        cc_status = CncfDashboardApi.GitlabMonitor.cloud_status(monitored_job_list("cross-cloud"), cross_cloud_pipeline_monitor.child_pipeline, cloud.cloud_name, cross_cloud_pipeline_monitor.pipeline_id)
       end
 
       Logger.info fn ->
         "cross_project_pipeline_monitor: #{inspect(cross_project_pipeline_monitor)}"
       end
       if cross_project_pipeline_monitor do
-        cp_status = CncfDashboardApi.GitlabMonitor.cloud_status(monitored_job_list("cross-project"), pipeline_monitor.child_pipeline, cloud.cloud_name, cross_project_pipeline_monitor.pipeline_id)
+        cp_status = CncfDashboardApi.GitlabMonitor.cloud_status(monitored_job_list("cross-project"), cross_project_pipeline_monitor.child_pipeline, cloud.cloud_name, cross_project_pipeline_monitor.pipeline_id)
       end
  
       cond do
