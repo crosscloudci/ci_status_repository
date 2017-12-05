@@ -60,7 +60,8 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     # child -- it's ignored for a child 
     ccskpm = insert(:cross_cloud_source_key_project_monitor)
     CncfDashboardApi.GitlabMonitor.migrate_source_key_monitor(ccskpm.id)
-    assert CncfDashboardApi.GitlabMonitor.monitored_job_list("cross-project") == ["e2e", "App-Deploy"] 
+    # assert CncfDashboardApi.GitlabMonitor.monitored_job_list("cross-project") == ["e2e", "App-Deploy"] 
+    assert CncfDashboardApi.GitlabMonitor.monitored_job_list("cross-project") == ["App-Deploy"] 
   end
 
   # test "upsert_pipeline_monitor", %{socket: socket} do 

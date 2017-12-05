@@ -552,11 +552,11 @@ defmodule CncfDashboardApi.GitlabMonitor do
       Logger.info fn ->
         "status: #{inspect(status)}"
       end
-      Logger.info fn ->
-        "all dashboards status: #{inspect(Repo.all(
-          from dbs in CncfDashboardApi.DashboardBadgeStatus,
-          where: dbs.ref_monitor_id == ^rm_record.id))}"
-      end
+      # Logger.info fn ->
+      #   "all dashboards status: #{inspect(Repo.all(
+      #     from dbs in CncfDashboardApi.DashboardBadgeStatus,
+      #     where: dbs.ref_monitor_id == ^rm_record.id))}"
+      # end
 
       cloud_order = cloud.order + 1
       Logger.info fn ->
