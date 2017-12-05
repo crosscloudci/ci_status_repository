@@ -289,15 +289,26 @@ defmodule CncfDashboardApi.GitlabMonitor do
                                           left_join: pipelines in assoc(projects, :pipelines),     
                                           where: pipelines.id == ^pipeline_id) 
                                           |> List.first
+    Logger.info fn ->
+      "compile url project: #{inspect(project)}"
+    end
 
     compile = Repo.all(from pj in CncfDashboardApi.PipelineJobs, 
                                           where: pj.pipeline_id == ^pipeline_id)
                 |> Enum.find(fn(x) -> x.name =~ "compile" end) 
+
+    Logger.info fn ->
+      "compile job: #{inspect(compile)}"
+    end
+
     if compile do
+      Logger.info fn ->
+        "source key pipeline jobs, should be only 1: #{inspect(Repo.all(from skpj in CncfDashboardApi.SourceKeyPipelineJobs, where: skpj.new_id == ^compile.id))}"
+      end
       source_key_pipeline_jobs = Repo.all(from skpj in CncfDashboardApi.SourceKeyPipelineJobs, 
                                                    where: skpj.new_id == ^compile.id) |> List.first
       Logger.info fn ->
-        "compile local pipeline_id: #{pipeline_id} source key: #{inspect(source_key_pipeline_jobs)}"
+        "compile local pipeline_id: #{pipeline_id} *first* source key: #{inspect(source_key_pipeline_jobs)}"
       end
       # e.g.   https://gitlab.dev.cncf.ci/coredns/coredns/-/jobs/31525
       "#{project.web_url}/-/jobs/#{source_key_pipeline_jobs.source_id}"
@@ -360,11 +371,14 @@ defmodule CncfDashboardApi.GitlabMonitor do
       target_pm = Repo.all(from pm in CncfDashboardApi.PipelineMonitor, 
                            where: pm.pipeline_id == ^pipeline_monitor.internal_build_pipeline_id, 
                            where: pm.pipeline_type == "build") |> List.first
+      target_pl = Repo.all(from pm in CncfDashboardApi.Pipelines, 
+                           where: pm.id == ^pipeline_monitor.internal_build_pipeline_id ) |> List.first
       Logger.info fn ->
         " upsert_ref_monitor target_pm: #{inspect(target_pm)}"
       end
     else
       target_pm = pipeline_monitor
+      target_pl = pipeline
     end
 
     {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: target_pm.project_id,
@@ -372,12 +386,12 @@ defmodule CncfDashboardApi.GitlabMonitor do
       |> find_by([:project_id, :release_type])
 
     changeset = CncfDashboardApi.RefMonitor.changeset(rm_record,  
-               %{ref: pipeline.ref,
-                 status: pipeline.status,
-                 sha: pipeline.sha,
-                 release_type: pipeline_monitor.release_type,
+               %{ref: target_pl.ref,
+                 status: target_pl.status,
+                 sha: target_pl.sha,
+                 release_type: target_pm.release_type,
                  project_id: target_pm.project_id,
-                 pipeline_id: pipeline.id,
+                 pipeline_id: target_pl.id,
                  order: pipeline_order
                })
 
@@ -407,7 +421,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
       |> find_by([:ref_monitor_id, :order])
 
     changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(dbs_record, 
-               %{ref: pipeline.ref,
+               %{ref: target_pl.ref,
                  status: build_status(target_pm.pipeline_id),
                  ref_monitor_id: rm_record.id,
                  url: compile_url(target_pm.pipeline_id),
@@ -456,7 +470,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
       "cross_cloud ad cross_project:"
     end
 
-    cc = Repo.all(from p in CncfDashboardApi.Projects, where: p.name == "cross-cloud") |> List.first
+    cc = Repo.all(from p in CncfDashboardApi.Projects, where: p.name == "cross-cloud") |> List.last
     Logger.info fn ->
       "cross_cloud project: #{inspect(cc)}"
     end
@@ -545,7 +559,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
 
      # TODO determine cloud url 
       changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(dbs_record, 
-                                                                  %{ref: pipeline.ref,
+                                                                  %{ref: target_pl.ref,
                                                                     status: status,
                                                                     ref_monitor_id: rm_record.id,
                                                                     url: "http://example.com",
