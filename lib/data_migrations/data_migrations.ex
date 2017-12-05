@@ -33,9 +33,9 @@ defmodule CncfDashboardApi.DataMigrations do
       source_array = unquote(map)
 
       # 1) log that we are starting the load
-      Logger.info fn ->
-        "Upsert " <> (Atom.to_string(unquote(model)))
-      end
+      # Logger.info fn ->
+      #   "Upsert " <> (Atom.to_string(unquote(model)))
+      # end
 
       # 2) get the list of all source records and loop through them
       #
@@ -66,9 +66,9 @@ defmodule CncfDashboardApi.DataMigrations do
         #
 
         # {sp_found, sp_record} = %CncfDashboardApi.Projects{id: (skp_record.new_id || -1)} |> find_by(:id)
-        Logger.info fn ->
-          "Data migration: Using a key model: #{inspect unquote(key_model)} for #{inspect unquote(model)}"
-        end
+        # Logger.info fn ->
+        #   "Data migration: Using a key model: #{inspect unquote(key_model)} for #{inspect unquote(model)}"
+        # end
         unquote(
           if key_model do 
             quote do
@@ -76,17 +76,17 @@ defmodule CncfDashboardApi.DataMigrations do
             end
           else
             quote do
-              Logger.info fn ->
-                "Data Migration Source map #{inspect source_map}"
-              end
+              # Logger.info fn ->
+              #   "Data Migration Source map #{inspect source_map}"
+              # end
               {sp_found, sp_record} = %unquote(model){id: source_map["id"]} |> find_by(:id)
             end
           end
         ) 
 
-        Logger.info fn ->
-          "Datamigration: Using a key model"
-        end
+        # Logger.info fn ->
+        #   "Datamigration: Using a key model"
+        # end
 
         case sp_found do
           :not_found ->
@@ -120,9 +120,9 @@ defmodule CncfDashboardApi.DataMigrations do
                                     |> Atom.to_string]) 
                                   end
         ) 
-        Logger.info fn ->
-          "destination changeset build from source map: #{inspect(cs1)}"
-        end
+        # Logger.info fn ->
+        #   "destination changeset build from source map: #{inspect(cs1)}"
+        # end
         changeset = unquote(model).changeset(sp_record, cs1)
 
         # 7) save the local record
@@ -132,15 +132,15 @@ defmodule CncfDashboardApi.DataMigrations do
           :found ->
             # {_, sp_record} = CncfDashboardApi.Repo.update(changeset) 
             {_, sp_record} = unquote(repo).update(changeset) 
-            Logger.info fn ->
-              ":found data migration result: #{inspect(sp_record)}"
-            end
+            # Logger.info fn ->
+            #   ":found data migration result: #{inspect(sp_record)}"
+            # end
           :not_found ->
             # {_, sp_record} = CncfDashboardApi.Repo.insert(changeset) 
             {_, sp_record} = unquote(repo).insert(changeset) 
-            Logger.info fn ->
-              ":not_found data migration result: #{inspect(sp_record)}"
-            end
+            # Logger.info fn ->
+            #   ":not_found data migration result: #{inspect(sp_record)}"
+            # end
         end
 
         # 8) save the uniquekey record

@@ -10,7 +10,8 @@ defmodule CncfDashboardApi.PipelineMonitor do
     field :cloud, :string
     field :child_pipeline, :boolean
     field :target_project_name, :string
-    field :internal_build_pipeline_id, :string
+    field :internal_build_pipeline_id, :integer
+    # belongs_to :internal_pipeline, CncfDashboardApi.Pipelines, foreign_key: :internal_build_pipeline_id, references: :id
 
 
     timestamps()
@@ -21,7 +22,8 @@ defmodule CncfDashboardApi.PipelineMonitor do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:pipeline_id, :running, :release_type, :pipeline_type, :project_id])
+    |> cast(params, [:pipeline_id, :running, :release_type, :pipeline_type, :project_id, :cloud,
+    :child_pipeline, :target_project_name, :internal_build_pipeline_id])
     |> validate_required([:pipeline_id, :running, :release_type, :pipeline_type, :project_id])
   end
 end

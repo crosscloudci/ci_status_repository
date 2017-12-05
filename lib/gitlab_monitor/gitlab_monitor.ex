@@ -3,7 +3,7 @@ require IEx;
 defmodule CncfDashboardApi.GitlabMonitor do
   import Ecto.Query
   alias CncfDashboardApi.Repo
-  use EctoConditionals, repo: CncfDashboardApi.Repo
+  use EctoConditionals, repo: Repo
 
 
   def last_checked do
@@ -119,7 +119,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
 
       case pm_found do
         :found -> raise "You may not monitor the same project and pipeline for two different branches"
-        _ ->
+        _ -> :ok
       end
                                                            
     # Insert only if pipeline, project, and release type do not exist
@@ -134,7 +134,11 @@ defmodule CncfDashboardApi.GitlabMonitor do
                                                              pipeline_id: source_key_pipeline.new_id,
                                                              running: true,
                                                              release_type: monitor.pipeline_release_type,
-                                                             pipeline_type: pipeline_type 
+                                                             pipeline_type: pipeline_type ,
+                                                             cloud: monitor.cloud,
+                                                             child_pipeline: monitor.child_pipeline,
+                                                             target_project_name: monitor.target_project_name,
+                                                             internal_build_pipeline_id: monitor.project_build_pipeline_id
                                                            })
 
     case pm_found do
@@ -192,7 +196,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
   def is_deploy_pipeline_type(project_id) do
     project = Repo.all(from skp in CncfDashboardApi.Projects, 
                                         where: skp.id == ^project_id) |> List.first
-    if project.name =~ "cross-cloud" do
+    if (project.name =~ "cross-cloud" || project.name =~ "cross-project") do
       true
     else
       false
@@ -216,52 +220,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
     end
   end
 
-#  @doc """
-#   Get the url for the set of cross-cloud pipeline jobs based on the local `pipeline_id`.
-#
-#   Returns a string e.g. `"<url>"`
-#   """
-#   def cross_project_url(pipeline_id) do
-#     # the job names specified in the cross-cloud section of the cross-cloud.yml (status_jobs)
-#     cross_project_config = CncfDashboardApi.YmlReader.GitlabCi.gitlab_pipeline_config |> Enum.find(fn(x) -> x["pipeline_name"] =~ "cross-project" end)
-#     
-#      # determine the build status
-#      #    i.e. get the build job (name = compile)
-#      #    if exists, dashboard badge status status = build job status
-#      #    if doesn't exist, dashboard badge status = running
-#      project = Repo.all(from projects in CncfDashboardApi.Projects, 
-#                                           left_join: pipelines in assoc(projects, :pipelines),     
-#                                           where: pipelines.id == ^pipeline_id) 
-#                                           |> List.first
-#
-#     
-#     # retrieve the pipeline status from the jobs specified in the cross-cloud section of the cross-cloud.yml (status_jobs)
-#     # Loop through in the order recieved
-#     #
-#     # For cross-cloud jobs, a running or failed sends the url (not success)
-#     # For cross-project, running, failed, and success sends the url
-#     cross_project_config["status_jobs"] |> Enum.reduce([], fn(x, acc) ->
-#       monitored_job = Repo.all(from pj in CncfDashboardApi.PipelineJobs, 
-#                                where: pj.pipeline_id == ^pipeline_id)
-#                                |> Enum.find(fn(x) -> x.name =~ x end) 
-#       if monitored_job.status =~ "failed" do
-#       [x|acc]
-#       else
-#       end 
-#     end)
-#
-#     if compile do
-#       source_key_pipeline_jobs = Repo.all(from skpj in CncfDashboardApi.SourceKeyPipelineJobs, 
-#                                                    where: skpj.new_id == ^compile.id) |> List.first
-#       Logger.info fn ->
-#         "compile local pipeline_id: #{pipeline_id} source key: #{inspect(source_key_pipeline_jobs)}"
-#       end
-#       # e.g.   https://gitlab.dev.cncf.ci/coredns/coredns/-/jobs/31525
-#       "#{project.web_url}/-/jobs/#{source_key_pipeline_jobs.source_id}"
-#     end
-#   end
-
-  def cloud_status(monitor_job_list, child, _cloud, internal_pipeline_id) do
+  def cloud_status(monitor_job_list, child_pipeline, _cloud, internal_pipeline_id) do
     # get all the jobs for the internal pipeline
       monitored_jobs = Repo.all(from pj in CncfDashboardApi.PipelineJobs, 
                                where: pj.pipeline_id == ^internal_pipeline_id)
@@ -291,7 +250,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
                     # The Backend Dashboard will NOT set the badge status to success when a 
                     # child -- it's ignored for a child 
                     # can only go to a success status from initial or success status
-                    if (child == false && (acc =~ "success" || acc =~ "initial")) do
+                    if (child_pipeline == false && (acc =~ "success" || acc =~ "initial")) do
                       acc = "success" 
                     end
                     {:cont, acc}
@@ -334,12 +293,11 @@ defmodule CncfDashboardApi.GitlabMonitor do
   # 2. pipeline_monitor is created/updated during the http_post
   # 3. upsert_ref_monitor is called to set up the dashboard
   def upsert_ref_monitor(project_id, pipeline_id) do
+     
       Logger.info fn ->
         "upsert_ref_monitor project id: #{project_id} pipeline_id: #{pipeline_id}"
       end
 
-    # initialize the dashboard
-    initialize_ref_monitor(project_id)
 
     # get project
     project = Repo.all(from p in CncfDashboardApi.Projects, 
@@ -354,18 +312,14 @@ defmodule CncfDashboardApi.GitlabMonitor do
     {pm_found, pipeline_monitor} = %CncfDashboardApi.PipelineMonitor{pipeline_id: pipeline.id, 
       project_id: project_id} |> find_by([:pipeline_id, :project_id])
 
+    # initialize the dashboard on build pipeline only
+    if pipeline_monitor.pipeline_type == "build" do
+      initialize_ref_monitor(project_id)
+    end
+
     #  get all clouds
     clouds = Repo.all(from c in CncfDashboardApi.Clouds)
 
-    # build ref_monitor
-    #    Abstraction of one or more pipelines
-     # field :ref, :string
-     # field :status, :string
-     # field :sha, :string
-     # field :release_type, :string
-     # field :project_id, :integer
-     # field :order, :integer
-     # field :pipeline_id, :integer
     if pipeline.release_type == "stable" do
       pipeline_order = 1
     else
@@ -401,13 +355,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
     end
      
      # build dashboard_badget_status
-     #   Abstraction of the status of one or more pipeline jobs
-     # field :status, :string
-     # field :cloud_id, :integer
-     # field :ref_monitor_id, :integer
-     # field :order, :integer
-     #
-     # et the dashboard badge for the build job
+     # get the dashboard badge for the build job
      #   i.e. get the dashboard badge with order = 1
 
      #
@@ -437,12 +385,116 @@ defmodule CncfDashboardApi.GitlabMonitor do
         {_, dbs_record} = Repo.insert(changeset) 
     end
      
-     # TODO loop through all clouds
+    #  # TODO loop through all clouds
+    cloud_list = Repo.all(from cd1 in CncfDashboardApi.Clouds, 
+                                           where: cd1.active == true,
+                                           order_by: [cd1.order]) 
+    Logger.info fn ->
+      "cloud_list : #{inspect(cloud_list)}"
+    end
+    # TODO get all the pipelines for the current working_project
+    # if pipeline_type = "build" then the project_id is a target project
+    # if pipeline_type = "deploy" then this is a pipeline project 
+    if pipeline_monitor.pipeline_type == "build" do
+      deploy_pipeline_monitors = Repo.all(from pm in CncfDashboardApi.PipelineMonitor, 
+                                                   where: pm.internal_build_pipeline_id == ^pipeline_monitor.pipeline_id,
+                                                   where: pm.pipeline_type == "deploy") 
+    else
+      deploy_pipeline_monitors = Repo.all(from pm in CncfDashboardApi.PipelineMonitor, 
+                                                   where: pm.internal_build_pipeline_id == ^pipeline_monitor.internal_build_pipeline_id,
+                                                   where: pm.pipeline_type == "deploy") 
+    end
+    Logger.info fn ->
+      "deploy_pipeline_monitors : #{inspect(deploy_pipeline_monitors)}"
+    end
+
+    #TODO put order on pipelines in yml
+    #TODO until then cross-cloud always comes before cross-project
+
+    cc = Repo.all(from p in CncfDashboardApi.Projects, where: p.name == "cross-cloud") |> List.first
+    cp = Repo.all(from p in CncfDashboardApi.Projects, where: p.name == "cross-project") |> List.first
+    Enum.map(cloud_list, fn(cloud) ->
+      cross_cloud_pipeline_monitor = Enum.find(deploy_pipeline_monitors, fn(x) ->
+        x.source_project_id == cc.id && x.cloud == cloud.cloud_name
+      end)
+      cross_project_pipeline_monitor = Enum.find(deploy_pipeline_monitors, fn(x) ->
+        x.source_project_id == cp.id && x.cloud == cloud.cloud_name
+      end)
+
+      if cross_cloud_pipeline_monitor do
+        Logger.info fn ->
+          "cross_cloud_pipeline_monitor found: #{inspect(cross_cloud_pipeline_monitor)}"
+        end
+        cc_status = CncfDashboardApi.GitlabMonitor.cloud_status(monitored_job_list("cross-cloud"), pipeline_monitor.child_pipeline, cloud.cloud_name, cross_cloud_pipeline_monitor.pipeline_id)
+      end
+
+      if cross_project_pipeline_monitor do
+        Logger.info fn ->
+          "cross_project_pipeline_monitor found: #{inspect(cross_project_pipeline_monitor)}"
+        end
+        cp_status = CncfDashboardApi.GitlabMonitor.cloud_status(monitored_job_list("cross-project"), pipeline_monitor.child_pipeline, cloud.cloud_name, cross_project_pipeline_monitor.pipeline_id)
+      end
+ 
+      cond do
+        (cp_status && cp_status != "") -> 
+          status = cp_status 
+        (cc_status && cc_status != "") ->
+          status = cc_status 
+        true ->
+          status = "N/A"
+      end
+
+      Logger.info fn ->
+        "cp_status: #{inspect(cp_status)}"
+      end
+      Logger.info fn ->
+        "cc_status: #{inspect(cc_status)}"
+      end
+      Logger.info fn ->
+        "status: #{inspect(status)}"
+      end
+      Logger.info fn ->
+        "all dashboards status: #{inspect(Repo.all(
+          from dbs in CncfDashboardApi.DashboardBadgeStatus,
+          where: dbs.ref_monitor_id == ^rm_record.id,
+          where: dbs.order == ^cloud.order))}"
+      end
+
+      cloud_order = cloud.order + 1
+      {dbs_found, dbs_record} = %CncfDashboardApi.DashboardBadgeStatus{ref_monitor_id: rm_record.id, order: (cloud_order)} |> find_by([:ref_monitor_id, :order])
+
+     # TODO determine cloud url 
+      changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(dbs_record, 
+                                                                  %{ref: pipeline.ref,
+                                                                    status: status,
+                                                                    ref_monitor_id: rm_record.id,
+                                                                    url: "http://example.com",
+                                                                    cloud_id: cloud.id,
+                                                                    order: cloud_order # build badge always 1 
+                                                                  })
+
+      Logger.info fn ->
+        "upsert_ref_monitor cloud status DashboardBadgeStatus.changeset : #{inspect(changeset)}"
+      end
+
+      case dbs_found do
+        :found ->
+          {_, dbs_record} = Repo.update(changeset) 
+        :not_found ->
+          {_, dbs_record} = Repo.insert(changeset) 
+      end
+    end)
      #
      # TODO determine cloud status
      #    determine cloud_id of the job (or set of jobs) status
      #    set order to the cloud order
      #
+  end
+
+  def monitored_job_list(project_name) do
+    cloud_list = CncfDashboardApi.YmlReader.GitlabCi.gitlab_pipeline_config()
+    pipeline_config = Enum.find(cloud_list, fn(x) -> x["pipeline_name"] == project_name end) 
+    pipeline_config["status_jobs"]
   end
 
   # projects and clouds must be migrated before calling initialize_ref_monitor
@@ -477,6 +529,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
 
   def new_n_a_ref_monitor(project_id, release_type, ref_order) do
     # insert a stable ref_monitor
+    Logger.info fn -> "new_n_a_ref_monitor" end
     changeset = CncfDashboardApi.RefMonitor.changeset(%CncfDashboardApi.RefMonitor{}, 
                                                       %{ref: "N/A",
                                                         status: "N/A",
@@ -500,15 +553,19 @@ defmodule CncfDashboardApi.GitlabMonitor do
     # insert one dashboard_badge for each cloud with status of N/A for the new ref_monitor
     |> Enum.map(fn(x) -> 
       Logger.info fn ->
-        "initialize_ref_monitor cloud: #{inspect(x)}"
+        "new dashboard badge status cloud: #{inspect(x)}"
       end
       cloud_order = x.order + 1 # clouds start with 2 wrt badge status
       changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(%CncfDashboardApi.DashboardBadgeStatus{}, 
                                                                   %{ref: "N/A",
                                                                     status: "N/A",
+                                                                    cloud_id: x.id,
                                                                     ref_monitor_id: rm_record.id,
                                                                     order: cloud_order })
       {_, dbs_record} = Repo.insert(changeset) 
+      Logger.info fn ->
+        "new initialized dashboard badge status: #{inspect(dbs_record)}"
+      end
 
     end) 
   end

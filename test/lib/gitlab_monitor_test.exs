@@ -12,7 +12,6 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
   use ExUnit.Case
   # use CncfDashboardApi.ModelCase
   
-  @tag :wip
   test "running cloud_status" do
     monitored_job_list = ["e2e", "App-Deploy"]
     child = false 
@@ -21,7 +20,6 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert CncfDashboardApi.GitlabMonitor.cloud_status(monitored_job_list, child, "aws", internal_pipeline_id) == "running"
   end
 
-  @tag :wip
   test "failed cloud_status" do
     monitored_job_list = ["e2e", "App-Deploy"]
     child = false 
@@ -33,7 +31,6 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert CncfDashboardApi.GitlabMonitor.cloud_status(monitored_job_list, child, "aws", internal_pipeline_id) == "failed"
   end
 
-  @tag :wip
   test "success parent cloud_status" do
     monitored_job_list = ["e2e", "App-Deploy"]
     child = false 
@@ -45,7 +42,6 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert CncfDashboardApi.GitlabMonitor.cloud_status(monitored_job_list, child, "aws", internal_pipeline_id) == "success"
   end
 
-  @tag :wip
   test "running child cloud_status -- job status success ignored when a child" do
     # The Backend Dashboard will NOT set the badge status to success when a 
     # child -- it's ignored for a child 
@@ -59,12 +55,20 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert CncfDashboardApi.GitlabMonitor.cloud_status(monitored_job_list, child, "aws", internal_pipeline_id) == "running"
   end
 
+  test "monitored_job_list" do
+    # The Backend Dashboard will NOT set the badge status to success when a 
+    # child -- it's ignored for a child 
+    ccskpm = insert(:cross_cloud_source_key_project_monitor)
+    CncfDashboardApi.GitlabMonitor.migrate_source_key_monitor(ccskpm.id)
+    assert CncfDashboardApi.GitlabMonitor.monitored_job_list("cross-project") == ["e2e", "App-Deploy"] 
+  end
+
   # test "upsert_pipeline_monitor", %{socket: socket} do 
   test "stable update: upsert_pipeline_monitor" do 
     skpm = insert(:source_key_project_monitor)
     # check insert 
     CncfDashboardApi.Endpoint.subscribe(self, "dashboard:*")
-    {:ok, upsert_count, cloud_map} = CncfDashboardApi.GitlabMigrations.upsert_clouds()
+    # {:ok, upsert_count, cloud_map} = CncfDashboardApi.GitlabMigrations.upsert_clouds()
     projects = insert(:project, %{ref_monitors: []})
     skpj = insert(:source_key_project, %{new_id: projects.id})
     CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm.id)
@@ -101,7 +105,7 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     skpm = insert(:head_source_key_project_monitor)
     # check insert 
     CncfDashboardApi.Endpoint.subscribe(self, "dashboard:*")
-    {:ok, upsert_count, cloud_map} = CncfDashboardApi.GitlabMigrations.upsert_clouds()
+    # {:ok, upsert_count, cloud_map} = CncfDashboardApi.GitlabMigrations.upsert_clouds()
     projects = insert(:project, %{ref_monitors: []})
     skpj = insert(:source_key_project, %{new_id: projects.id})
     CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm.id)
@@ -134,7 +138,7 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
 
   test "upsert_pipeline_monitor should not allow the same project and pipeline to monitor two different branches" do 
     skpm = insert(:source_key_project_monitor)
-    {:ok, upsert_count, cloud_map} = CncfDashboardApi.GitlabMigrations.upsert_clouds()
+    # {:ok, upsert_count, cloud_map} = CncfDashboardApi.GitlabMigrations.upsert_clouds()
     projects = insert(:project)
     CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm.id)
     skpm = insert(:source_key_project_monitor, %{pipeline_release_type: "head"})
@@ -151,7 +155,6 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
   end
 
   test "Use upsert_ref_monitor to insert a ref monitor" do 
-
     # try with no ref_monitors
     project = insert(:project, %{ref_monitors: []})
     pipeline = project.pipelines |> List.first
