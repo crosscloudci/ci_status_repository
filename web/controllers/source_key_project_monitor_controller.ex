@@ -23,8 +23,11 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitorController do
           "source_key_project_monitor create project: #{inspect(project)}"
         end
         
-        CncfDashboardApi.Polling.Supervisor.Pipeline.start_pipeline(source_key_project_monitor.id, source_key_project_monitor.id, project.timeout * 1000) 
-        # Process.sleep(13000)
+        if pm_record.pipeline_type == "build" do
+          CncfDashboardApi.Polling.Supervisor.Pipeline.start_pipeline(source_key_project_monitor.source_project_id, source_key_project_monitor.id, project.timeout * 1000) 
+          # Process.sleep(13000)
+        end
+
         conn
         |> put_status(:created)
         |> put_resp_header("location", source_key_project_monitor_path(conn, :show, source_key_project_monitor))
