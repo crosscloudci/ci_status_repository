@@ -287,11 +287,11 @@ defmodule CncfDashboardApi.GitlabMonitor do
              end) 
   end
 
+  def build_url(pipeline_id) do
+
+  end
+
   def compile_url(pipeline_id) do
-     # determine the build status
-     #    i.e. get the build job (name = compile)
-     #    if exists, dashboard badge status status = build job status
-     #    if doesn't exist, dashboard badge status = running
      project = Repo.all(from projects in CncfDashboardApi.Projects, 
                                           left_join: pipelines in assoc(projects, :pipelines),     
                                           where: pipelines.id == ^pipeline_id) 
