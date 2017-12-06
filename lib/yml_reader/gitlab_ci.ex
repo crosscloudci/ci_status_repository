@@ -13,18 +13,6 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
      body
     end
   end
-  # def cloud_list do
-  #   yml = CncfDashboardApi.YmlReader.GitlabCi.get() |> YamlElixir.read_from_string 
-  #   yml["clouds"] 
-  #   |> Stream.with_index 
-  #   |> Enum.reduce([], fn ({{k, v}, idx}, acc) -> 
-  #     # [%{"id" => (idx + 1), 
-  #     [%{"id" => 0, 
-  #       "cloud_name" => k, 
-  #       "active" => v,
-  #       "order" => (idx + 1)} | acc] 
-  #   end) 
-	# end
 
   def cloud_list do
     yml = CncfDashboardApi.YmlReader.GitlabCi.get() |> YamlElixir.read_from_string 
