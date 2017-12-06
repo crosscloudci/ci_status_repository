@@ -2,6 +2,7 @@ require IEx;
 defmodule CncfDashboardApi.YmlReader.GitlabCiTest do
   use ExUnit.Case
 
+  @tag :wip
   test "get" do 
     yml = CncfDashboardApi.YmlReader.GitlabCi.get()
     assert yml |> is_binary  

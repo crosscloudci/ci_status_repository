@@ -101,7 +101,15 @@ defmodule CncfDashboardApi.GitlabMonitor do
                                                    where: skp.source_id == ^monitor.project_build_pipeline_id) |> List.first
     
     Logger.info fn ->
+      "GitlabMonitor: monitor : #{inspect(monitor)}"
+    end
+
+    Logger.info fn ->
       "GitlabMonitor: source_key_project : #{inspect(source_key_project)}"
+    end
+
+    Logger.info fn ->
+      "GitlabMonitor: target_source_key_pipeline : #{inspect(target_source_key_pipeline)}"
     end
     # determine pipeline type
     case is_deploy_pipeline_type(source_key_project.new_id) do
@@ -524,7 +532,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
       end
  
       cond do
-        (cp_status && cp_status != "") -> 
+        (cp_status && cp_status != "" && cc_status != "failed") -> 
           status = cp_status 
         (cc_status && cc_status != "") ->
           status = cc_status 
