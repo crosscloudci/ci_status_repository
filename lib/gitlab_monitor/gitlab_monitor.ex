@@ -101,7 +101,15 @@ defmodule CncfDashboardApi.GitlabMonitor do
                                                    where: skp.source_id == ^monitor.project_build_pipeline_id) |> List.first
     
     Logger.info fn ->
+      "GitlabMonitor: monitor : #{inspect(monitor)}"
+    end
+
+    Logger.info fn ->
       "GitlabMonitor: source_key_project : #{inspect(source_key_project)}"
+    end
+
+    Logger.info fn ->
+      "GitlabMonitor: target_source_key_pipeline : #{inspect(target_source_key_pipeline)}"
     end
     # determine pipeline type
     case is_deploy_pipeline_type(source_key_project.new_id) do
@@ -261,7 +269,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
                   "monitored job string: #{inspect(monitor_name)}. job: #{inspect(job)}"
                 end
                 cond do
-                  job && (job.status =~ "failed" || job.status =~ "cancelled") ->
+                  job && (job.status =~ "failed" || job.status =~ "canceled") ->
                     acc = "failed"  
                     {:halt, acc}
                   job && (job.status =~ "running" || job.status =~ "created") ->
@@ -406,12 +414,12 @@ defmodule CncfDashboardApi.GitlabMonitor do
       :found ->
         {:ok, rm_record} = Repo.update(changeset) 
         Logger.info fn ->
-          "ref_monitor found update: #{inspect(rm_found)}"
+          "ref_monitor found update: #{inspect(rm_record)}"
         end
       :not_found ->
         {:ok, rm_record} = Repo.insert(changeset) 
-        Logger.info fn ->
-          "ref_monitor not found insert: #{inspect(rm_found)}"
+        Logger.error fn ->
+          "ref_monitor not found insert (should never happen): #{inspect(rm_record)}"
         end
     end
      
@@ -442,17 +450,16 @@ defmodule CncfDashboardApi.GitlabMonitor do
     case dbs_found do
       :found ->
         {_, dbs_record} = Repo.update(changeset) 
+        Logger.info fn ->
+          "dashboard status found update: #{inspect(dbs_record)}"
+        end
       :not_found ->
         {_, dbs_record} = Repo.insert(changeset) 
+        Logger.error fn ->
+          "dashboard status not found insert (should never happen): #{inspect(dbs_record)}"
+        end
     end
      
-    #  # TODO loop through all clouds
-    cloud_list = Repo.all(from cd1 in CncfDashboardApi.Clouds, 
-                                           where: cd1.active == true,
-                                           order_by: [cd1.order]) 
-    Logger.info fn ->
-      "cloud_list : #{inspect(cloud_list)}"
-    end
     # TODO get all the pipelines for the current working_project
     # if pipeline_type = "build" then the project_id is a target project
     # if pipeline_type = "deploy" then this is a pipeline project 
@@ -487,6 +494,18 @@ defmodule CncfDashboardApi.GitlabMonitor do
       "cross_project project: #{inspect(cp)}"
     end
 
+    #  # TODO loop through all clouds
+    posted_clouds = deploy_pipeline_monitors |> Enum.uniq_by(fn(x) -> x.cloud end) |> Enum.reduce([], fn(x,acc)-> [x.cloud | acc] end)
+    Logger.info fn ->
+      "posted_clouds : #{inspect(posted_clouds)}"
+    end
+
+    cloud_list = Repo.all(from cd1 in CncfDashboardApi.Clouds, where: cd1.active == true, where: cd1.cloud_name in ^posted_clouds, order_by: [cd1.order]) 
+    Logger.info fn ->
+      "filtered cloud_list : #{inspect(cloud_list)}"
+    end
+
+    # TODO only loop through clouds that have deploy pipeline monitors
     Enum.map(cloud_list, fn(cloud) ->
       Logger.info fn ->
         "cloud_name: #{inspect(cloud.cloud_name)}"
@@ -513,7 +532,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
       end
  
       cond do
-        (cp_status && cp_status != "") -> 
+        (cp_status && cp_status != "" && cc_status != "failed") -> 
           status = cp_status 
         (cc_status && cc_status != "") ->
           status = cc_status 
@@ -587,7 +606,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
         :not_found ->
           {_, dbs_record} = Repo.insert(changeset) 
           Logger.info fn ->
-            "dbs not found : #{inspect(dbs_record)}"
+            "dbs not found (should never happen) : #{inspect(dbs_record)}"
           end
       end
     end)
