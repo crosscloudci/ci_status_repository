@@ -295,7 +295,57 @@ defmodule CncfDashboardApi.GitlabMonitor do
              end) 
   end
 
-  def build_url(pipeline_id) do
+  def build_url(monitor_job_list, child_pipeline, _cloud, internal_pipeline_id) do
+
+    Logger.info fn ->
+      "build_url monitored_job_list: #{inspect(monitor_job_list)}"
+    end
+    # get all the jobs for the internal pipeline
+    monitored_jobs = Repo.all(from pj in CncfDashboardApi.PipelineJobs, 
+                              where: pj.pipeline_id == ^internal_pipeline_id)
+    Logger.info fn ->
+      "build_url monitored_jobs: #{inspect(monitored_jobs)}"
+    end
+
+    # loop through the jobs list in the order of precedence
+      # monitor_job_list e.g. ["e2e", "App-Deploy"]
+    # create status string e.g. "failure"
+    # If any job in the status jobs list has a status of failed, return failed
+    # else if any job in the list has a status of running, return running
+    # else 
+    #    if not child pipeline
+    #      if all jobs are a success, return success
+    status = monitor_job_list 
+             |> Enum.reduce_while("initial", fn(monitor_name, acc) ->
+                job = Enum.find(monitored_jobs, fn(x) -> x.name =~ monitor_name end) 
+                Logger.info fn ->
+                  "monitored job string: #{inspect(monitor_name)}. job: #{inspect(job)}"
+                end
+                cond do
+                  job && (job.status =~ "failed" || job.status =~ "canceled") ->
+                    acc = "failed"  
+                    {:halt, acc}
+                  job && (job.status =~ "running" || job.status =~ "created") ->
+                    # can only go to a running status from initial, running, or success status
+                    if (acc =~ "running" || acc =~ "initial" || acc =~ "success") do
+                      acc = "running" 
+                    end
+                    {:cont, acc}
+                  job && job.status =~ "success" ->
+                    # The Backend Dashboard will NOT set the badge status to success when a 
+                    # child -- it's ignored for a child 
+                    # can only go to a success status from initial or success status
+                    if (child_pipeline == false && (acc =~ "success" || acc =~ "initial")) do
+                      acc = "success" 
+                    end
+                    {:cont, acc}
+                  true ->
+                    Logger.error fn ->
+                      "unhandled job status: #{inspect(job)}.  #{inspect(monitor_name)} not found"
+                    end
+                    {:cont, acc}
+                end 
+             end) 
 
   end
 
