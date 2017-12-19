@@ -36,10 +36,10 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServer do
     case is_pipeline_complete(source_key_project_monitor_id) do
       {:ok, :running} ->
         # only set run to fail if wh
-        Logger.info fn ->
-          "is_pipeline_complete: still running"
-        end
-        set_run_to_fail(source_key_project_monitor_id)
+      Logger.info fn ->
+        "is_pipeline_complete: still running"
+      end
+      set_run_to_fail(source_key_project_monitor_id)
       {:ok, :complete} -> :ok 
     end
     {:stop, :normal, state}
@@ -73,10 +73,11 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServer do
     {_, pm_record} = Repo.update(pm_changeset) 
 
     # only two ref monitors, head and stable
-    {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: pm_record.project_id, release_type: pm_record.release_type} 
-                            |> find_by([:project_id, :release_type])
+    {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: pm_record.project_id, 
+      release_type: pm_record.release_type} 
+      |> find_by([:project_id, :release_type])
 
-                            # TODO, remove in favor of setting *all* badges that are still running to failed
+      # TODO, remove in favor of setting *all* badges that are still running to failed
     {dbs_found, dbs_record} = %CncfDashboardApi.DashboardBadgeStatus{ref_monitor_id: rm_record.id, order: 1} 
                               |> find_by([:ref_monitor_id, :order])
 

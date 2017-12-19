@@ -24,6 +24,9 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitorController do
         end
         
         if pm_record.pipeline_type == "build" do
+          Logger.info fn ->
+            "source_key_project_monitor start_pipeline timeout: #{inspect((project.timeout * 1000))}"
+          end
           CncfDashboardApi.Polling.Supervisor.Pipeline.start_pipeline(source_key_project_monitor.source_project_id, source_key_project_monitor.id, project.timeout * 1000) 
           # Process.sleep(13000)
         end
