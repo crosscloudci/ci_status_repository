@@ -12,6 +12,19 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServerTest do
   use ExUnit.Case
   # use CncfDashboardApi.ModelCase
   
+  test "run a kubernetes test" do
+    # scenario 1
+    # call kubernetes script
+    # System.cmd("whoami", [])
+    # set a premature timeout
+    # how do we set a premature timeout on the real db?
+    #   mock the timeout?
+    #
+    # scenario 2
+    # mock *all* of the build/compile data
+    # do a timeout 
+  end
+
   test "let a pipeline timeout" do 
     skpm = insert(:source_key_project_monitor)
     # pm = insert(:pipeline_monitor)
