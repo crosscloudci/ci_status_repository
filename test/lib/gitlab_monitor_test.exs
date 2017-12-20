@@ -12,6 +12,7 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
   use ExUnit.Case
   # use CncfDashboardApi.ModelCase
   
+  @tag :wip
   test "running cloud_status" do
     monitored_job_list = ["e2e", "App-Deploy"]
     child = false 
@@ -20,6 +21,7 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert CncfDashboardApi.GitlabMonitor.cloud_status(monitored_job_list, child, "aws", internal_pipeline_id) == "running"
   end
 
+  @tag :wip
   test "failed cloud_status" do
     monitored_job_list = ["e2e", "App-Deploy"]
     child = false 
@@ -31,6 +33,7 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert CncfDashboardApi.GitlabMonitor.cloud_status(monitored_job_list, child, "aws", internal_pipeline_id) == "failed"
   end
 
+  @tag :wip
   test "success parent cloud_status" do
     monitored_job_list = ["e2e", "App-Deploy"]
     child = false 
@@ -42,6 +45,7 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert CncfDashboardApi.GitlabMonitor.cloud_status(monitored_job_list, child, "aws", internal_pipeline_id) == "success"
   end
 
+  @tag :wip
   test "running child cloud_status -- job status success ignored when a child" do
     # The Backend Dashboard will NOT set the badge status to success when a 
     # child -- it's ignored for a child 
@@ -195,6 +199,7 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert 4 = dbs_count
   end
 
+  @tag :wip
   test "compile_url" do 
     project = insert(:project, %{pipelines: 
       [build(:pipeline, %{pipeline_jobs:
@@ -210,13 +215,14 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
   end
 
   @tag :wip
-  test "monitored_jobs" do 
+  test "successfull deploy_url" do 
     project = insert(:project, %{pipelines: 
       [build(:pipeline, %{pipeline_jobs:
-        [build(:pipeline_job, %{name: "App-Deploy"}),
-         build(:pipeline_job, %{name: "e2e"}),
+        [build(:pipeline_job, %{name: "App-Deploy", status: "success"}),
+         build(:pipeline_job, %{name: "e2e", status: "success"}),
         ]
       })]} )
+    child = false 
     job_names = ["App-Deploy", "e2e"]
     pipeline = project.pipelines |> List.first
     pipeline_job = pipeline.pipeline_jobs |> List.first
@@ -224,16 +230,31 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     pipeline_job = pipeline.pipeline_jobs |> List.last
     skpj = insert(:source_key_pipeline_job, %{source_id: "2", new_id: pipeline_job.id})
 
-    jobs = CncfDashboardApi.GitlabMonitor.monitored_jobs(job_names, pipeline.id)
-    [firstj, secondj] = jobs
-    assert firstj.name == job_names |> List.first
-    assert secondj.name == job_names |> List.last
-    # test ordering
-    job_names = [ "e2e", "App-Deploy"]
-    jobs = CncfDashboardApi.GitlabMonitor.monitored_jobs(job_names, pipeline.id)
-    [firstj, secondj] = jobs
-    assert firstj.name == job_names |> List.first
-    assert secondj.name == job_names |> List.last
+    url =  CncfDashboardApi.GitlabMonitor.deploy_url(job_names, child, pipeline.id)
+    temp_url = "#{project.web_url}/-/jobs/#{skpj.source_id}"
+    assert ^temp_url = url
+  end
+
+  @tag :wip
+  test "failed deploy_url" do 
+    project = insert(:project, %{pipelines: 
+      [build(:pipeline, %{pipeline_jobs:
+        [build(:pipeline_job, %{name: "App-Deploy", status: "failed"}),
+         build(:pipeline_job, %{name: "e2e", status: "running"}),
+        ]
+      })]} )
+    child = false 
+    job_names = ["App-Deploy", "e2e"]
+    pipeline = project.pipelines |> List.first
+    pipeline_job = pipeline.pipeline_jobs |> List.first
+    skpj1 = insert(:source_key_pipeline_job, %{new_id: pipeline_job.id})
+    pipeline_job = pipeline.pipeline_jobs |> List.last
+    skpj2 = insert(:source_key_pipeline_job, %{source_id: "2", new_id: pipeline_job.id})
+
+    url =  CncfDashboardApi.GitlabMonitor.deploy_url(job_names, child, pipeline.id)
+    #should be the first job with failed status
+    temp_url = "#{project.web_url}/-/jobs/#{skpj1.source_id}"
+    assert ^temp_url = url
   end
 
 end

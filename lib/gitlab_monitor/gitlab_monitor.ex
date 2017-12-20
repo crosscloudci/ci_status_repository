@@ -242,6 +242,16 @@ defmodule CncfDashboardApi.GitlabMonitor do
     end
   end
 
+ @doc """
+  Gets a list of migrated jobs based on based on `pipeline_id` and `job_names`.
+
+  job_names is a list of strings denoting the job name
+
+  A migration from gitlab must have occured before calling this function in order to get 
+  valid jobs 
+
+  Returns `[%job1, %job2]`
+  """
   def monitored_jobs(job_names, pipeline_id) do
     Logger.info fn ->
       "monitored_job_list job_names: #{inspect(job_names)}"
@@ -254,14 +264,13 @@ defmodule CncfDashboardApi.GitlabMonitor do
       "monitored_job_list monitored_jobs: #{inspect(jobs)}"
     end
 
-    # TODO order monitored_jobs wrt job_names
+    # sort by job_names
     job_names
     |> Enum.reduce([], fn(job_name, acc) ->
       job = Enum.find(jobs, fn(x) -> x.name =~ job_name end) 
       [job | acc]
     end)
     |> Enum.reverse
-
   end
 
   def cloud_status(monitor_job_list, child_pipeline, _cloud, internal_pipeline_id) do
@@ -269,9 +278,13 @@ defmodule CncfDashboardApi.GitlabMonitor do
     Logger.info fn ->
       "cloud_status monitored_job_list: #{inspect(monitor_job_list)}"
     end
+
     # get all the jobs for the internal pipeline
-    monitored_jobs = Repo.all(from pj in CncfDashboardApi.PipelineJobs, 
-                              where: pj.pipeline_id == ^internal_pipeline_id)
+    # monitored_jobs = Repo.all(from pj in CncfDashboardApi.PipelineJobs, 
+    #                           where: pj.pipeline_id == ^internal_pipeline_id)
+    
+    monitored_jobs = monitored_jobs(monitor_job_list, internal_pipeline_id)
+
     Logger.info fn ->
       "cloud_status monitored_jobs: #{inspect(monitored_jobs)}"
     end
@@ -284,11 +297,13 @@ defmodule CncfDashboardApi.GitlabMonitor do
     # else 
     #    if not child pipeline
     #      if all jobs are a success, return success
-    status = monitor_job_list 
-             |> Enum.reduce_while("initial", fn(monitor_name, acc) ->
-               job = Enum.find(monitored_jobs, fn(x) -> x.name =~ monitor_name end) 
+    # status = monitor_job_list 
+    #          |> Enum.reduce_while("initial", fn(monitor_name, acc) ->
+    #            job = Enum.find(monitored_jobs, fn(x) -> x.name =~ monitor_name end) 
+    status = monitored_jobs 
+             |> Enum.reduce_while("initial", fn(job, acc) ->
                Logger.info fn ->
-                 "monitored job string: #{inspect(monitor_name)}. job: #{inspect(job)}"
+                 "monitored job: #{inspect(job)}"
                end
                cond do
                  job && (job.status =~ "failed" || job.status =~ "canceled") ->
@@ -310,70 +325,63 @@ defmodule CncfDashboardApi.GitlabMonitor do
                    {:cont, acc}
                  true ->
                  Logger.error fn ->
-                   "unhandled job status: #{inspect(job)}.  #{inspect(monitor_name)} not found"
+                   "unhandled job status: #{inspect(job)}  not handled"
                  end
                  {:cont, acc}
                end 
              end) 
   end
 
-  # TODO make a function that 'gets the right job'
   # TODO modify compile_url function to use function that gets job
-  # TODO modify cloud_status to use function that gets job
   # TODO create deploy_url function that uses get job function
   
-  def deploy_url(monitor_job_list, child_pipeline, _cloud, internal_pipeline_id) do
-
+  def deploy_url(monitor_job_list, child_pipeline, internal_pipeline_id) do
+     project = Repo.all(from projects in CncfDashboardApi.Projects, 
+                                          left_join: pipelines in assoc(projects, :pipelines),     
+                                          where: pipelines.id == ^internal_pipeline_id) 
+                                          |> List.first
     Logger.info fn ->
-      "deploy_url monitored_job_list: #{inspect(monitor_job_list)}"
-    end
-    # get all the jobs for the internal pipeline
-    monitored_jobs = Repo.all(from pj in CncfDashboardApi.PipelineJobs, 
-                              where: pj.pipeline_id == ^internal_pipeline_id)
-    Logger.info fn ->
-      "deploy_url monitored_jobs: #{inspect(monitored_jobs)}"
+      "deploy url project: #{inspect(project)}"
     end
 
-    # loop through the jobs list in the order of precedence
-      # monitor_job_list e.g. ["e2e", "App-Deploy"]
-    # create status string e.g. "failure"
-    # If any job in the status jobs list has a status of failed, return failed
-    # else if any job in the list has a status of running, return running
-    # else 
-    #    if not child pipeline
-    #      if all jobs are a success, return success
-    status = monitor_job_list 
-             |> Enum.reduce_while("initial", fn(monitor_name, acc) ->
-                job = Enum.find(monitored_jobs, fn(x) -> x.name =~ monitor_name end) 
-                Logger.info fn ->
-                  "monitored job string: #{inspect(monitor_name)}. job: #{inspect(job)}"
-                end
+    monitored_jobs = monitored_jobs(monitor_job_list, internal_pipeline_id)
+    status_job = monitored_jobs 
+             |> Enum.reduce_while(%{:status => "initial", :job => :nojob}, fn(job, acc) ->
+               Logger.info fn ->
+                 "monitored job: #{inspect(job)}"
+               end
                 cond do
                   job && (job.status =~ "failed" || job.status =~ "canceled") ->
-                    acc = "failed"  
+                    acc = %{status: "failed", job: job}
                     {:halt, acc}
                   job && (job.status =~ "running" || job.status =~ "created") ->
                     # can only go to a running status from initial, running, or success status
-                    if (acc =~ "running" || acc =~ "initial" || acc =~ "success") do
-                      acc = "running" 
+                    if (acc.status =~ "running" || acc.status =~ "initial" || acc.status =~ "success") do
+                      acc = %{status: "running" , job: job}
                     end
                     {:cont, acc}
                   job && job.status =~ "success" ->
-                    # The Backend Dashboard will NOT set the badge status to success when a 
-                    # child -- it's ignored for a child 
-                    # can only go to a success status from initial or success status
-                    if (child_pipeline == false && (acc =~ "success" || acc =~ "initial")) do
-                      acc = "success" 
+                    if (child_pipeline == false && (acc.status =~ "success" || acc.status =~ "initial")) do
+                      acc = %{status: "success", job: job} 
                     end
                     {:cont, acc}
                   true ->
-                    Logger.error fn ->
-                      "unhandled job status: #{inspect(job)}.  #{inspect(monitor_name)} not found"
-                    end
+                 Logger.error fn ->
+                   "unhandled job status: #{inspect(job)}  not handled"
+                 end
                     {:cont, acc}
                 end 
              end) 
 
+    Logger.error fn ->
+      "status_job: #{inspect(status_job)}"
+    end
+
+      if status_job.job != :nojob do
+        source_key_pipeline_jobs = Repo.all(from skpj in CncfDashboardApi.SourceKeyPipelineJobs, where: skpj.new_id == ^status_job.job.id) 
+                                   |> List.first
+        "#{project.web_url}/-/jobs/#{source_key_pipeline_jobs.source_id}"
+      end
   end
 
   def compile_url(pipeline_id) do
@@ -385,9 +393,11 @@ defmodule CncfDashboardApi.GitlabMonitor do
       "compile url project: #{inspect(project)}"
     end
 
-    compile = Repo.all(from pj in CncfDashboardApi.PipelineJobs, 
-                                          where: pj.pipeline_id == ^pipeline_id)
-                |> Enum.find(fn(x) -> x.name =~ "compile" end) 
+    compile = monitored_jobs(["compile"], pipeline_id) 
+              |> List.first
+    # compile = Repo.all(from pj in CncfDashboardApi.PipelineJobs, 
+    #                                       where: pj.pipeline_id == ^pipeline_id)
+    #             |> Enum.find(fn(x) -> x.name =~ "compile" end) 
 
     Logger.info fn ->
       "compile job: #{inspect(compile)}"
