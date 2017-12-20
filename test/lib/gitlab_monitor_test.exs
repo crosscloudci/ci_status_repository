@@ -208,4 +208,32 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     temp_url = "#{project.web_url}/-/jobs/#{skpj.source_id}"
     assert ^temp_url = url
   end
+
+  @tag :wip
+  test "monitored_jobs" do 
+    project = insert(:project, %{pipelines: 
+      [build(:pipeline, %{pipeline_jobs:
+        [build(:pipeline_job, %{name: "App-Deploy"}),
+         build(:pipeline_job, %{name: "e2e"}),
+        ]
+      })]} )
+    job_names = ["App-Deploy", "e2e"]
+    pipeline = project.pipelines |> List.first
+    pipeline_job = pipeline.pipeline_jobs |> List.first
+    skpj = insert(:source_key_pipeline_job, %{new_id: pipeline_job.id})
+    pipeline_job = pipeline.pipeline_jobs |> List.last
+    skpj = insert(:source_key_pipeline_job, %{source_id: "2", new_id: pipeline_job.id})
+
+    jobs = CncfDashboardApi.GitlabMonitor.monitored_jobs(job_names, pipeline.id)
+    [firstj, secondj] = jobs
+    assert firstj.name == job_names |> List.first
+    assert secondj.name == job_names |> List.last
+    # test ordering
+    job_names = [ "e2e", "App-Deploy"]
+    jobs = CncfDashboardApi.GitlabMonitor.monitored_jobs(job_names, pipeline.id)
+    [firstj, secondj] = jobs
+    assert firstj.name == job_names |> List.first
+    assert secondj.name == job_names |> List.last
+  end
+
 end

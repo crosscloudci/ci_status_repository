@@ -242,6 +242,28 @@ defmodule CncfDashboardApi.GitlabMonitor do
     end
   end
 
+  def monitored_jobs(job_names, pipeline_id) do
+    Logger.info fn ->
+      "monitored_job_list job_names: #{inspect(job_names)}"
+    end
+    # get all the jobs for the internal pipeline
+    jobs = Repo.all(from pj in CncfDashboardApi.PipelineJobs, 
+                              where: pj.pipeline_id == ^pipeline_id,
+                              where: pj.name in ^job_names)
+    Logger.info fn ->
+      "monitored_job_list monitored_jobs: #{inspect(jobs)}"
+    end
+
+    # TODO order monitored_jobs wrt job_names
+    job_names
+    |> Enum.reduce([], fn(job_name, acc) ->
+      job = Enum.find(jobs, fn(x) -> x.name =~ job_name end) 
+      [job | acc]
+    end)
+    |> Enum.reverse
+
+  end
+
   def cloud_status(monitor_job_list, child_pipeline, _cloud, internal_pipeline_id) do
 
     Logger.info fn ->
@@ -295,16 +317,21 @@ defmodule CncfDashboardApi.GitlabMonitor do
              end) 
   end
 
-  def build_url(monitor_job_list, child_pipeline, _cloud, internal_pipeline_id) do
+  # TODO make a function that 'gets the right job'
+  # TODO modify compile_url function to use function that gets job
+  # TODO modify cloud_status to use function that gets job
+  # TODO create deploy_url function that uses get job function
+  
+  def deploy_url(monitor_job_list, child_pipeline, _cloud, internal_pipeline_id) do
 
     Logger.info fn ->
-      "build_url monitored_job_list: #{inspect(monitor_job_list)}"
+      "deploy_url monitored_job_list: #{inspect(monitor_job_list)}"
     end
     # get all the jobs for the internal pipeline
     monitored_jobs = Repo.all(from pj in CncfDashboardApi.PipelineJobs, 
                               where: pj.pipeline_id == ^internal_pipeline_id)
     Logger.info fn ->
-      "build_url monitored_jobs: #{inspect(monitored_jobs)}"
+      "deploy_url monitored_jobs: #{inspect(monitored_jobs)}"
     end
 
     # loop through the jobs list in the order of precedence
