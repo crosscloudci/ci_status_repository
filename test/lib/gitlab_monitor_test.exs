@@ -12,7 +12,6 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
   use ExUnit.Case
   # use CncfDashboardApi.ModelCase
   
-  @tag :wip
   test "running cloud_status" do
     monitored_job_list = ["e2e", "App-Deploy"]
     child = false 
@@ -21,7 +20,6 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert CncfDashboardApi.GitlabMonitor.cloud_status(monitored_job_list, child, "aws", internal_pipeline_id) == "running"
   end
 
-  @tag :wip
   test "failed cloud_status" do
     monitored_job_list = ["e2e", "App-Deploy"]
     child = false 
@@ -33,7 +31,6 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert CncfDashboardApi.GitlabMonitor.cloud_status(monitored_job_list, child, "aws", internal_pipeline_id) == "failed"
   end
 
-  @tag :wip
   test "success parent cloud_status" do
     monitored_job_list = ["e2e", "App-Deploy"]
     child = false 
@@ -45,7 +42,6 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert CncfDashboardApi.GitlabMonitor.cloud_status(monitored_job_list, child, "aws", internal_pipeline_id) == "success"
   end
 
-  @tag :wip
   test "running child cloud_status -- job status success ignored when a child" do
     # The Backend Dashboard will NOT set the badge status to success when a 
     # child -- it's ignored for a child 
@@ -64,8 +60,7 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     # child -- it's ignored for a child 
     ccskpm = insert(:cross_cloud_source_key_project_monitor)
     CncfDashboardApi.GitlabMonitor.migrate_source_key_monitor(ccskpm.id)
-    # assert CncfDashboardApi.GitlabMonitor.monitored_job_list("cross-project") == ["e2e", "App-Deploy"] 
-    assert CncfDashboardApi.GitlabMonitor.monitored_job_list("cross-project") == ["App-Deploy"] 
+    assert CncfDashboardApi.GitlabMonitor.monitored_job_list("cross-project") == ["Build-Source", "App-Deploy"] 
   end
 
   # test "upsert_pipeline_monitor", %{socket: socket} do 
@@ -199,7 +194,6 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert 4 = dbs_count
   end
 
-  @tag :wip
   test "compile_url" do 
     project = insert(:project, %{pipelines: 
       [build(:pipeline, %{pipeline_jobs:
@@ -214,7 +208,6 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert ^temp_url = url
   end
 
-  @tag :wip
   test "successfull deploy_url" do 
     project = insert(:project, %{pipelines: 
       [build(:pipeline, %{pipeline_jobs:
@@ -235,7 +228,6 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert ^temp_url = url
   end
 
-  @tag :wip
   test "failed deploy_url" do 
     project = insert(:project, %{pipelines: 
       [build(:pipeline, %{pipeline_jobs:
