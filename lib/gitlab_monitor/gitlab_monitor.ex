@@ -66,6 +66,9 @@ defmodule CncfDashboardApi.GitlabMonitor do
   def target_project_exist?(project_name, source_pipeline_id) do
     {p_found, p_record} = %CncfDashboardApi.Projects{name: project_name } |> find_by([:name])
     {pl_found, pl_record} = %CncfDashboardApi.SourceKeyPipelines{source_id: source_pipeline_id } |> find_by([:source_id])
+    Logger.info fn ->
+      "GitlabMonitor: target_project_exist? project, source_key_pipeline : #{inspect(p_record)}, #{inspect(pl_record}"
+    end
     if (p_found == :not_found || pl_found == :not_found) do
       false
     else
@@ -104,6 +107,9 @@ defmodule CncfDashboardApi.GitlabMonitor do
 
     # migrate missing internal id, if it doesn't exist
     unless target_project_exist?(monitor.target_project_name, monitor.project_build_pipeline_id) do
+      Logger.info fn ->
+        "GitlabMonitor: target_project did not exist}"
+      end
       CncfDashboardApi.GitlabMigrations.upsert_missing_target_project_pipeline( monitor.target_project_name, monitor.project_build_pipeline_id)
     end
                                    
