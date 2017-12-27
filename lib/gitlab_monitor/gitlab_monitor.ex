@@ -67,7 +67,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
     {p_found, p_record} = %CncfDashboardApi.Projects{name: project_name } |> find_by([:name])
     {pl_found, pl_record} = %CncfDashboardApi.SourceKeyPipelines{source_id: source_pipeline_id } |> find_by([:source_id])
     Logger.info fn ->
-      "GitlabMonitor: target_project_exist? project, source_key_pipeline : #{inspect(p_record)}, #{inspect(pl_record}"
+      "GitlabMonitor: target_project_exist? project, source_key_pipeline : #{inspect(p_record)}, #{inspect(pl_record)}"
     end
     if (p_found == :not_found || pl_found == :not_found) do
       false
