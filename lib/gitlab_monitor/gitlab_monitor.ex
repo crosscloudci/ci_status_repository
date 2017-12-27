@@ -190,11 +190,6 @@ defmodule CncfDashboardApi.GitlabMonitor do
                                                            monitor.source_pipeline_id |> String.to_integer)
 
     upsert_ref_monitor(source_key_project.new_id,source_key_pipeline.new_id)
-    # TODO if no build job status and cloud job status records for passed project, create/default to running or N/A
-
-    # TODO put polling in caller i.e. controller
-    #
-    # TODO populate ref_monitor
     
     # Call dashboard channel
     CncfDashboardApi.Endpoint.broadcast! "dashboard:*", "new_cross_cloud_call", %{reply: dashboard_response} 
@@ -202,9 +197,6 @@ defmodule CncfDashboardApi.GitlabMonitor do
     Logger.info fn ->
       "GitlabMonitor: Broadcasted json"
     end
-
-    # TODO update last updated
-
   end
 
   def dashboard_response do
@@ -534,7 +526,6 @@ defmodule CncfDashboardApi.GitlabMonitor do
       end
     end
 
-    # TODO get all the pipelines for the current working_project
     # if pipeline_type = "build" then the project_id is a target project
     # if pipeline_type = "deploy" then this is a pipeline project 
     if pipeline_monitor.pipeline_type == "build" do
@@ -551,13 +542,6 @@ defmodule CncfDashboardApi.GitlabMonitor do
       "deploy_pipeline_monitors : #{inspect(deploy_pipeline_monitors)}"
     end
 
-    #TODO put order on pipelines in yml
-    #TODO until then cross-cloud always comes before cross-project
-    #
-    Logger.info fn ->
-      "cross_cloud ad cross_project:"
-    end
-
     cc = Repo.all(from p in CncfDashboardApi.Projects, where: p.name == "cross-cloud") |> List.last
     Logger.info fn ->
       "cross_cloud project: #{inspect(cc)}"
@@ -568,7 +552,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
       "cross_project project: #{inspect(cp)}"
     end
 
-    #  # TODO loop through all clouds
+    #loop through all clouds
     posted_clouds = deploy_pipeline_monitors |> Enum.uniq_by(fn(x) -> x.cloud end) |> Enum.reduce([], fn(x,acc)-> [x.cloud | acc] end)
     Logger.info fn ->
       "posted_clouds : #{inspect(posted_clouds)}"
@@ -579,7 +563,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
       "filtered cloud_list : #{inspect(cloud_list)}"
     end
 
-    # TODO only loop through clouds that have deploy pipeline monitors
+    #only loop through clouds that have deploy pipeline monitors
     Enum.map(cloud_list, fn(cloud) ->
       Logger.info fn ->
         "cloud_name: #{inspect(cloud.cloud_name)}"
@@ -594,6 +578,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
       Logger.info fn ->
         "cross_cloud_pipeline_monitor: #{inspect(cross_cloud_pipeline_monitor)}"
       end
+
       if cross_cloud_pipeline_monitor do
         job_names = monitored_job_list("cross-cloud")
         cc_status = badge_status_by_pipeline_id(job_names, cross_cloud_pipeline_monitor.child_pipeline, cloud.cloud_name, cross_cloud_pipeline_monitor.pipeline_id)
@@ -603,6 +588,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
       Logger.info fn ->
         "cross_project_pipeline_monitor: #{inspect(cross_project_pipeline_monitor)}"
       end
+
       if cross_project_pipeline_monitor do
         job_names = monitored_job_list("cross-project")
         cp_status = badge_status_by_pipeline_id(job_names, cross_project_pipeline_monitor.child_pipeline, cloud.cloud_name, cross_project_pipeline_monitor.pipeline_id)
@@ -643,31 +629,40 @@ defmodule CncfDashboardApi.GitlabMonitor do
       Logger.info fn ->
         "cloud : #{inspect(cloud)}"
       end
-      {dbs_found, dbs_record} = %CncfDashboardApi.DashboardBadgeStatus{ref_monitor_id: rm_record.id, order: (cloud_order)} |> find_by([:ref_monitor_id, :order])
 
-      changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(dbs_record, 
-                                                                  %{ref: target_pl.ref,
-                                                                    status: status,
-                                                                    ref_monitor_id: rm_record.id,
-                                                                    url: deploy_url,
-                                                                    cloud_id: cloud.id,
-                                                                    order: cloud_order # build badge always 1 
-                                                                  })
-
-      Logger.info fn ->
-        "upsert_ref_monitor cloud status DashboardBadgeStatus.changeset : #{inspect(changeset)}"
-      end
-
-      case dbs_found do
-        :found ->
-          {_, dbs_record} = Repo.update(changeset) 
-        Logger.info fn ->
-          "dbs_found : #{inspect(dbs_record)}"
+      # ticket #230
+      if status == "initial" do
+        Logger.error fn ->
+          "invalid status for pipline: #{inspect(status)}, #{inspect(status)}"
         end
-        :not_found ->
-          {_, dbs_record} = Repo.insert(changeset) 
+      else
+
+        {dbs_found, dbs_record} = %CncfDashboardApi.DashboardBadgeStatus{ref_monitor_id: rm_record.id, order: (cloud_order)} |> find_by([:ref_monitor_id, :order])
+
+        changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(dbs_record, 
+                                                                    %{ref: target_pl.ref,
+                                                                      status: status,
+                                                                      ref_monitor_id: rm_record.id,
+                                                                      url: deploy_url,
+                                                                      cloud_id: cloud.id,
+                                                                      order: cloud_order # build badge always 1 
+                                                                    })
+
         Logger.info fn ->
-          "dbs not found (should never happen) : #{inspect(dbs_record)}"
+          "upsert_ref_monitor cloud status DashboardBadgeStatus.changeset : #{inspect(changeset)}"
+        end
+
+        case dbs_found do
+          :found ->
+            {_, dbs_record} = Repo.update(changeset) 
+          Logger.info fn ->
+            "dbs_found : #{inspect(dbs_record)}"
+          end
+          :not_found ->
+            {_, dbs_record} = Repo.insert(changeset) 
+          Logger.info fn ->
+            "dbs not found (should never happen) : #{inspect(dbs_record)}"
+          end
         end
       end
     end)
