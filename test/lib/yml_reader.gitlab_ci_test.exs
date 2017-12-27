@@ -2,7 +2,6 @@ require IEx;
 defmodule CncfDashboardApi.YmlReader.GitlabCiTest do
   use ExUnit.Case
 
-  @tag :wip
   test "get" do 
     yml = CncfDashboardApi.YmlReader.GitlabCi.get()
     assert yml |> is_binary  
@@ -27,7 +26,6 @@ defmodule CncfDashboardApi.YmlReader.GitlabCiTest do
     assert Enum.find_value(project_list, fn(x) -> x["project_url"] == "https://github.com/kubernetes/kubernetes" end) 
   end
 
-  @tag :wip
   test "gitlab_pipeline_config" do 
     cloud_list = CncfDashboardApi.YmlReader.GitlabCi.gitlab_pipeline_config()
     assert Enum.find_value(cloud_list, fn(x) -> x["pipeline_name"] == "cross-project" end) 

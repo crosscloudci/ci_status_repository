@@ -27,7 +27,6 @@ defmodule CncfDashboardApi.ProjectsControllerTest do
     {:ok, conn: signed_conn}
   end
 
-  @tag :wip
   # @tag :login
   test "lists all entries on index", %{conn: conn} do
     projects = insert(:project)

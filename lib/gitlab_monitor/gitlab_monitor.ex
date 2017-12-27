@@ -221,27 +221,6 @@ defmodule CncfDashboardApi.GitlabMonitor do
 
   end
 
-  # projects, clouds, pipleines, and pipeline jobs should be recently migrated before calling build status 
-  def build_status(pipeline_id) do
-    # determine the build status
-    #    i.e. get the build job (name = container)
-    #    if exists, dashboard badge status status = build job status
-    #    if doesn't exist, dashboard badge status = running
-    container = Repo.all(from pj in CncfDashboardApi.PipelineJobs, 
-                         where: pj.pipeline_id == ^pipeline_id)
-                         |> Enum.find(fn(x) -> x.name =~ "container" end) 
-
-    Logger.info fn ->
-      "build_status: #{inspect(container)}"
-    end
-
-    if container && (container.status == "success" || container.status == "failed") do
-      container.status
-    else
-      "running"
-    end
-  end
-
  @doc """
   Gets a list of migrated jobs based on based on `pipeline_id` and `job_names`.
 
@@ -277,20 +256,16 @@ defmodule CncfDashboardApi.GitlabMonitor do
     |> Enum.reverse
   end
 
-  def cloud_status(monitor_job_list, child_pipeline, _cloud, internal_pipeline_id) do
+  def badge_status_by_pipeline_id(monitor_job_list, child_pipeline, _cloud, internal_pipeline_id) do
 
     Logger.info fn ->
-      "cloud_status monitored_job_list: #{inspect(monitor_job_list)}"
+      "badge_status_by_pipeline_id monitored_job_list: #{inspect(monitor_job_list)}"
     end
 
-    # get all the jobs for the internal pipeline
-    # monitored_jobs = Repo.all(from pj in CncfDashboardApi.PipelineJobs, 
-    #                           where: pj.pipeline_id == ^internal_pipeline_id)
-    
     monitored_jobs = monitored_jobs(monitor_job_list, internal_pipeline_id)
 
     Logger.info fn ->
-      "cloud_status monitored_jobs: #{inspect(monitored_jobs)}"
+      "badge_status_by_pipeline_id monitored_jobs: #{inspect(monitored_jobs)}"
     end
 
     # loop through the jobs list in the order of precedence
@@ -301,13 +276,10 @@ defmodule CncfDashboardApi.GitlabMonitor do
     # else 
     #    if not child pipeline
     #      if all jobs are a success, return success
-    # status = monitor_job_list 
-    #          |> Enum.reduce_while("initial", fn(monitor_name, acc) ->
-    #            job = Enum.find(monitored_jobs, fn(x) -> x.name =~ monitor_name end) 
     status = monitored_jobs 
              |> Enum.reduce_while("initial", fn(job, acc) ->
                Logger.info fn ->
-                 "monitored job: #{inspect(job)}"
+                 "badge_status_by_pipeline_id monitored job: #{inspect(job)}"
                end
                cond do
                  job && (job.status =~ "failed" || job.status =~ "canceled") ->
@@ -322,8 +294,9 @@ defmodule CncfDashboardApi.GitlabMonitor do
                  job && job.status =~ "success" ->
                    # The Backend Dashboard will NOT set the badge status to success when a 
                    # child -- it's ignored for a child 
-                   # can only go to a success status from initial or success status
-                   if (child_pipeline == false && (acc =~ "success" || acc =~ "initial")) do
+                   # can only go to a success status from initial, running, or success status
+                   if (child_pipeline == false && (acc =~ "success" || acc =~ "initial" || 
+                     acc =~ "running")) do
                      acc = "success" 
                    end
                    {:cont, acc}
@@ -336,7 +309,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
              end) 
   end
 
-  def deploy_url(monitor_job_list, child_pipeline, internal_pipeline_id) do
+  def badge_url(monitor_job_list, child_pipeline, internal_pipeline_id) do
      project = Repo.all(from projects in CncfDashboardApi.Projects, 
                                           left_join: pipelines in assoc(projects, :pipelines),     
                                           where: pipelines.id == ^internal_pipeline_id) 
@@ -391,36 +364,6 @@ defmodule CncfDashboardApi.GitlabMonitor do
       else
         ""
       end
-    end
-  end
-
-  def compile_url(pipeline_id) do
-    project = Repo.all(from projects in CncfDashboardApi.Projects, 
-                       left_join: pipelines in assoc(projects, :pipelines),     
-                       where: pipelines.id == ^pipeline_id) 
-                       |> List.first
-    Logger.info fn ->
-      "compile url project: #{inspect(project)}"
-    end
-
-    compile = monitored_jobs(["compile"], pipeline_id) 
-              |> List.first
-
-    Logger.info fn ->
-      "compile job: #{inspect(compile)}"
-    end
-
-    if compile do
-      Logger.info fn ->
-        "source key pipeline jobs, should be only 1: #{inspect(Repo.all(from skpj in CncfDashboardApi.SourceKeyPipelineJobs, where: skpj.new_id == ^compile.id))}"
-      end
-      source_key_pipeline_jobs = Repo.all(from skpj in CncfDashboardApi.SourceKeyPipelineJobs, 
-                                          where: skpj.new_id == ^compile.id) |> List.first
-      Logger.info fn ->
-        "compile local pipeline_id: #{pipeline_id} *first* source key: #{inspect(source_key_pipeline_jobs)}"
-      end
-      # e.g.   https://gitlab.dev.cncf.ci/coredns/coredns/-/jobs/31525
-      "#{project.web_url}/-/jobs/#{source_key_pipeline_jobs.source_id}"
     end
   end
 
@@ -529,11 +472,12 @@ defmodule CncfDashboardApi.GitlabMonitor do
     {dbs_found, dbs_record} = %CncfDashboardApi.DashboardBadgeStatus{ref_monitor_id: rm_record.id, order: 1} 
                               |> find_by([:ref_monitor_id, :order])
 
+    job_names = monitored_job_list("project")
     changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(dbs_record, 
                                                                 %{ref: target_pl.ref,
-                                                                  status: build_status(target_pm.pipeline_id),
+                                                                  status: badge_status_by_pipeline_id(job_names, false, "", target_pm.pipeline_id),
                                                                   ref_monitor_id: rm_record.id,
-                                                                  url: compile_url(target_pm.pipeline_id),
+                                                                  url: badge_url(job_names, false, target_pm.pipeline_id),
                                                                   order: 1 # build badge always 1 
                                                                 })
 
@@ -616,8 +560,8 @@ defmodule CncfDashboardApi.GitlabMonitor do
       end
       if cross_cloud_pipeline_monitor do
         job_names = monitored_job_list("cross-cloud")
-        cc_status = cloud_status(job_names, cross_cloud_pipeline_monitor.child_pipeline, cloud.cloud_name, cross_cloud_pipeline_monitor.pipeline_id)
-        cc_deploy_url = deploy_url(job_names, cross_cloud_pipeline_monitor.child_pipeline, cross_cloud_pipeline_monitor.pipeline_id)
+        cc_status = badge_status_by_pipeline_id(job_names, cross_cloud_pipeline_monitor.child_pipeline, cloud.cloud_name, cross_cloud_pipeline_monitor.pipeline_id)
+        cc_deploy_url = badge_url(job_names, cross_cloud_pipeline_monitor.child_pipeline, cross_cloud_pipeline_monitor.pipeline_id)
       end
 
       Logger.info fn ->
@@ -625,8 +569,8 @@ defmodule CncfDashboardApi.GitlabMonitor do
       end
       if cross_project_pipeline_monitor do
         job_names = monitored_job_list("cross-project")
-        cp_status = cloud_status(job_names, cross_project_pipeline_monitor.child_pipeline, cloud.cloud_name, cross_project_pipeline_monitor.pipeline_id)
-        cp_deploy_url = deploy_url(job_names, cross_project_pipeline_monitor.child_pipeline, cross_project_pipeline_monitor.pipeline_id)
+        cp_status = badge_status_by_pipeline_id(job_names, cross_project_pipeline_monitor.child_pipeline, cloud.cloud_name, cross_project_pipeline_monitor.pipeline_id)
+        cp_deploy_url = badge_url(job_names, cross_project_pipeline_monitor.child_pipeline, cross_project_pipeline_monitor.pipeline_id)
       end
 
       cond do

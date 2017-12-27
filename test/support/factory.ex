@@ -1,3 +1,4 @@
+require Logger;
 defmodule CncfDashboardApi.Factory do
   # with Ecto
   use ExMachina.Ecto, repo: CncfDashboardApi.Repo
@@ -101,16 +102,33 @@ defmodule CncfDashboardApi.Factory do
       cloud_id: cloud.id,
     }
 	end
+
+  def compile_pipeline_job_factory do
+    %CncfDashboardApi.PipelineJobs{
+      name: "compile",
+      status: "running",
+      ref: "ci_master",
+    }
+	end
+
+  def container_pipeline_job_factory do
+    %CncfDashboardApi.PipelineJobs{
+      name: "container",
+      status: "running",
+      ref: "ci_master",
+    }
+	end
+
   def build_pipeline_factory do
     %CncfDashboardApi.Pipelines{
       ref: "ci_master",
       status: "success",
       sha: "2342342342343243sdfsdfsdfs",
       release_type: "build",
-      pipeline_jobs: [build(:pipeline_job)],
+      pipeline_jobs: [build(:compile_pipeline_job), build(:container_pipeline_job)],
     }
-
 	end
+
   def cross_cloud_pipeline_factory do
     %CncfDashboardApi.Pipelines{
       ref: "ci_master",
@@ -121,6 +139,7 @@ defmodule CncfDashboardApi.Factory do
     }
 
 	end
+
   def cross_project_pipeline_factory do
     %CncfDashboardApi.Pipelines{
       ref: "ci_master",
@@ -199,6 +218,9 @@ defmodule CncfDashboardApi.Factory do
 
   def source_key_project_monitor_factory do
     first_active_project =CncfDashboardApi.YmlReader.GitlabCi.project_list |> Enum.find(fn(x) -> x["active"] == true end)
+    Logger.info fn ->
+      "factory: first_active_project: #{inspect(first_active_project)}"
+    end
     projects = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == first_active_project["yml_name"] end)
     # use a real pipeline id 
     pipelines = GitLabProxy.get_gitlab_pipelines(projects["id"]) |> List.first
