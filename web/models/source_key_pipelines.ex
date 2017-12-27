@@ -15,7 +15,6 @@ defmodule CncfDashboardApi.SourceKeyPipelines do
   def changeset(struct, params \\ %{}) do
     struct
     |> cast(params, [:source_id, :new_id, :source_name])
-    # |> validate_required([:source_id, :new_id, :source_name])
-    |> validate_required([:source_id])
+    |> validate_required([:source_id, :new_id])
   end
 end

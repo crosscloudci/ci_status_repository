@@ -47,7 +47,6 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServerTest do
     # GenServer.stop(s_timeout)
 
     {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.pipeline_monitor(skpm.id) 
-    IEx.pry
     assert  false == pm_record.running 
   end
 

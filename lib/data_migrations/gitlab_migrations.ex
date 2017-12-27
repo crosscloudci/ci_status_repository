@@ -94,10 +94,31 @@ defmodule CncfDashboardApi.GitlabMigrations do
       "upsert_missing_target_project_pipeline: source_project_name, source_pipeline_id : #{inspect(source_project_name)}, #{inspect(source_pipeline_id)}"
     end
     upsert_projects
-    {p_found, p_record} = %CncfDashboardApi.Projects{name: source_project_name } |> find_by([:name])
-    if p_found == :found do
+    p_record = CncfDashboardApi.Repo.all(from p in CncfDashboardApi.Projects, 
+                                         where: ilike(p.name, ^"#{source_project_name}")) |> List.first
+    Logger.info fn ->
+      "upsert_missing_target_project_pipeline: p_record : #{inspect(p_record)}"
+    end
+    if is_nil(p_record) do
+      p_found = false
+    else
+      p_found = true
+    end
+    if p_found do
       {skp_found, skp_record} = %CncfDashboardApi.SourceKeyProjects{new_id: p_record.id } |> find_by([:new_id])
+      Logger.info fn ->
+        "upsert_missing_target_project_pipeline: skp_record: #{inspect(skp_record)}"
+      end
       upsert_pipeline(skp_record.source_id, source_pipeline_id)
+      {:ok, _upsert_count, pipeline_map} = CncfDashboardApi.GitlabMigrations.upsert_pipeline(skp_record.source_id, source_pipeline_id) 
+      Logger.info fn ->
+        "upsert_missing_target_project_pipeline: pipeline_map: #{inspect(pipeline_map)}"
+      end
+    else
+      Logger.error fn ->
+        "upsert_missing_target_project_pipeline: project not found}"
+      end
+
     end
   end
 

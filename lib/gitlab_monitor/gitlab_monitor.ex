@@ -9,14 +9,14 @@ defmodule CncfDashboardApi.GitlabMonitor do
   def last_checked do
     yml = System.get_env("GITLAB_CI_YML")
     {d_found, d_record} = %CncfDashboardApi.Dashboard{gitlab_ci_yml: yml } |> find_by([:gitlab_ci_yml])
-    changeset = CncfDashboardApi.Dashboard.changeset(d_record, %{last_check: Ecto.DateTime.utc, gitlab_ci_yml: yml, })
+    changeset = CncfDashboardApi.Dashboard.changeset(d_record, %{last_check: Ecto.DateTime.utc, gitlab_ci_yml: yml})
     case d_found do
       :found ->
-        # {_, d_record} = Repo.update!(changeset) 
-         Repo.update!(changeset) 
+        {_, d_record} = Repo.update(changeset) 
+         # Repo.update!(changeset) 
       :not_found ->
-        # {_, d_record} = Repo.insert!(changeset) 
-         Repo.insert!(changeset) 
+        {_, d_record} = Repo.insert(changeset) 
+         # Repo.insert!(changeset) 
     end
   end
 
@@ -108,7 +108,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
     # migrate missing internal id, if it doesn't exist
     unless target_project_exist?(monitor.target_project_name, monitor.project_build_pipeline_id) do
       Logger.info fn ->
-        "GitlabMonitor: target_project did not exist}"
+        "GitlabMonitor: target_project did not exist"
       end
       CncfDashboardApi.GitlabMigrations.upsert_missing_target_project_pipeline( monitor.target_project_name, monitor.project_build_pipeline_id)
     end
@@ -445,13 +445,26 @@ defmodule CncfDashboardApi.GitlabMonitor do
     if pipeline_monitor.pipeline_type == "deploy" do
       target_pm = Repo.all(from pm in CncfDashboardApi.PipelineMonitor, 
                            where: pm.pipeline_id == ^pipeline_monitor.internal_build_pipeline_id, 
-                           where: pm.pipeline_type == "build") |> List.first
-                           target_pl = Repo.all(from pm in CncfDashboardApi.Pipelines, 
-                                                where: pm.id == ^pipeline_monitor.internal_build_pipeline_id ) |> List.first
+                           where: pm.pipeline_type == "build") 
+                           |> List.first()
+      target_pl = Repo.all(from pm in CncfDashboardApi.Pipelines, 
+                           where: pm.id == ^pipeline_monitor.internal_build_pipeline_id ) |> List.first
+      # must be a legacy call.  This deploy pipeline call is probably for a
+      # dependencie that not longer exists in the db
+      if is_nil(target_pm) do
+        Logger.error fn ->
+          "Legacy dependency.  A deploy call with no build calls has been found for: #{inspect(pipeline_monitor)}"
+        end
+        target_pm = pipeline_monitor
+        target_pl = pipeline
+      end
       Logger.info fn ->
-        " upsert_ref_monitor target_pm: #{inspect(target_pm)}"
+        " upsert_ref_monitor deploy target_pm: #{inspect(target_pm)}"
       end
     else
+      Logger.info fn ->
+        " upsert_ref_monitor build target_pm: #{inspect(pipeline_monitor)}"
+      end
       target_pm = pipeline_monitor
       target_pl = pipeline
     end
