@@ -146,4 +146,28 @@ require CncfDashboardApi.DataMigrations;
     assert pipeline_jobs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.PipelineJobs, :count, :id)  
     assert source_pipeline_jobs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyPipelineJobs, :count, :id)  
   end
+
+  test "upsert_missing_target_project_pipeline" do 
+    # check insert 
+    {:ok, upsert_count, project_map} = CncfDashboardApi.GitlabMigrations.upsert_projects()
+    # get first project with a pipeline
+    project = Enum.find(project_map, fn(x) ->
+      count = GitLabProxy.get_gitlab_pipelines(x["id"]) 
+      |> Enum.count 
+      count > 0
+    end)
+    # project = project_map |> List.first 
+    pipeline_map = GitLabProxy.get_gitlab_pipelines(project["id"])
+    pipeline = pipeline_map |> List.first 
+    # CncfDashboardApi.GitlabMigrations.upsert_pipeline( project["id"] |> Integer.to_string, pipeline["id"] |> Integer.to_string)
+    CncfDashboardApi.GitlabMigrations.upsert_missing_target_project_pipeline( project["name"], pipeline["id"] |> Integer.to_string)
+    pipeline_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.Pipelines, :count, :id)  
+    source_pipeline_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyPipelines, :count, :id)  
+    assert 1 = pipeline_count  
+    assert 1 = source_pipeline_count
+    # check update -- should not increase
+    CncfDashboardApi.GitlabMigrations.upsert_pipelines(project_map)
+    assert pipeline_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.Pipelines, :count, :id)  
+    assert source_pipeline_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyPipelines, :count, :id)  
+  end
 end

@@ -25,6 +25,7 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServerTest do
     # do a timeout 
   end
 
+  @tag timeout: 300_000 
   test "let a pipeline timeout" do 
     skpm = insert(:source_key_project_monitor)
     # pm = insert(:pipeline_monitor)
@@ -42,11 +43,11 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServerTest do
     CncfDashboardApi.Polling.Supervisor.Pipeline.start_pipeline(skpm.id, skpm.id, 1000) 
     # GenServer.stop(s_timeout)
     # Wait for the timeout to complete
-    Process.sleep(13000)
+    Process.sleep(27000)
     # GenServer.stop(s_timeout)
 
     {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.pipeline_monitor(skpm.id) 
-    #TODO check if badges set to false
+    IEx.pry
     assert  false == pm_record.running 
   end
 

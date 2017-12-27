@@ -89,6 +89,18 @@ defmodule CncfDashboardApi.GitlabMigrations do
     upsert_projects([project_map_orig])
   end
 
+  def upsert_missing_target_project_pipeline(source_project_name, source_pipeline_id) do
+    Logger.info fn ->
+      "upsert_missing_target_project_pipeline: source_project_name, source_pipeline_id : #{inspect(source_project_name)}, #{inspect(source_pipeline_id)}"
+    end
+    upsert_projects
+    {p_found, p_record} = %CncfDashboardApi.Projects{name: source_project_name } |> find_by([:name])
+    if p_found == :found do
+      {skp_found, skp_record} = %CncfDashboardApi.SourceKeyProjects{new_id: p_record.id } |> find_by([:new_id])
+      upsert_pipeline(skp_record.source_id, source_pipeline_id)
+    end
+  end
+
   def upsert_projects do
     project_map_orig = GitLabProxy.get_gitlab_projects()
     upsert_projects(project_map_orig)

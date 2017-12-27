@@ -12,6 +12,20 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
   use ExUnit.Case
   # use CncfDashboardApi.ModelCase
   
+  test "target_project_exist?" do
+    {:ok, upsert_count, project_map} = CncfDashboardApi.GitlabMigrations.upsert_projects()
+    project = Enum.find(project_map, fn(x) ->
+      count = GitLabProxy.get_gitlab_pipelines(x["id"]) 
+      |> Enum.count 
+      count > 0
+    end)
+    pipeline_map = GitLabProxy.get_gitlab_pipelines(project["id"])
+    pipeline = pipeline_map |> List.first 
+    assert CncfDashboardApi.GitlabMonitor.target_project_exist?(project["name"], pipeline["id"] |> Integer.to_string) == false 
+    CncfDashboardApi.GitlabMigrations.upsert_pipeline( project["id"] |> Integer.to_string, pipeline["id"] |> Integer.to_string)
+    assert CncfDashboardApi.GitlabMonitor.target_project_exist?(project["name"], pipeline["id"] |> Integer.to_string) == true
+  end
+
   test "running build badge_status_by_pipeline_id" do
     monitored_job_list = ["container", "compile"]
     child = false 
@@ -63,6 +77,7 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert CncfDashboardApi.GitlabMonitor.badge_status_by_pipeline_id(monitored_job_list, child, "aws", internal_pipeline_id) == "running"
   end
 
+  @tag timeout: 300_000 
   test "monitored_job_list" do
     # The Backend Dashboard will NOT set the badge status to success when a 
     # child -- it's ignored for a child 

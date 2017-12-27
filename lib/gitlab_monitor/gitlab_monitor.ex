@@ -63,6 +63,16 @@ defmodule CncfDashboardApi.GitlabMonitor do
       |> find_by([:pipeline_id, :project_id, :pipeline_type, :release_type])
   end
 
+  def target_project_exist?(project_name, source_pipeline_id) do
+    {p_found, p_record} = %CncfDashboardApi.Projects{name: project_name } |> find_by([:name])
+    {pl_found, pl_record} = %CncfDashboardApi.SourceKeyPipelines{source_id: source_pipeline_id } |> find_by([:source_id])
+    if (p_found == :not_found || pl_found == :not_found) do
+      false
+    else
+      true
+    end
+  end
+
   def migrate_source_key_monitor(source_key_project_monitor_id) do
     # migrate clouds
     CncfDashboardApi.GitlabMigrations.upsert_clouds()
@@ -89,7 +99,14 @@ defmodule CncfDashboardApi.GitlabMonitor do
 
     # get the local pipeline
     source_key_pipeline = Repo.all(from skp in CncfDashboardApi.SourceKeyPipelines, 
-                                   where: skp.source_id == ^monitor.source_pipeline_id) |> List.first
+                                   where: skp.source_id == ^monitor.source_pipeline_id) 
+                                   |> List.first
+
+    # migrate missing internal id, if it doesn't exist
+    unless target_project_exist?(monitor.target_project_name, monitor.project_build_pipeline_id) do
+      CncfDashboardApi.GitlabMigrations.upsert_missing_target_project_pipeline( monitor.target_project_name, monitor.project_build_pipeline_id)
+    end
+                                   
     {:ok, monitor, source_key_project, source_key_pipeline}
   end
 
