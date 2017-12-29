@@ -151,6 +151,26 @@ defmodule CncfDashboardApi.Factory do
 
 	end
 
+  def build_source_key_project_monitor_factory do
+    # use a real source key project id 
+    projects = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == "coredns" end)
+    # use a real pipeline id 
+    pipelines = GitLabProxy.get_gitlab_pipelines(projects["id"]) |> List.first
+    %CncfDashboardApi.SourceKeyProjectMonitor{
+      # source_project_id: "1",
+      source_project_id: projects["id"] |> Integer.to_string,
+      # source_pipeline_id: "1",
+      source_pipeline_id: pipelines["id"] |> Integer.to_string,
+      source_pipeline_job_id: "1",
+      pipeline_release_type: "head",
+      active: true, 
+      cloud: "",
+      child_pipeline: false,
+      target_project_name: "coredns",
+      project_build_pipeline_id: pipelines["id"] |> Integer.to_string,
+    }
+  end
+
   def cross_cloud_source_key_project_monitor_factory do
     # use a real source key project id 
     projects = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == "cross-cloud" end)

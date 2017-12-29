@@ -23,12 +23,22 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitorController do
           "source_key_project_monitor create project: #{inspect(project)}"
         end
         
-        if pm_record.pipeline_type == "build" do
-          Logger.info fn ->
-            "source_key_project_monitor start_pipeline timeout: #{inspect((project.timeout * 1000))}"
-          end
-          CncfDashboardApi.Polling.Supervisor.Pipeline.start_pipeline(source_key_project_monitor.source_project_id, source_key_project_monitor.id, project.timeout * 1000) 
-          # Process.sleep(13000)
+        case pm_record.pipeline_type  do
+          "build" ->
+            Logger.info fn ->
+              "source_key_project_monitor start_pipeline build timeout: #{inspect((project.timeout * 1000))}"
+            end
+            CncfDashboardApi.Polling.Supervisor.Pipeline.start_pipeline(source_key_project_monitor.source_project_id, source_key_project_monitor.id, project.timeout * 1000) 
+            # Process.sleep(13000)
+          "deploy" ->
+            config = CncfDashboardApi.YmlReader.GitlabCi.gitlab_pipeline_config()
+            cc = Enum.find(config, fn(x) -> x["pipeline_name"] == project.name end) 
+            Logger.info fn ->
+              "source_key_project_monitor start_pipeline deploy timeout: #{inspect(cc["timeout"] * 1000)}"
+            end
+            # base unique identifier on project name and target project name
+            # i.e. '{"cross-project", "linkerd"}
+            CncfDashboardApi.Polling.Supervisor.Pipeline.start_pipeline({source_key_project_monitor.source_project_id, source_key_project_monitor.target_project_name}, source_key_project_monitor.id, cc["timeout"] * 1000) 
         end
 
         conn

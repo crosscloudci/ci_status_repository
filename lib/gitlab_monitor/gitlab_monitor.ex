@@ -215,7 +215,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
     CncfDashboardApi.GitlabMigrations.upsert_pipeline_jobs(monitor.source_project_id |> String.to_integer, 
                                                            monitor.source_pipeline_id |> String.to_integer)
 
-    upsert_ref_monitor(source_key_project.new_id,source_key_pipeline.new_id)
+    # upsert_ref_monitor(source_key_project.new_id,source_key_pipeline.new_id)
     
     # CncfDashboardApi.GitlabMonitor.Dashboard.broadcast()
 
@@ -271,6 +271,21 @@ defmodule CncfDashboardApi.GitlabMonitor do
   end
 
 
+ @doc """
+  Gets the corresponding build pipeline based on `%PipelineMonitor`.
+  Returns `%PipelineMonitor`
+  """
+  def build_pipeline_monitor_by_deploy_pipeline_monitor(deploy_pipeline_monitor) do
+    if deploy_pipeline_monitor.pipeline_type == "deploy" do
+      Repo.all(from pm in CncfDashboardApi.PipelineMonitor, 
+                           where: pm.pipeline_id == ^deploy_pipeline_monitor.internal_build_pipeline_id, 
+                           where: pm.pipeline_type == "build") 
+                           |> List.first()
+    else
+      # pipeline is a build pipeline
+      deploy_pipeline_monitor
+    end
+  end
 
  @doc """
   Selects the target pipeline info based on `{%PipelineMonitor, %Pipeline}`.
@@ -285,10 +300,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
   """
  def target_pipeline_info(pipeline_monitor, pipeline) do
     if pipeline_monitor.pipeline_type == "deploy" do
-      target_pm = Repo.all(from pm in CncfDashboardApi.PipelineMonitor, 
-                           where: pm.pipeline_id == ^pipeline_monitor.internal_build_pipeline_id, 
-                           where: pm.pipeline_type == "build") 
-                           |> List.first()
+      target_pm = build_pipeline_monitor_by_deploy_pipeline_monitor(pipeline_monitor)
       target_pl = Repo.all(from pm in CncfDashboardApi.Pipelines, 
                            where: pm.id == ^pipeline_monitor.internal_build_pipeline_id ) |> List.first
 
@@ -517,5 +529,16 @@ defmodule CncfDashboardApi.GitlabMonitor do
     end)
   end
 
+  def cloud_order_by_name(cloud_name) do
+    Logger.info fn ->
+      "cloud_order_by_name: #{inspect(cloud_name)}"
+    end
+    {p_found, c_record} = %CncfDashboardApi.Clouds{cloud_name: cloud_name } |> find_by([:cloud_name])
+    order = if p_found do
+      c_record.order + 1 # clouds start with 2 wrt badge status
+    else
+      :error
+    end
+  end
 
 end

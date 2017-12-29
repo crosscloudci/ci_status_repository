@@ -31,8 +31,29 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitorControllerTest do
     end
   end
 
+
   test "creates and renders resource when data is valid", %{conn: conn} do
     valid_att = params_for(:source_key_project_monitor)
+    conn = post conn, source_key_project_monitor_path(conn, :create), source_key_project_monitor: valid_att
+    assert json_response(conn, 201)["data"]["id"]
+    assert Repo.get_by(SourceKeyProjectMonitor, valid_att)
+  end
+
+  test "creates and renders resource when deploy data is valid", %{conn: conn} do
+    # pull over cross cloud and cross project projects manually in test mode 
+    cc_project = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == "cross-cloud" end)
+    cp_project = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == "cross-project" end)
+    CncfDashboardApi.GitlabMigrations.upsert_project(cc_project["id"] |> Integer.to_string) 
+    CncfDashboardApi.GitlabMigrations.upsert_project(cp_project["id"] |> Integer.to_string) 
+
+    # must have valid corresponding build project in db before sending
+    # a deploy project
+    bskpm = insert(:build_source_key_project_monitor)
+    CncfDashboardApi.GitlabMonitor.migrate_source_key_monitor(bskpm.id)
+    |> CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor_info
+    |> CncfDashboardApi.GitlabMonitor.upsert_ref_monitor
+
+    valid_att = params_for(:cross_project_source_key_project_monitor)
     conn = post conn, source_key_project_monitor_path(conn, :create), source_key_project_monitor: valid_att
     assert json_response(conn, 201)["data"]["id"]
     assert Repo.get_by(SourceKeyProjectMonitor, valid_att)
