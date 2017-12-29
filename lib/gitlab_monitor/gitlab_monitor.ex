@@ -5,20 +5,20 @@ defmodule CncfDashboardApi.GitlabMonitor do
   alias CncfDashboardApi.Repo
   use EctoConditionals, repo: Repo
 
+ @doc """
+  Updates the dashboard based on `source_key_project_monitor_id`.
 
-  def last_checked do
-    yml = System.get_env("GITLAB_CI_YML")
-    {d_found, d_record} = %CncfDashboardApi.Dashboard{gitlab_ci_yml: yml } |> find_by([:gitlab_ci_yml])
-    changeset = CncfDashboardApi.Dashboard.changeset(d_record, %{last_check: Ecto.DateTime.utc, gitlab_ci_yml: yml})
-    case d_found do
-      :found ->
-        {_, d_record} = Repo.update(changeset) 
-         # Repo.update!(changeset) 
-      :not_found ->
-        {_, d_record} = Repo.insert(changeset) 
-         # Repo.insert!(changeset) 
-    end
-  end
+  Returns `:ok`
+  """
+  def update_dashboard(source_key_project_monitor_id) do
+    CncfDashboardApi.GitlabMonitor.Dashboard.last_checked()
+    migrate_source_key_monitor(source_key_project_monitor_id)
+    |> upsert_pipeline_monitor_info
+    |> upsert_ref_monitor
+    CncfDashboardApi.GitlabMonitor.Dashboard.broadcast()
+    :ok
+  end 
+
 
  @doc """
   Get the source key models for the source key monitor, the project, and the pipeline 
@@ -63,6 +63,11 @@ defmodule CncfDashboardApi.GitlabMonitor do
       |> find_by([:pipeline_id, :project_id, :pipeline_type, :release_type])
   end
 
+ @doc """
+  Checks if the target project has been migrated based on `project_name` and `source_pipeline_id`.
+
+  Returns `boolean`.
+  """
   def target_project_exist?(project_name, source_pipeline_id) do
     {p_found, p_record} = %CncfDashboardApi.Projects{name: project_name } |> find_by([:name])
     {pl_found, pl_record} = %CncfDashboardApi.SourceKeyPipelines{source_id: source_pipeline_id } |> find_by([:source_id])
@@ -84,7 +89,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
     monitor = Repo.all(from skpm in CncfDashboardApi.SourceKeyProjectMonitor, 
                        where: skpm.id == ^source_key_project_monitor_id) |> List.first
     Logger.info fn ->
-      "GitlabMonitor: source_key_project_monitor : #{inspect(monitor)}"
+      "migrate_source_key_monitor: source_key_project_monitor : #{inspect(monitor)}"
     end
 
     # make sure the immediate project is upserted
@@ -108,32 +113,53 @@ defmodule CncfDashboardApi.GitlabMonitor do
     # migrate missing internal id, if it doesn't exist
     unless target_project_exist?(monitor.target_project_name, monitor.project_build_pipeline_id) do
       Logger.info fn ->
-        "GitlabMonitor: target_project did not exist"
+        "migrate_source_key_monitor: target_project did not exist"
       end
       CncfDashboardApi.GitlabMigrations.upsert_missing_target_project_pipeline( monitor.target_project_name, monitor.project_build_pipeline_id)
     end
-                                   
-    {:ok, monitor, source_key_project, source_key_pipeline}
-  end
 
-  def upsert_pipeline_monitor(source_key_project_monitor_id) do
-    last_checked
-    {:ok, monitor, source_key_project, source_key_pipeline} = migrate_source_key_monitor(source_key_project_monitor_id)
-    
     target_source_key_pipeline = Repo.all(from skp in CncfDashboardApi.SourceKeyPipelines, 
                                                    where: skp.source_id == ^monitor.project_build_pipeline_id) |> List.first
-    
+
     Logger.info fn ->
-      "GitlabMonitor: monitor : #{inspect(monitor)}"
+      "migrate_source_key_monitor: monitor : #{inspect(monitor)}"
     end
 
     Logger.info fn ->
-      "GitlabMonitor: source_key_project : #{inspect(source_key_project)}"
+      "migrate_source_key_monitor: source_key_project : #{inspect(source_key_project)}"
     end
 
     Logger.info fn ->
-      "GitlabMonitor: target_source_key_pipeline : #{inspect(target_source_key_pipeline)}"
+      "migrate_source_key_monitor: target_source_key_pipeline : #{inspect(target_source_key_pipeline)}"
     end
+                                   
+    {:ok, {monitor, source_key_project, source_key_pipeline, source_key_project_monitor_id, target_source_key_pipeline}}
+  end
+
+ @doc """
+  Migrates the source key pipeline_monitor into the internal pipeline monitor based on `{%monitor, %source_key_project, %source_key_pipeline, source_key_project_monitor_id}`.
+
+  Returns `[%SourceKeyProjects, %SourceKeyPipelines]`
+  """
+  def upsert_pipeline_monitor(source_key_project_monitor_id) do
+    update_dashboard(source_key_project_monitor_id)
+    # {:ok, source_key_project_info} = migrate_source_key_monitor(source_key_project_monitor_id)
+    # upsert_pipeline_monitor_info(source_key_project_info)
+  end
+
+  def upsert_pipeline_monitor_info({:ok, source_key_project_info}) do
+    upsert_pipeline_monitor_info(source_key_project_info)
+  end
+
+ @doc """
+  Migrates the source key pipeline_monitor into the internal pipeline monitor based on `source_key_project_monitor_id`.
+
+  Returns `[%SourceKeyProjects, %SourceKeyPipelines]`
+  """
+  def upsert_pipeline_monitor_info({monitor, source_key_project, source_key_pipeline, source_key_project_monitor_id, target_source_key_pipeline} = source_key_project_info) do
+
+    CncfDashboardApi.GitlabMonitor.Dashboard.last_checked()
+
     # determine pipeline type
     case is_deploy_pipeline_type(source_key_project.new_id) do
       true -> pipeline_type = "deploy"
@@ -191,33 +217,9 @@ defmodule CncfDashboardApi.GitlabMonitor do
 
     upsert_ref_monitor(source_key_project.new_id,source_key_pipeline.new_id)
     
-    # Call dashboard channel
-    CncfDashboardApi.Endpoint.broadcast! "dashboard:*", "new_cross_cloud_call", %{reply: dashboard_response} 
+    # CncfDashboardApi.GitlabMonitor.Dashboard.broadcast()
 
-    Logger.info fn ->
-      "GitlabMonitor: Broadcasted json"
-    end
-  end
-
-  def dashboard_response do
-    yml = System.get_env("GITLAB_CI_YML")
-    {d_found, d_record} = %CncfDashboardApi.Dashboard{gitlab_ci_yml: yml } |> find_by([:gitlab_ci_yml])
-    cloud_list = Repo.all(from cd1 in CncfDashboardApi.Clouds, 
-                          where: cd1.active == true,
-                          order_by: [cd1.order]) 
-    projects = Repo.all(from projects in CncfDashboardApi.Projects,      
-                        left_join: ref_monitors in assoc(projects, :ref_monitors),
-                        left_join: dashboard_badge_statuses in assoc(ref_monitors, :dashboard_badge_statuses),
-                        left_join: cloud in assoc(dashboard_badge_statuses, :cloud),
-                        where: projects.active == true,
-                        order_by: [projects.order, ref_monitors.order, dashboard_badge_statuses.order], 
-                        preload: [ref_monitors: 
-                                  {ref_monitors, dashboard_badge_statuses: dashboard_badge_statuses, 
-                                    dashboard_badge_statuses: {dashboard_badge_statuses, cloud: cloud },
-                                  }] )
-
-    with_cloud = %{"dashboard" => d_record, "clouds" => cloud_list, "projects" => projects} 
-    response = CncfDashboardApi.DashboardView.render("index.json", dashboard: with_cloud)
+    project_pipeline_info = project_pipeline_info(source_key_project.new_id, source_key_pipeline.new_id)
   end
 
   # project name is either cross-cloud (cross-cloud handles the deploy pipelines)
@@ -234,6 +236,19 @@ defmodule CncfDashboardApi.GitlabMonitor do
       false
     end
 
+  end
+
+ @doc """
+  Gets a job names in order of precedence for a specific project based on `project_name`.
+
+  Precendence is from least to most important 
+
+  Returns `["job_name1", "job_name2"]`
+  """
+  def monitored_job_list(project_name) do
+    cloud_list = CncfDashboardApi.YmlReader.GitlabCi.gitlab_pipeline_config()
+    pipeline_config = Enum.find(cloud_list, fn(x) -> x["pipeline_name"] == project_name end) 
+    pipeline_config["status_jobs"]
   end
 
  @doc """
@@ -276,13 +291,28 @@ defmodule CncfDashboardApi.GitlabMonitor do
     Logger.info fn ->
       "badge_status_by_pipeline_id monitored_job_list: #{inspect(monitor_job_list)}"
     end
+    %{:status => status, :job => _} = monitored_jobs(monitor_job_list, internal_pipeline_id)
+                  |> status_job(child_pipeline)
+     status
+  end
 
-    monitored_jobs = monitored_jobs(monitor_job_list, internal_pipeline_id)
+ @doc """
+  Gets the status and job based on precendence based on `monitored_jobs` and `child_pipeline`  
 
+  If any job in the status jobs list has a status of failed, return failed
+  else if any job in the list has a status of running, return running
+  else 
+     if not child pipeline
+       if all jobs are a success, return success
+
+  Returns :nojob if no job found
+
+  Returns `%{:status => "success", :job => %PipelineJob}`
+  """
+  def status_job(monitored_jobs, child_pipeline) do
     Logger.info fn ->
-      "badge_status_by_pipeline_id monitored_jobs: #{inspect(monitored_jobs)}"
+      "status_job monitored_jobs: #{inspect(monitored_jobs)}"
     end
-
     # loop through the jobs list in the order of precedence
     # monitor_job_list e.g. ["e2e", "App-Deploy"]
     # create status string e.g. "failure"
@@ -291,49 +321,6 @@ defmodule CncfDashboardApi.GitlabMonitor do
     # else 
     #    if not child pipeline
     #      if all jobs are a success, return success
-    status = monitored_jobs 
-             |> Enum.reduce_while("initial", fn(job, acc) ->
-               Logger.info fn ->
-                 "badge_status_by_pipeline_id monitored job: #{inspect(job)}"
-               end
-               cond do
-                 job && (job.status =~ "failed" || job.status =~ "canceled") ->
-                   acc = "failed"  
-                   {:halt, acc}
-                 job && (job.status =~ "running" || job.status =~ "created") ->
-                   # can only go to a running status from initial, running, or success status
-                   if (acc =~ "running" || acc =~ "initial" || acc =~ "success") do
-                     acc = "running" 
-                   end
-                   {:cont, acc}
-                 job && job.status =~ "success" ->
-                   # The Backend Dashboard will NOT set the badge status to success when a 
-                   # child -- it's ignored for a child 
-                   # can only go to a success status from initial, running, or success status
-                   if (child_pipeline == false && (acc =~ "success" || acc =~ "initial" || 
-                     acc =~ "running")) do
-                     acc = "success" 
-                   end
-                   {:cont, acc}
-                 true ->
-                 Logger.error fn ->
-                   "unhandled job status: #{inspect(job)}  not handled"
-                 end
-                 {:cont, acc}
-               end 
-             end) 
-  end
-
-  def badge_url(monitor_job_list, child_pipeline, internal_pipeline_id) do
-     project = Repo.all(from projects in CncfDashboardApi.Projects, 
-                                          left_join: pipelines in assoc(projects, :pipelines),     
-                                          where: pipelines.id == ^internal_pipeline_id) 
-                                          |> List.first
-    Logger.info fn ->
-      "deploy url project: #{inspect(project)}"
-    end
-
-    monitored_jobs = monitored_jobs(monitor_job_list, internal_pipeline_id)
     status_job = monitored_jobs 
              |> Enum.reduce_while(%{:status => "initial", :job => :nojob}, fn(job, acc) ->
                Logger.info fn ->
@@ -350,6 +337,9 @@ defmodule CncfDashboardApi.GitlabMonitor do
                     end
                     {:cont, acc}
                   job && job.status =~ "success" ->
+                    # The Backend Dashboard will NOT set the badge status to success when a 
+                    # child -- it's ignored for a child 
+                    # can only go to a success status from initial, running, or success status
                     if (child_pipeline == false && (acc.status =~ "success" || acc.status =~ "initial")) do
                       acc = %{status: "success", job: job} 
                     end
@@ -361,6 +351,20 @@ defmodule CncfDashboardApi.GitlabMonitor do
                     {:cont, acc}
                 end 
              end) 
+  end 
+
+
+  def badge_url(monitor_job_list, child_pipeline, internal_pipeline_id) do
+     project = Repo.all(from projects in CncfDashboardApi.Projects, 
+                                          left_join: pipelines in assoc(projects, :pipelines),     
+                                          where: pipelines.id == ^internal_pipeline_id) 
+                                          |> List.first
+    Logger.info fn ->
+      "deploy url project: #{inspect(project)}"
+    end
+
+    status_job = monitored_jobs(monitor_job_list, internal_pipeline_id)
+                  |> status_job(child_pipeline)
 
     Logger.info fn ->
       "status_job: #{inspect(status_job)}"
@@ -382,19 +386,19 @@ defmodule CncfDashboardApi.GitlabMonitor do
     end
   end
 
-  # project, pipeline, and pipeline jobs should be migrated before
-  # calling upsert_ref_monitor
-  # 1. source_key_project_monitor is called from a http post
-  # 2. pipeline_monitor is created/updated during the http_post
-  # 3. upsert_ref_monitor is called to set up the dashboard
-  def upsert_ref_monitor(project_id, pipeline_id) do
+ @doc """
+ Gets all project and pipeline information based on the internal
+ `project_id` and  `pipeline_id`.
 
+  project, pipeline, and pipeline jobs should be migrated before
+    calling project_pipeline_info 
+
+  Returns `{:ok, %Projects, %Pipelines, [%PipelineJobs], %PipelineMonitor]}`
+  """
+  def project_pipeline_info(project_id, pipeline_id) do
     Logger.info fn ->
-      "upsert_ref_monitor project id: #{project_id} pipeline_id: #{pipeline_id}"
+      "project_pipeline_info project id: #{project_id} pipeline_id: #{pipeline_id}"
     end
-
-
-    # get project
     project = Repo.all(from p in CncfDashboardApi.Projects, 
                        where: p.id == ^project_id) |> List.first
                        # get pipeline
@@ -408,32 +412,26 @@ defmodule CncfDashboardApi.GitlabMonitor do
       project_id: project_id} |> find_by([:pipeline_id, :project_id])
 
     Logger.info fn ->
-      " upsert_ref_monitor pipeline_monitor: #{inspect(pipeline_monitor)}"
+      "project_pipeline_info pipeline_monitor: #{inspect(pipeline_monitor)}"
     end
 
-    # initialize the dashboard on build pipeline only
-    if pipeline_monitor.pipeline_type == "build" do
-      initialize_ref_monitor(project_id)
-    end
+    {:ok, project, pipeline, pipeline_jobs, pipeline_monitor}
+  end
 
-    #  get all clouds
-    clouds = Repo.all(from c in CncfDashboardApi.Clouds)
 
-    if pipeline.release_type == "stable" do
-      pipeline_order = 1
-    else
-      pipeline_order = 2
-    end
 
-    # if never given a release status for the pipeline, raise an error
+ @doc """
+  Selects the target pipeline info based on `{%PipelineMonitor, %Pipeline}`.
 
-    # if  deploy pipline, use the target project for the refmonitor
-    Logger.info fn ->
-      " upsert_ref_monitor pipeline_monitor.internal_build_pipeline_id: #{inspect(pipeline_monitor.internal_build_pipeline_id)}"
-    end
-    Logger.info fn ->
-      " upsert_ref_monitor all build pipeline_monitors: #{inspect(Repo.all(CncfDashboardApi.PipelineMonitor) )}"
-    end
+  target pipeline is the current (passed in) pipeline and pipeline monitor
+  if the pipeline type is `deploy`
+
+  target pipeline is based on the internal_build_pipeline_id 
+  if the pipeline type is `build`
+
+  Returns `{%PipelineMonitor, %Pipelines}`
+  """
+ def target_pipeline_info(pipeline_monitor, pipeline) do
     if pipeline_monitor.pipeline_type == "deploy" do
       target_pm = Repo.all(from pm in CncfDashboardApi.PipelineMonitor, 
                            where: pm.pipeline_id == ^pipeline_monitor.internal_build_pipeline_id, 
@@ -441,14 +439,16 @@ defmodule CncfDashboardApi.GitlabMonitor do
                            |> List.first()
       target_pl = Repo.all(from pm in CncfDashboardApi.Pipelines, 
                            where: pm.id == ^pipeline_monitor.internal_build_pipeline_id ) |> List.first
-      # must be a legacy call.  This deploy pipeline call is probably for a
-      # dependencie that not longer exists in the db
+
       if is_nil(target_pm) do
         Logger.error fn ->
           "Legacy dependency.  A deploy call with no build calls has been found for: #{inspect(pipeline_monitor)}"
         end
-        target_pm = pipeline_monitor
-        target_pl = pipeline
+        raise "There should be no deploy pipelines that do not have a corresponding build pipeline 
+        Must be a legacy call.  This deploy pipeline call is probably for a dependency that no 
+        longer exists in the db"
+        # target_pm = pipeline_monitor
+        # target_pl = pipeline
       end
       Logger.info fn ->
         " upsert_ref_monitor deploy target_pm: #{inspect(target_pm)}"
@@ -460,71 +460,89 @@ defmodule CncfDashboardApi.GitlabMonitor do
       target_pm = pipeline_monitor
       target_pl = pipeline
     end
+    {target_pm, target_pl}
+ end
 
-    {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: target_pm.project_id,
-      release_type: pipeline_monitor.release_type} 
-      |> find_by([:project_id, :release_type])
+ @doc """
+  Updates one ref monitor based on `project_id` and  `pipeline_id`.
 
-    changeset = CncfDashboardApi.RefMonitor.changeset(rm_record,  
-                                                      %{ref: target_pl.ref,
-                                                        status: target_pl.status,
-                                                        sha: target_pl.sha,
-                                                        release_type: target_pm.release_type,
-                                                        project_id: target_pm.project_id,
-                                                        pipeline_id: target_pl.id,
-                                                        order: pipeline_order
-                                                      })
+  project, pipeline, and pipeline jobs should be migrated before
+    calling upsert_ref_monitor
 
-    case rm_found do
-      :found ->
-        {:ok, rm_record} = Repo.update(changeset) 
-      Logger.info fn ->
-        "ref_monitor found update: #{inspect(rm_record)}"
-      end
-      :not_found ->
-        {:ok, rm_record} = Repo.insert(changeset) 
-      Logger.error fn ->
-        "ref_monitor not found insert (should never happen): #{inspect(rm_record)}"
-      end
-    end
+  1. source_key_project_monitor is called from a http post
+  2. pipeline_monitor is created/updated during the http_post
+  3. upsert_ref_monitor is called to set up the dashboard
 
-    # build dashboard_badget_status
-    # get the dashboard badge for the build job
-    #   i.e. get the dashboard badge with order = 1
-
-    #
-    # upsert the build status badge based on ref_monitor and order (always 1)
+  Returns `[%DashboardBadgeStatus]`
+  """
+  def upsert_ref_monitor(project_id, pipeline_id) do
     Logger.info fn ->
-      "upsert_ref_monitor rm_record.id : #{inspect(rm_record)}"
+      "upsert_ref_monitor project id: #{project_id} pipeline_id: #{pipeline_id}"
     end
-    {dbs_found, dbs_record} = %CncfDashboardApi.DashboardBadgeStatus{ref_monitor_id: rm_record.id, order: 1} 
-                              |> find_by([:ref_monitor_id, :order])
+    project_pipeline_info = project_pipeline_info(project_id, pipeline_id)
+    upsert_ref_monitor(project_pipeline_info)
+  end
+
+  def upsert_ref_monitor({:ok, project, pipeline, pipeline_jobs, pipeline_monitor} = project_pipeline_monitor) do
+    upsert_ref_monitor({project, pipeline, pipeline_jobs, pipeline_monitor})
+  end
+
+ @doc """
+  Updates one ref monitor based on `{%Project, %Pipeline, [%PipelineJobs], %PipelineMonitor}`.
+
+  project, pipeline, and pipeline jobs should be migrated before
+    calling upsert_ref_monitor
+
+  1. source_key_project_monitor is called from a http post
+  2. pipeline_monitor is created/updated during the http_post
+  3. upsert_ref_monitor is called to set up the dashboard
+
+  Returns `[%DashboardBadgeStatus]`
+  """
+  def upsert_ref_monitor({project, pipeline, pipeline_jobs, pipeline_monitor} = project_pipeline_monitor) do
+
+    Logger.info fn ->
+      "upsert_ref_monitor/1 project id: #{project.id} pipeline_id: #{pipeline.id}"
+    end
+    
+    project_id = project.id
+    pipeline_id = pipeline.id
+
+    # initialize the dashboard on build pipeline only
+    if pipeline_monitor.pipeline_type == "build" do
+      CncfDashboardApi.GitlabMonitor.Dashboard.initialize_ref_monitor(project_id)
+    end
+
+    #  get all clouds
+    clouds = Repo.all(from c in CncfDashboardApi.Clouds)
+
+    if pipeline.release_type == "stable" do
+      pipeline_order = 1
+    else
+      pipeline_order = 2
+    end
+
+    # TODO if never given a release status for the pipeline, raise an error
+
+    # if  deploy pipline, use the target project for the refmonitor
+    Logger.info fn ->
+      " upsert_ref_monitor pipeline_monitor.internal_build_pipeline_id: #{inspect(pipeline_monitor.internal_build_pipeline_id)}"
+    end
+    Logger.info fn ->
+      " upsert_ref_monitor all build pipeline_monitors: #{inspect(Repo.all(CncfDashboardApi.PipelineMonitor) )}"
+    end
+
+    {target_pm, target_pl} = target_pipeline_info(pipeline_monitor, pipeline)
+
+    rm_record = CncfDashboardApi.GitlabMonitor.Dashboard.upsert_ref_monitor(pipeline_monitor, target_pm, target_pl, pipeline_order)
+
 
     job_names = monitored_job_list("project")
-    changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(dbs_record, 
-                                                                %{ref: target_pl.ref,
-                                                                  status: badge_status_by_pipeline_id(job_names, false, "", target_pm.pipeline_id),
-                                                                  ref_monitor_id: rm_record.id,
-                                                                  url: badge_url(job_names, false, target_pm.pipeline_id),
-                                                                  order: 1 # build badge always 1 
-                                                                })
-
-    Logger.info fn ->
-      "upsert_ref_monitor DashboardBadgeStatus.changeset : #{inspect(changeset)}"
-    end
-
-    case dbs_found do
-      :found ->
-        {_, dbs_record} = Repo.update(changeset) 
-      Logger.info fn ->
-        "dashboard status found update: #{inspect(dbs_record)}"
-      end
-      :not_found ->
-        {_, dbs_record} = Repo.insert(changeset) 
-      Logger.error fn ->
-        "dashboard status not found insert (should never happen): #{inspect(dbs_record)}"
-      end
-    end
+    dbs_record = CncfDashboardApi.GitlabMonitor.Dashboard.update_badge(rm_record,
+                                                                       target_pl.ref,
+                                                                       badge_status_by_pipeline_id(job_names, false, "", target_pm.pipeline_id),
+                                                                       badge_url(job_names, false, target_pm.pipeline_id),
+                                                                       1)
 
     # if pipeline_type = "build" then the project_id is a target project
     # if pipeline_type = "deploy" then this is a pipeline project 
@@ -637,114 +655,15 @@ defmodule CncfDashboardApi.GitlabMonitor do
         end
       else
 
-        {dbs_found, dbs_record} = %CncfDashboardApi.DashboardBadgeStatus{ref_monitor_id: rm_record.id, order: (cloud_order)} |> find_by([:ref_monitor_id, :order])
+    dbs_record = CncfDashboardApi.GitlabMonitor.Dashboard.update_badge(rm_record,
+                                                                       target_pl.ref,
+                                                                       status,
+                                                                       deploy_url,
+                                                                       cloud_order)
 
-        changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(dbs_record, 
-                                                                    %{ref: target_pl.ref,
-                                                                      status: status,
-                                                                      ref_monitor_id: rm_record.id,
-                                                                      url: deploy_url,
-                                                                      cloud_id: cloud.id,
-                                                                      order: cloud_order # build badge always 1 
-                                                                    })
-
-        Logger.info fn ->
-          "upsert_ref_monitor cloud status DashboardBadgeStatus.changeset : #{inspect(changeset)}"
-        end
-
-        case dbs_found do
-          :found ->
-            {_, dbs_record} = Repo.update(changeset) 
-          Logger.info fn ->
-            "dbs_found : #{inspect(dbs_record)}"
-          end
-          :not_found ->
-            {_, dbs_record} = Repo.insert(changeset) 
-          Logger.info fn ->
-            "dbs not found (should never happen) : #{inspect(dbs_record)}"
-          end
-        end
       end
     end)
   end
 
-  def monitored_job_list(project_name) do
-    cloud_list = CncfDashboardApi.YmlReader.GitlabCi.gitlab_pipeline_config()
-    pipeline_config = Enum.find(cloud_list, fn(x) -> x["pipeline_name"] == project_name end) 
-    pipeline_config["status_jobs"]
-  end
-
-  # projects and clouds must be migrated before calling initialize_ref_monitor
-  def initialize_ref_monitor(project_id) do
-    Logger.info fn ->
-      "initialize_ref_monitor: initializing"
-    end
-
-    {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: project_id, release_type: "stable"} 
-                            |> find_by([:project_id, :release_type])
-    case rm_found do
-      :not_found ->
-        new_n_a_ref_monitor(project_id, "stable", 1) # stable order is always 1
-      _ -> 
-      Logger.info fn ->
-        "initialize_ref_monitor: Stable already exists for project_id: #{project_id} release type 'stable'"
-      end
-    end
-
-    {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: project_id, release_type: "head"} 
-                            |> find_by([:project_id, :release_type])
-    case rm_found do
-      :not_found ->
-        new_n_a_ref_monitor(project_id, "head", 2) # head order is always 2
-      _ -> 
-      Logger.info fn ->
-        "initialize_ref_monitor: Stable already exists for project_id: #{project_id} release type 'head'"
-      end
-    end
-
-  end
-
-  def new_n_a_ref_monitor(project_id, release_type, ref_order) do
-    # insert a stable ref_monitor
-    Logger.info fn -> "new_n_a_ref_monitor" end
-    changeset = CncfDashboardApi.RefMonitor.changeset(%CncfDashboardApi.RefMonitor{}, 
-                                                      %{ref: "N/A",
-                                                        status: "N/A",
-                                                        sha: "N/A",
-                                                        release_type: release_type,
-                                                        project_id: project_id,
-                                                        order: ref_order 
-                                                      })
-    {_, rm_record} = Repo.insert(changeset) 
-    #      insert a databoard_badge for build status with status of N/A for the new ref_monitor
-    changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(%CncfDashboardApi.DashboardBadgeStatus{}, 
-                                                                %{ref: "N/A",
-                                                                  status: "N/A",
-                                                                  ref_monitor_id: rm_record.id,
-                                                                  order: 1 # build badge always 1 
-                                                                })
-    {_, dbs_record} = Repo.insert(changeset) 
-    #  get all clouds
-    Repo.all(from c in CncfDashboardApi.Clouds, where: c.active == true,
-             order_by: :order)
-             # insert one dashboard_badge for each cloud with status of N/A for the new ref_monitor
-             |> Enum.map(fn(x) -> 
-               Logger.info fn ->
-                 "new dashboard badge status cloud: #{inspect(x)}"
-               end
-               cloud_order = x.order + 1 # clouds start with 2 wrt badge status
-               changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(%CncfDashboardApi.DashboardBadgeStatus{}, 
-                                                                           %{ref: "N/A",
-                                                                             status: "N/A",
-                                                                             cloud_id: x.id,
-                                                                             ref_monitor_id: rm_record.id,
-                                                                             order: cloud_order })
-                                                                             {_, dbs_record} = Repo.insert(changeset) 
-               Logger.info fn ->
-                 "new initialized dashboard badge status: #{inspect(dbs_record)}"
-               end
-
-             end) 
-  end
 
 end

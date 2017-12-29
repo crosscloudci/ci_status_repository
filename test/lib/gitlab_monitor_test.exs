@@ -86,6 +86,42 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert CncfDashboardApi.GitlabMonitor.monitored_job_list("cross-project") == ["Build-Source", "App-Deploy"] 
   end
 
+  test "stable update: update_dashboard" do 
+    skpm = insert(:source_key_project_monitor)
+    # check insert 
+    CncfDashboardApi.Endpoint.subscribe(self, "dashboard:*")
+    projects = insert(:project, %{ref_monitors: []})
+    skpj = insert(:source_key_project, %{new_id: projects.id})
+    CncfDashboardApi.GitlabMonitor.update_dashboard(skpm.id)
+    pipeline_monitor_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.PipelineMonitor, :count, :id)  
+    assert 1 = pipeline_monitor_count  
+    assert_receive %Phoenix.Socket.Broadcast{ topic: "dashboard:*", 
+      event: "new_cross_cloud_call", payload: %{reply: %{dashboard: dashboard}}}
+    %{clouds: _, projects: projects} =dashboard
+    head_badge = projects 
+                 |> List.first 
+                 |> Map.get(:pipelines) 
+                 |> Enum.find(fn(x) -> x.release_type =~ "head" end) 
+                 |> Map.get(:jobs) 
+                 |> Enum.find(fn(x) -> x.order == 1 end)
+    assert head_badge.status == "N/A"
+    stable_badge = projects 
+                 |> List.first 
+                 |> Map.get(:pipelines) 
+                 |> Enum.find(fn(x) -> x.release_type =~ "stable" end) 
+                 |> Map.get(:jobs) 
+                 |> Enum.find(fn(x) -> x.order == 1 end)
+    assert (stable_badge.status == "running" || 
+      stable_badge.status == "success" ||
+      stable_badge.status == "failed"
+    )
+
+    pipeline_jobs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.PipelineJobs, :count, :id)  
+    source_pipeline_jobs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyPipelineJobs, :count, :id)  
+    assert 0 < pipeline_jobs_count  
+    assert 0 < source_pipeline_jobs_count
+  end
+
   test "stable update: upsert_pipeline_monitor" do 
     skpm = insert(:source_key_project_monitor)
     # check insert 
@@ -207,14 +243,6 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert 0 < dbs_count
   end
 
-  test "initialize_ref_monitor" do 
-    project = insert(:project, %{ref_monitors: []})
-    CncfDashboardApi.GitlabMonitor.initialize_ref_monitor(project.id)
-    ref_monitor_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.RefMonitor, :count, :id)  
-    assert 2 = ref_monitor_count  
-    dbs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.DashboardBadgeStatus, :count, :id)  
-    assert 4 = dbs_count
-  end
 
   test "compile badge_url" do 
     project = insert(:project, %{pipelines: 

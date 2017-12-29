@@ -24,5 +24,7 @@ defmodule CncfDashboardApi.RefMonitor do
     # |> validate_required([:ref, :status, :sha, :release_type, :project_id, :order, :pipeline_id])
     # initialized ref_monitors will have no pipeline (they exist before a build)
     |> validate_required([:ref, :status, :sha, :release_type, :project_id, :order])
+    
+    |> unique_constraint(:project_id_release_type, message: "Project Id and Release Type must be unique for a Ref Monitor")
   end
 end

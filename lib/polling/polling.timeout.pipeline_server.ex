@@ -88,7 +88,7 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServer do
     end)
 
     # Call dashboard channel
-    CncfDashboardApi.Endpoint.broadcast! "dashboard:*", "new_cross_cloud_call", %{reply: CncfDashboardApi.GitlabMonitor.dashboard_response} 
+    CncfDashboardApi.GitlabMonitor.Dashboard.broadcast()
 
     Logger.info fn ->
       "Polling.Pipeline: Broadcasted json"
