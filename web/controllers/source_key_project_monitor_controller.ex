@@ -36,9 +36,9 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitorController do
             Logger.info fn ->
               "source_key_project_monitor start_pipeline deploy timeout: #{inspect(cc["timeout"] * 1000)}"
             end
-            # base unique identifier on the target's source_pipeline_id and target project name
+            # base unique identifier on the target's source_pipeline_id (e.g. a head or stable pipeline)), source_project_id (cross cloud or cross project), cloud (e.g. aws) , and target project name (e.g. linkerd)
             # i.e. '{"cross-project", "linkerd"}
-            CncfDashboardApi.Polling.Supervisor.Pipeline.start_pipeline({source_key_project_monitor.project_build_pipeline_id, source_key_project_monitor.target_project_name}, source_key_project_monitor.id, cc["timeout"] * 1000) 
+            CncfDashboardApi.Polling.Supervisor.Pipeline.start_pipeline({source_key_project_monitor.project_build_pipeline_id, source_key_project_monitor.source_project_id, source_key_project_monitor.cloud, source_key_project_monitor.target_project_name}, source_key_project_monitor.id, cc["timeout"] * 1000) 
         end
 
         conn
