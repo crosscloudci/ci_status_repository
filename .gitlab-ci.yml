@@ -27,7 +27,7 @@ Dashboard-Backend:
 
 Deploy-Backend:
   stage: Deploy
-  image: registry.dev.cncf.ci/cncf/cncf-ci-dashboard:helm
+  image: crosscloudci/helm:latest
   script:
     - >
       if [ "$BASE_URL" == "https://gitlab.dev.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "master" ]; then
@@ -35,7 +35,7 @@ Deploy-Backend:
         export BACKEND_INGRESS="devapi.cncf.ci"
       elif [ "$BASE_URL" == "https://gitlab.cidev.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "intergration" ]; then 
         echo "Deploying $CI_COMMIT_REF_NAME on $BASE_URL"
-        export BACKEND_INGRESS="devapi.cncf.ci"
+        export BACKEND_INGRESS="cidevapi.cncf.ci"
       elif [ "$BASE_URL" == "https://gitlab.staging.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "staging" ]; then 
         echo "Deploying $CI_COMMIT_REF_NAME on $BASE_URL"
         export BACKEND_INGRESS="stagingapi.cncf.ci"
