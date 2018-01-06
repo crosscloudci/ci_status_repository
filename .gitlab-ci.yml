@@ -5,33 +5,45 @@ stages:
 before_script:
   - export BASE_URL=${BASE_URL:-$(echo $CI_PROJECT_URL |  cut -d'/' -f1-3)}
 
-Dashboard-Backend-Dev:
+Dashboard-Backend:
   stage: Build
-  only:
-    - master
   script:
     - >
-      if [ "$BASE_URL" == "https://gitlab.dev.cncf.ci" ]; then
-        continue
+      if [ "$BASE_URL" == "https://gitlab.dev.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "master" ]; then
+        echo "Deploying $CI_COMMIT_REF_NAME on $BASE_URL"
+      elif [ "$BASE_URL" == "https://gitlab.cidev.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "integration" ]; then 
+        echo "Deploying $CI_COMMIT_REF_NAME on $BASE_URL"
+      elif [ "$BASE_URL" == "https://gitlab.staging.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "staging" ]; then 
+        echo "Deploying $CI_COMMIT_REF_NAME on $BASE_URL"
+      elif [ "$BASE_URL" == "https://gitlab.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "production" ]; then
+        echo "Deploying $CI_COMMIT_REF_NAME on $BASE_URL"
       else
-        echo 'Wrong Environment'
+        echo "No Matching Environment Could Be Found"
         exit 1
       fi
     - docker login -u "gitlab-ci-token" -p "$CI_JOB_TOKEN" $CI_REGISTRY
     - docker build --pull --no-cache -t "$CI_REGISTRY_IMAGE/backend-$CI_COMMIT_REF_NAME:$CI_COMMIT_SHA" .
     - docker push "$CI_REGISTRY_IMAGE/backend-$CI_COMMIT_REF_NAME:$CI_COMMIT_SHA"
 
-Deploy-Backend-Dev:
+Deploy-Backend:
   stage: Deploy
-  only:
-    - master
-  image: registry.dev.cncf.ci/cncf/cncf-ci-dashboard:helm
+  image: crosscloudci/helm:latest
   script:
     - >
-      if [ "$BASE_URL" == "https://gitlab.dev.cncf.ci" ]; then
-        continue
+      if [ "$BASE_URL" == "https://gitlab.dev.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "master" ]; then
+        echo "Deploying $CI_COMMIT_REF_NAME on $BASE_URL"
+        export BACKEND_INGRESS="devapi.cncf.ci"
+      elif [ "$BASE_URL" == "https://gitlab.cidev.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "integration" ]; then 
+        echo "Deploying $CI_COMMIT_REF_NAME on $BASE_URL"
+        export BACKEND_INGRESS="cidevapi.cncf.ci"
+      elif [ "$BASE_URL" == "https://gitlab.staging.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "staging" ]; then 
+        echo "Deploying $CI_COMMIT_REF_NAME on $BASE_URL"
+        export BACKEND_INGRESS="stagingapi.cncf.ci"
+      elif [ "$BASE_URL" == "https://gitlab.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "production" ]; then
+        echo "Deploying $CI_COMMIT_REF_NAME on $BASE_URL"
+        export BACKEND_INGRESS="productionapi.cncf.ci"
       else
-        echo 'Wrong Environment'
+        echo "No Matching Environment Could Be Found"
         exit 1
       fi
     - /helm/entrypoint.sh
@@ -40,43 +52,4 @@ Deploy-Backend-Dev:
     - helm repo add cncf http://cncf.gitlab.io/stable
     - helm upgrade nginx-"$CI_COMMIT_REF_NAME" --install --force stable/nginx-ingress
     - helm upgrade db-"$CI_COMMIT_REF_NAME" stable/postgresql --install --force --set postgresUser=backend,postgresPassword=secretbackend,postgresDatabase=backend --set service.type=ClusterIP --set imageTag=9.6
-    - helm upgrade backend-"$CI_COMMIT_REF_NAME" cncf/backend --install --force --wait --timeout 3600 --set db.user=backend --set db.password=secretbackend --set db.name=backend --set db.host=db-"$CI_COMMIT_REF_NAME"-postgresql --set db.pool=5 --set api=https://gitlab.dev.cncf.ci/api/v4 --set token="$GITLAB_DEV_TOKEN" --set jwt.issuer="$DEV_JWT_ISSUER" --set jwt.key="$DEV_JWT_KEY" --set imagePullSecrets="$CI_COMMIT_REF_NAME"secret --set yaml=https://raw.githubusercontent.com/CrossCloudCI/cncf-configuration/master/cross-cloud.yml --set ingress.host="$CI_COMMIT_REF_NAME"api.cncf.ci --set ingress.port=4001 --set image.repository="$CI_REGISTRY_IMAGE/backend-$CI_COMMIT_REF_NAME" --set image.tag="$CI_COMMIT_SHA"
-
-Dashboard-Backend-Staging:
-  stage: Build
-  only:
-    - staging
-  script:
-    - echo "$BASE_URL"
-    - >
-      if [ "$BASE_URL" == "https://gitlab.staging.cncf.ci" ]; then
-        continue
-      else
-        echo 'Wrong Environment'
-        exit 1
-      fi
-    - docker login -u "gitlab-ci-token" -p "$CI_JOB_TOKEN" $CI_REGISTRY
-    - docker build --pull --no-cache -t "$CI_REGISTRY_IMAGE/backend-$CI_COMMIT_REF_NAME:$CI_COMMIT_SHA" .
-    - docker push "$CI_REGISTRY_IMAGE/backend-$CI_COMMIT_REF_NAME:$CI_COMMIT_SHA"
-
-Deploy-Backend-Staging:
-  stage: Deploy
-  only:
-    - staging
-  image: registry.staging.cncf.ci/cncf/cncf-ci-dashboard:helm
-  script:
-    - echo "$BASE_URL"
-    - >
-      if [ "$BASE_URL" == "https://gitlab.staging.cncf.ci" ]; then
-        continue
-      else
-        echo 'Wrong Environment'
-        exit 1
-      fi
-    - /helm/entrypoint.sh
-    - export KUBECONFIG=/kubeconfig
-    - helm init
-    - helm repo add cncf http://cncf.gitlab.io/stable
-    - helm upgrade nginx-"$CI_COMMIT_REF_NAME" --install --force stable/nginx-ingress
-    - helm upgrade db-"$CI_COMMIT_REF_NAME" stable/postgresql --install --force --set postgresUser=backend,postgresPassword=secretbackend,postgresDatabase=backend --set service.type=ClusterIP --set imageTag=9.6
-    - helm upgrade backend-"$CI_COMMIT_REF_NAME" cncf/backend --install --force --wait --timeout 3600 --set db.user=backend --set db.password=secretbackend --set db.name=backend --set db.host=db-"$CI_COMMIT_REF_NAME"-postgresql --set db.pool=5 --set api=https://gitlab.staging.cncf.ci/api/v4 --set token="$GITLAB_STAGING_TOKEN" --set jwt.issuer="$STAGING_JWT_ISSUER" --set jwt.key="$STAGING_JWT_KEY" --set imagePullSecrets="$CI_COMMIT_REF_NAME"secret --set yaml=https://raw.githubusercontent.com/CrossCloudCI/cncf-configuration/staging/cross-cloud.yml --set ingress.host="$CI_COMMIT_REF_NAME"api.cncf.ci --set ingress.port=4001 --set image.repository="$CI_REGISTRY_IMAGE/backend-$CI_COMMIT_REF_NAME" --set image.tag="$CI_COMMIT_SHA"
+    - helm upgrade bck-"$CI_COMMIT_REF_NAME" cncf/backend --install --force --wait --timeout 3600 --set db.user=backend --set db.password=secretbackend --set db.name=backend --set db.host=db-"$CI_COMMIT_REF_NAME"-postgresql --set db.pool=5 --set api="$BASE_URL"/api/v4 --set token="$GITLAB_TOKEN" --set jwt.issuer="$JWT_ISSUER" --set jwt.key="$JWT_KEY" --set imagePullSecrets="$CI_COMMIT_REF_NAME"secret --set yaml=https://raw.githubusercontent.com/CrossCloudCI/cncf-configuration/"$CI_COMMIT_REF_NAME"/cross-cloud.yml --set ingress.host="$BACKEND_INGRESS" --set ingress.port=4001 --set image.repository="$CI_REGISTRY_IMAGE/backend-$CI_COMMIT_REF_NAME" --set image.tag="$CI_COMMIT_SHA"
