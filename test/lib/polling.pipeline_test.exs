@@ -16,7 +16,7 @@ defmodule CncfDashboardApi.Polling.PipelineTest do
     skpm = insert(:source_key_project_monitor)
     pm = insert(:pipeline_monitor)
     CncfDashboardApi.Polling.Pipeline.monitor(skpm.id) 
-    {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.pipeline_monitor(skpm.id) 
+    {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.PipelineMonitor.pipeline_monitor(skpm.id) 
     assert  false == pm_record.running 
   end
 
@@ -26,10 +26,10 @@ defmodule CncfDashboardApi.Polling.PipelineTest do
     # {:ok, upsert_count, cloud_map} = CncfDashboardApi.GitlabMigrations.upsert_clouds()
     projects = insert(:project)
     CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm.id)
-    {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.pipeline_monitor(skpm.id) 
+    {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.PipelineMonitor.pipeline_monitor(skpm.id) 
     assert  true == pm_record.running 
     CncfDashboardApi.Polling.Pipeline.set_run_to_fail(skpm.id) 
-    {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.pipeline_monitor(skpm.id) 
+    {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.PipelineMonitor.pipeline_monitor(skpm.id) 
     assert  false == pm_record.running 
   end
 end
