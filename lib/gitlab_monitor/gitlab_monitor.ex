@@ -370,7 +370,9 @@ defmodule CncfDashboardApi.GitlabMonitor do
                                                                        target_pl.ref,
                                                                        status,
                                                                        deploy_url,
-                                                                       cloud_order)
+                                                                       cloud_order, 
+                                                                       cloud.id
+    )
 
       end
     end)

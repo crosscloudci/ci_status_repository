@@ -146,10 +146,18 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
   Returns `%RefMonitor`
   """
   def upsert_ref_monitor(pipeline_monitor, target_pm, target_pl, pipeline_order) do
+    #TODO remove pipeline_monitor
+      Logger.info fn ->
+        "upsert_ref_monitor pipeline_monitor, target_pm, target_pl, pipeline_order: #{inspect(pipeline_monitor)}, #{inspect(target_pm)},
+        #{inspect(target_pl)}, #{inspect(pipeline_order)}"
+      end
     {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: target_pm.project_id,
-      release_type: pipeline_monitor.release_type} 
+      release_type: target_pm.release_type} 
       |> find_by([:project_id, :release_type])
 
+    Logger.info fn ->
+      "upsert_ref_monitor rm_found, rm_record: #{inspect(rm_found)}, #{inspect(rm_record)}"
+    end
     changeset = CncfDashboardApi.RefMonitor.changeset(rm_record,  
                                                       %{ref: target_pl.ref,
                                                         status: target_pl.status,
@@ -159,6 +167,9 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
                                                         pipeline_id: target_pl.id,
                                                         order: pipeline_order
                                                       })
+    Logger.info fn ->
+      "upsert_ref_monitor changeset: #{inspect(changeset)}"
+    end
 
     case rm_found do
       :found ->
@@ -180,7 +191,8 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
 
   Returns `%DashboardBadgeStatus`
   """
-  def update_badge(rm_record, ref, status, url, badge_order) do
+  # def update_badge(rm_record, ref, status, url, badge_order) do
+  def update_badge(rm_record, ref, status, url, badge_order, cloud_id \\ nil) do
     {dbs_found, dbs_record} = %CncfDashboardApi.DashboardBadgeStatus{ref_monitor_id: rm_record.id, order: badge_order} 
                               |> find_by([:ref_monitor_id, :order])
 
@@ -189,7 +201,8 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
                                                                   status: status,
                                                                   ref_monitor_id: rm_record.id,
                                                                   url: url,
-                                                                  order: badge_order # build badge always 1 
+                                                                  order: badge_order, # build badge always 1
+                                                                  cloud_id: cloud_id # build badge has no cloud_id 
                                                                 })
 
     Logger.info fn ->
