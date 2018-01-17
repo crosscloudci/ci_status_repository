@@ -50,7 +50,7 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServer do
       "is_pipeline_complete skpm: #{source_key_project_monitor_id}"
     end
     CncfDashboardApi.GitlabMonitor.migrate_source_key_monitor(source_key_project_monitor_id)
-    {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.pipeline_monitor(source_key_project_monitor_id) 
+    {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.PipelineMonitor.pipeline_monitor(source_key_project_monitor_id) 
     Logger.info fn ->
       "is_pipeline_complete pm_record.running: #{pm_record.running}"
     end
@@ -91,7 +91,7 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServer do
       "set_run_to_fail"
     end
 
-    {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.pipeline_monitor(source_key_project_monitor_id) 
+    {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.PipelineMonitor.pipeline_monitor(source_key_project_monitor_id) 
 
     # stop monitor from running
     pm_changeset = CncfDashboardApi.PipelineMonitor.changeset(pm_record, %{running: false })
@@ -101,10 +101,10 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServer do
       "set_run_to_fail pm_record: #{inspect(pm_record)}"
     end
 
-    case CncfDashboardApi.GitlabMonitor.is_deploy_pipeline_type(pm_record.project_id) do
+    case CncfDashboardApi.GitlabMonitor.Pipeline.is_deploy_pipeline_type(pm_record.project_id) do
       true -> true
         badge_order = CncfDashboardApi.GitlabMonitor.cloud_order_by_name(pm_record.cloud)
-        build_pm_record = CncfDashboardApi.GitlabMonitor.build_pipeline_monitor_by_deploy_pipeline_monitor(pm_record)
+        build_pm_record = CncfDashboardApi.GitlabMonitor.PipelineMonitor.build_pipeline_monitor_by_deploy_pipeline_monitor(pm_record)
         Logger.info fn ->
           "set_run_to_fail badge_order, build_pm_record: #{inspect(badge_order)}, #{inspect(build_pm_record)}"
         end

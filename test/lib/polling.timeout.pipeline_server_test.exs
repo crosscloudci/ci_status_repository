@@ -46,7 +46,7 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServerTest do
     Process.sleep(27000)
     # GenServer.stop(s_timeout)
 
-    {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.pipeline_monitor(skpm.id) 
+    {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.PipelineMonitor.pipeline_monitor(skpm.id) 
     assert  false == pm_record.running 
   end
 
@@ -61,12 +61,12 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServerTest do
     bskpm = insert(:build_source_key_project_monitor)
     CncfDashboardApi.GitlabMonitor.migrate_source_key_monitor(bskpm.id)
     |> CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor_info
-    |> CncfDashboardApi.GitlabMonitor.upsert_ref_monitor
+    |> CncfDashboardApi.GitlabMonitor.upsert_gitlab_to_ref_monitor
 
     ccskpm = insert(:cross_project_source_key_project_monitor)
     CncfDashboardApi.GitlabMonitor.migrate_source_key_monitor(ccskpm.id)
     |> CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor_info
-    |> CncfDashboardApi.GitlabMonitor.upsert_ref_monitor
+    |> CncfDashboardApi.GitlabMonitor.upsert_gitlab_to_ref_monitor
 
     # setup the initial pipeline 
 
@@ -80,7 +80,7 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServerTest do
     Process.sleep(27000)
     # GenServer.stop(s_timeout)
 
-    {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.pipeline_monitor(ccskpm.id) 
+    {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.PipelineMonitor.pipeline_monitor(ccskpm.id) 
     assert  false == pm_record.running 
   end
 
@@ -90,10 +90,10 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServerTest do
     # {:ok, upsert_count, cloud_map} = CncfDashboardApi.GitlabMigrations.upsert_clouds()
     projects = insert(:project)
     CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm.id)
-    {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.pipeline_monitor(skpm.id) 
+    {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.PipelineMonitor.pipeline_monitor(skpm.id) 
     assert  true == pm_record.running 
     CncfDashboardApi.Polling.Timeout.PipelineServer.set_run_to_fail(skpm.id) 
-    {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.pipeline_monitor(skpm.id) 
+    {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.PipelineMonitor.pipeline_monitor(skpm.id) 
     assert  false == pm_record.running 
   end
 end
