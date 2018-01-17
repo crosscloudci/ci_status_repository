@@ -17,7 +17,7 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitorController do
       {:ok, source_key_project_monitor} ->
         # start polling
         CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(source_key_project_monitor.id)
-        {_pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.pipeline_monitor(source_key_project_monitor.id) 
+        {_pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.PipelineMonitor.pipeline_monitor(source_key_project_monitor.id) 
         project = Repo.get!(CncfDashboardApi.Projects, pm_record.project_id)
         Logger.info fn ->
           "source_key_project_monitor create project: #{inspect(project)}"

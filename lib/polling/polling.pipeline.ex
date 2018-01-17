@@ -6,7 +6,7 @@ defmodule CncfDashboardApi.Polling.Pipeline do
 
   def is_pipeline_complete(source_key_project_monitor_id) do
     CncfDashboardApi.GitlabMonitor.migrate_source_key_monitor(source_key_project_monitor_id)
-    {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.pipeline_monitor(source_key_project_monitor_id) 
+    {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.PipelineMonitor.pipeline_monitor(source_key_project_monitor_id) 
     if pm_record.running do
       CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(source_key_project_monitor_id)
       {:ok, :running}
@@ -32,7 +32,7 @@ defmodule CncfDashboardApi.Polling.Pipeline do
   end
 
   def set_run_to_fail(source_key_project_monitor_id) do
-    {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.pipeline_monitor(source_key_project_monitor_id) 
+    {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.PipelineMonitor.pipeline_monitor(source_key_project_monitor_id) 
 
     # stop monintor from running
     pm_changeset = CncfDashboardApi.PipelineMonitor.changeset(pm_record, %{running: false })

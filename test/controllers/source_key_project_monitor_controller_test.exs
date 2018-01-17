@@ -51,7 +51,7 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitorControllerTest do
     bskpm = insert(:build_source_key_project_monitor)
     CncfDashboardApi.GitlabMonitor.migrate_source_key_monitor(bskpm.id)
     |> CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor_info
-    |> CncfDashboardApi.GitlabMonitor.upsert_ref_monitor
+    |> CncfDashboardApi.GitlabMonitor.upsert_gitlab_to_ref_monitor
 
     valid_att = params_for(:cross_project_source_key_project_monitor)
     conn = post conn, source_key_project_monitor_path(conn, :create), source_key_project_monitor: valid_att
