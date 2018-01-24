@@ -39,6 +39,7 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitorControllerTest do
     assert Repo.get_by(SourceKeyProjectMonitor, valid_att)
   end
 
+  @tag :wip
   test "creates and renders resource when deploy data is valid", %{conn: conn} do
     # pull over cross cloud and cross project projects manually in test mode 
     cc_project = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == "cross-cloud" end)

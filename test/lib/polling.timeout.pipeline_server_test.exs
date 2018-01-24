@@ -50,6 +50,7 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServerTest do
     assert  false == pm_record.running 
   end
 
+  @tag :wip
   @tag timeout: 300_000 
   test "let a deploy pipeline timeout" do 
     # pull over cross cloud and cross project projects manually in test mode 

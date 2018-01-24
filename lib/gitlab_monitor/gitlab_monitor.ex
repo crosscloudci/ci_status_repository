@@ -257,6 +257,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
 
     # if pipeline_type = "build" then the project_id is a target project
     # if pipeline_type = "deploy" then this is a pipeline project 
+    # deploy pipeline monitors correspond to the cloud badges on the dashboard
     if pipeline_monitor.pipeline_type == "build" do
       deploy_pipeline_monitors = Repo.all(from pm in CncfDashboardApi.PipelineMonitor, 
                                           where: pm.internal_build_pipeline_id == ^pipeline_monitor.pipeline_id,
@@ -264,11 +265,36 @@ defmodule CncfDashboardApi.GitlabMonitor do
     else
       deploy_pipeline_monitors = Repo.all(from pm in CncfDashboardApi.PipelineMonitor, 
                                           where: pm.internal_build_pipeline_id == ^pipeline_monitor.internal_build_pipeline_id,
-                                          where: pm.pipeline_type == "deploy") 
+                                          where: pm.pipeline_type == "deploy")
     end
 
+    sorted_deploy_pipeline_monitors = deploy_pipeline_monitors 
+                                      |> Enum.sort_by(fn(x)-> NaiveDateTime.to_erl(x.updated_at) end)
     Logger.info fn ->
-      "deploy_pipeline_monitors : #{inspect(deploy_pipeline_monitors)}"
+      "sorted deploy_pipeline_monitors : #{inspect(sorted_deploy_pipeline_monitors)}"
+    end
+
+    sorted_source_key_pipelines = deploy_pipeline_monitors 
+                                  |> Enum.map(fn(x) ->
+                                    Repo.all(from skpj in CncfDashboardApi.SourceKeyPipelines, 
+                                             where: skpj.new_id == ^x.pipeline_id)
+                                  end)
+                                  |> List.flatten
+                                  |> Enum.sort_by(fn(x)-> NaiveDateTime.to_erl(x.updated_at) end)
+
+    Logger.info fn ->
+      "Sorted deploy source key pipelines : #{inspect(sorted_source_key_pipelines)}"
+    end
+
+    sorted_source_key_project_monitors = sorted_source_key_pipelines 
+                                          |> Enum.map(fn(x) ->
+                                            Repo.all(from skpm in CncfDashboardApi.SourceKeyProjectMonitor, 
+                                                     where: skpm.source_pipeline_id == ^x.source_id)
+                                          end)
+                                          |> List.flatten
+                                          |> Enum.sort_by(fn(x)-> NaiveDateTime.to_erl(x.updated_at) end)
+    Logger.info fn ->
+      "Sorted deploy source key project monitors : #{inspect(sorted_source_key_project_monitors)}"
     end
 
     cc = Repo.all(from p in CncfDashboardApi.Projects, where: p.name == "cross-cloud") |> List.last
@@ -297,12 +323,27 @@ defmodule CncfDashboardApi.GitlabMonitor do
       Logger.info fn ->
         "cloud_name: #{inspect(cloud.cloud_name)}"
       end
-      cross_cloud_pipeline_monitor = Enum.find(deploy_pipeline_monitors, fn(x) ->
+    # deploy_pipeline_monitors |> Enum.filter(fn(x) -> x.cloud=="aws" end) |> Enum.sort_by(fn(x)-> NaiveDateTime.to_erl(x.updated_at) end) |> List.first
+      # cross_cloud_pipeline_monitor = Enum.find(deploy_pipeline_monitors, fn(x) ->
+      #   x.project_id == cc.id && x.cloud == cloud.cloud_name
+      # end)
+      
+      # Use latest deploy_pipeline_monitor for the current cloud
+      cross_cloud_pipeline_monitor = Enum.filter(deploy_pipeline_monitors, fn(x) ->
         x.project_id == cc.id && x.cloud == cloud.cloud_name
       end)
-      cross_project_pipeline_monitor = Enum.find(deploy_pipeline_monitors, fn(x) ->
+      |> Enum.sort_by(fn(x)-> NaiveDateTime.to_erl(x.updated_at) end) 
+      |> List.last
+
+      # cross_project_pipeline_monitor = Enum.find(deploy_pipeline_monitors, fn(x) ->
+      #   x.project_id == cp.id && x.cloud == cloud.cloud_name
+      # end)
+
+      cross_project_pipeline_monitor = Enum.filter(deploy_pipeline_monitors, fn(x) ->
         x.project_id == cp.id && x.cloud == cloud.cloud_name
       end)
+      |> Enum.sort_by(fn(x)-> NaiveDateTime.to_erl(x.updated_at) end) 
+      |> List.last
 
       Logger.info fn ->
         "cross_cloud_pipeline_monitor: #{inspect(cross_cloud_pipeline_monitor)}"
