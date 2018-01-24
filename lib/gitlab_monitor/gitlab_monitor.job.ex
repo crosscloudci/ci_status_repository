@@ -30,14 +30,14 @@ defmodule CncfDashboardApi.GitlabMonitor.Job do
   """
   def monitored_jobs(job_names, pipeline_id) do
     Logger.info fn ->
-      "monitored_job_list job_names: #{inspect(job_names)}"
+      "monitored_jobs job_names: #{inspect(job_names)}"
     end
     # get all the jobs for the internal pipeline
     jobs = Repo.all(from pj in CncfDashboardApi.PipelineJobs, 
                     where: pj.pipeline_id == ^pipeline_id,
                     where: pj.name in ^job_names)
     Logger.info fn ->
-      "monitored_job_list monitored_jobs: #{inspect(jobs)}"
+      "monitored_jobs: #{inspect(jobs)}"
     end
 
     # sort by job_names
@@ -112,22 +112,25 @@ defmodule CncfDashboardApi.GitlabMonitor.Job do
 
 
   def badge_status_by_pipeline_id(monitor_job_list, child_pipeline, _cloud, internal_pipeline_id) do
-
     Logger.info fn ->
-      "badge_status_by_pipeline_id monitored_job_list: #{inspect(monitor_job_list)}"
+      "badge_status_by_pipeline_id monitor_job_list, chid_pipeline, internal_pipeline_id: #{inspect(monitor_job_list)}, #{inspect(child_pipeline)}, #{inspect(internal_pipeline_id)}"
     end
+
     %{:status => status, :job => _} = CncfDashboardApi.GitlabMonitor.Job.monitored_jobs(monitor_job_list, internal_pipeline_id)
                   |> CncfDashboardApi.GitlabMonitor.Job.status_job(child_pipeline)
      status
   end
 
   def badge_url(monitor_job_list, child_pipeline, internal_pipeline_id) do
+    Logger.info fn ->
+      "badge url monitor_job_list, chid_pipeline, internal_pipeline_id: #{inspect(monitor_job_list)}, #{inspect(child_pipeline)}, #{inspect(internal_pipeline_id)}"
+    end
      project = Repo.all(from projects in CncfDashboardApi.Projects, 
                                           left_join: pipelines in assoc(projects, :pipelines),     
                                           where: pipelines.id == ^internal_pipeline_id) 
                                           |> List.first
     Logger.info fn ->
-      "deploy url project: #{inspect(project)}"
+      "badge url project: #{inspect(project)}"
     end
 
     status_job = CncfDashboardApi.GitlabMonitor.Job.monitored_jobs(monitor_job_list, internal_pipeline_id)
@@ -143,6 +146,10 @@ defmodule CncfDashboardApi.GitlabMonitor.Job do
     if status_job.job != :nojob do
       Logger.info fn ->
         "status_job.job != :nojob"
+      end
+      source_key_pipeline_jobs = Repo.all(from skpj in CncfDashboardApi.SourceKeyPipelineJobs)
+      Logger.info fn ->
+        "All source key pipeline jobs #{inspect(source_key_pipeline_jobs)}"
       end
       source_key_pipeline_jobs = Repo.all(from skpj in CncfDashboardApi.SourceKeyPipelineJobs, where: skpj.new_id == ^status_job.job.id) |> List.first
       if source_key_pipeline_jobs do
