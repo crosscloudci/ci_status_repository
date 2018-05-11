@@ -52,7 +52,7 @@ Deploy-Backend:
       fi
     - /helm/entrypoint.sh
     - export KUBECONFIG=/kubeconfig
-    - helm init
+    - helm init --service-account tiller
     - helm repo add cncf http://cncf.gitlab.io/stable
     - helm upgrade nginx-"$CI_COMMIT_REF_NAME" --install --force stable/nginx-ingress
     - helm upgrade db-"$CI_COMMIT_REF_NAME" stable/postgresql --install --force --set postgresUser=backend,postgresPassword=secretbackend,postgresDatabase=backend --set service.type=ClusterIP --set imageTag=9.6
