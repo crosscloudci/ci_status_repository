@@ -25,7 +25,7 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServerTest do
     # do a timeout 
   end
 
-  @tag timeout: 300_000 
+  @tag timeout: 370_000 
   test "let a build pipeline timeout" do 
     skpm = insert(:source_key_project_monitor)
     # pm = insert(:pipeline_monitor)
@@ -43,15 +43,14 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServerTest do
     CncfDashboardApi.Polling.Supervisor.Pipeline.start_pipeline(skpm.id, skpm.id, 1000) 
     # GenServer.stop(s_timeout)
     # Wait for the timeout to complete
-    Process.sleep(27000)
+    Process.sleep(37000)
     # GenServer.stop(s_timeout)
 
     {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.PipelineMonitor.pipeline_monitor(skpm.id) 
     assert  false == pm_record.running 
   end
 
-  @tag :wip
-  @tag timeout: 300_000 
+  @tag timeout: 370_000 
   test "let a deploy pipeline timeout" do 
     # pull over cross cloud and cross project projects manually in test mode 
     cc_project = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == "cross-cloud" end)
@@ -78,7 +77,7 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServerTest do
     CncfDashboardApi.Polling.Supervisor.Pipeline.start_pipeline(ccskpm.id, ccskpm.id, 1000) 
     # GenServer.stop(s_timeout)
     # Wait for the timeout to complete
-    Process.sleep(27000)
+    Process.sleep(37000)
     # GenServer.stop(s_timeout)
 
     {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.PipelineMonitor.pipeline_monitor(ccskpm.id) 

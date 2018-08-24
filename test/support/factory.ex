@@ -236,6 +236,54 @@ defmodule CncfDashboardApi.Factory do
     }
 	end
 
+  # Failed project build pipeline - ONAP head release build failure
+  def source_key_failed_project_monitor_factory do
+    projects = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == "so" end)
+    %CncfDashboardApi.SourceKeyProjectMonitor{
+      source_project_id: projects["id"] |> Integer.to_string,
+      # ONAP SO Failed build pipeline
+      # ONAP SO project https://gitlab.dev.cncf.ci/onap/so/edit
+      # source_project_id: "53",
+      source_pipeline_id: "12567",
+      project_build_pipeline_id: "12567", # https://gitlab.dev.cncf.ci/onap/so/pipelines/12567
+
+      # The following are overridden
+      source_pipeline_job_id: "1",
+      pipeline_release_type: "head",
+      active: true, 
+      cloud: "aws",
+      child_pipeline: false,
+      target_project_name: "so",
+    }
+  end
+
+  #   - Using ONAP pipelines ids for cross-project (app deploy) and build pipelines
+  #   for testing use
+  #https://gitlab.dev.cncf.ci/cncf/cross-project/-/jobs/72439
+  def cross_project_source_key_failed_project_monitor_factory do
+    # use a real source key project id 
+    projects = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == "cross-project" end)
+    working_project = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == "so" end)
+    # use a real pipeline id 
+    pipelines = GitLabProxy.get_gitlab_pipelines(projects["id"]) |> List.first
+    build_pipelines = GitLabProxy.get_gitlab_pipelines(working_project["id"]) |> List.first
+    %CncfDashboardApi.SourceKeyProjectMonitor{
+      # source_project_id: "45", # cross-project id https://gitlab.dev.cncf.ci/cncf/cross-project/edit
+      source_project_id: projects["id"] |> Integer.to_string, # cross-project id https://gitlab.dev.cncf.ci/cncf/cross-project/edit
+      source_pipeline_id: "12645", # https://gitlab.dev.cncf.ci/cncf/cross-project/pipelines/12645
+      # source_pipeline_id: pipelines["id"] |> Integer.to_string,
+       project_build_pipeline_id: "12567", # https://gitlab.dev.cncf.ci/onap/so/pipelines/12567
+      # project_build_pipeline_id: build_pipelines["id"] |> Integer.to_string,
+
+      source_pipeline_job_id: "1",
+      pipeline_release_type: "head",
+      active: true, 
+      cloud: "aws",
+      child_pipeline: false,
+      target_project_name: "so",
+    }
+  end
+
   def source_key_project_monitor_factory do
     first_active_project =CncfDashboardApi.YmlReader.GitlabCi.project_list |> Enum.find(fn(x) -> x["active"] == true end)
     Logger.info fn ->
