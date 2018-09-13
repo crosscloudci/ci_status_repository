@@ -12,6 +12,8 @@ defmodule CncfDashboardApi.Polling.PipelineTest do
   use ExUnit.Case
   # use CncfDashboardApi.ModelCase
   
+  @tag :wip
+  @tag timeout: 320_000 
   test "monitor a pipeline" do 
     skpm = insert(:source_key_project_monitor)
     pm = insert(:pipeline_monitor)
