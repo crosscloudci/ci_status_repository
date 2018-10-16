@@ -32,6 +32,7 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitorControllerTest do
   end
 
 
+  @tag timeout: 320_000 
   test "creates and renders resource when data is valid", %{conn: conn} do
     valid_att = params_for(:source_key_project_monitor)
     conn = post conn, source_key_project_monitor_path(conn, :create), source_key_project_monitor: valid_att
@@ -40,6 +41,7 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitorControllerTest do
   end
 
   @tag :wip
+  @tag timeout: 320_000 
   test "creates and renders resource when deploy data is valid", %{conn: conn} do
     # pull over cross cloud and cross project projects manually in test mode 
     cc_project = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == "cross-cloud" end)

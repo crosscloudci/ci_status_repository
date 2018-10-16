@@ -67,7 +67,7 @@ defmodule CncfDashboardApi.GitlabMonitor.Job.JobTest do
     # child -- it's ignored for a child 
     ccskpm = insert(:cross_cloud_source_key_project_monitor)
     CncfDashboardApi.GitlabMonitor.migrate_source_key_monitor(ccskpm.id)
-    assert CncfDashboardApi.GitlabMonitor.Job.monitored_job_list("cross-project") == ["Build-Source", "App-Deploy"] 
+    assert CncfDashboardApi.GitlabMonitor.Job.monitored_job_list("cross-project") == ["Build-Source", "App-Deploy", "e2e"] 
   end
 
   test "compile badge_url" do 
@@ -125,5 +125,4 @@ defmodule CncfDashboardApi.GitlabMonitor.Job.JobTest do
     temp_url = "#{project.web_url}/-/jobs/#{skpj1.source_id}"
     assert ^temp_url = url
   end
-
 end
