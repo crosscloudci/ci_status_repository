@@ -351,7 +351,18 @@ defmodule CncfDashboardApi.GitlabMonitor do
 
       if cross_cloud_pipeline_monitor do
         job_names = CncfDashboardApi.GitlabMonitor.Job.monitored_job_list("cross-cloud")
-        cc_status = CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(job_names, cross_cloud_pipeline_monitor.child_pipeline, cloud.cloud_name, cross_cloud_pipeline_monitor.pipeline_id)
+        # https://gitlab.vulk.coop/cncf/ci-dashboard/issues/423
+        # if build for a project fails, all deploy badges should be N/A
+        if CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(
+          CncfDashboardApi.GitlabMonitor.Job.monitored_job_list("project"), 
+          false, 
+          "", 
+          target_pm.pipeline_id) == "failed" do
+          cc_status = "N/A"
+        else
+          cc_status = CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(job_names, cross_cloud_pipeline_monitor.child_pipeline, cloud.cloud_name, cross_cloud_pipeline_monitor.pipeline_id)
+        end
+        
         cc_deploy_url = CncfDashboardApi.GitlabMonitor.Job.badge_url(job_names, cross_cloud_pipeline_monitor.child_pipeline, cross_cloud_pipeline_monitor.pipeline_id)
       end
 
@@ -361,7 +372,17 @@ defmodule CncfDashboardApi.GitlabMonitor do
 
       if cross_project_pipeline_monitor do
         job_names = CncfDashboardApi.GitlabMonitor.Job.monitored_job_list("cross-project")
-        cp_status = CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(job_names, cross_project_pipeline_monitor.child_pipeline, cloud.cloud_name, cross_project_pipeline_monitor.pipeline_id)
+        # https://gitlab.vulk.coop/cncf/ci-dashboard/issues/423
+        # if build for a project fails, all deploy badges should be N/A
+        if CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(
+          CncfDashboardApi.GitlabMonitor.Job.monitored_job_list("project"), 
+          false, 
+          "", 
+          target_pm.pipeline_id) == "failed" do
+          cp_status = "N/A"
+        else
+          cp_status = CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(job_names, cross_project_pipeline_monitor.child_pipeline, cloud.cloud_name, cross_project_pipeline_monitor.pipeline_id)
+        end
         cp_deploy_url = CncfDashboardApi.GitlabMonitor.Job.badge_url(job_names, cross_project_pipeline_monitor.child_pipeline, cross_project_pipeline_monitor.pipeline_id)
       end
 

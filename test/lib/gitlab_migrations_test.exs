@@ -59,9 +59,9 @@ require CncfDashboardApi.DataMigrations;
     {:ok, upsert_count, project_map} = CncfDashboardApi.GitlabMigrations.upsert_project(test_project_id)
     project_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.Projects, :count, :id)  
     source_project_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyProjects, :count, :id)  
-    assert 1 = upsert_count  
-    assert 1 = project_count  
-    assert 1 = source_project_count
+    assert 2 = upsert_count  
+    assert 2 = project_count  
+    assert 2 = source_project_count
     # check update -- should not increase
     {:ok, upsert, project_map} = CncfDashboardApi.GitlabMigrations.upsert_projects()
     assert project_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.Projects, :count, :id)  
@@ -85,7 +85,7 @@ require CncfDashboardApi.DataMigrations;
     assert 1 < upsert_count  
   end
 
-  @tag timeout: 120_000 
+  @tag timeout: 320_000 
   test "upsert_pipelines" do 
     # check insert 
     {:ok, upsert_count, project_map} = CncfDashboardApi.GitlabMigrations.upsert_projects()
@@ -100,6 +100,7 @@ require CncfDashboardApi.DataMigrations;
     assert source_pipeline_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyPipelines, :count, :id)  
   end
 
+  @tag timeout: 360_000 
   test "upsert_pipeline (singular)" do 
     # check insert 
     {:ok, upsert_count, project_map} = CncfDashboardApi.GitlabMigrations.upsert_projects()
@@ -147,6 +148,7 @@ require CncfDashboardApi.DataMigrations;
     assert source_pipeline_jobs_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.SourceKeyPipelineJobs, :count, :id)  
   end
 
+  @tag timeout: 320_000 
   test "upsert_missing_target_project_pipeline" do 
     # check insert 
     {:ok, upsert_count, project_map} = CncfDashboardApi.GitlabMigrations.upsert_projects()

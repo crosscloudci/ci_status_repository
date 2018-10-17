@@ -33,6 +33,6 @@ defmodule CncfDashboardApi.YmlReader.GitlabCiTest do
     assert Enum.find_value(cloud_list, fn(x) -> x["pipeline_name"] == "project" end) 
     assert Enum.find_value(cloud_list, fn(x) -> is_number(x["timeout"]) end) 
     # assert Enum.find_value(cloud_list, fn(x) -> x["status_jobs"] == ["e2e", "App-Deploy"] end) 
-    assert Enum.find_value(cloud_list, fn(x) -> x["status_jobs"] == ["Build-Source", "App-Deploy"] end) 
+    assert Enum.find_value(cloud_list, fn(x) -> x["status_jobs"] == ["Build-Source", "App-Deploy", "e2e"] end) 
   end
 end
