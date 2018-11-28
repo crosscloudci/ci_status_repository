@@ -102,9 +102,10 @@ defmodule CncfDashboardApi.GitlabMonitor.Job do
                     end
                     {:cont, acc}
                   true ->
-                 Logger.error fn ->
-                   "unhandled job status: #{inspect(job)}  not handled"
-                 end
+                    Logger.error fn ->
+                      "unhandled job status: #{inspect(job)}  not handled"
+                    end
+                    acc = %{status: "N/A", job: job} 
                     {:cont, acc}
                 end 
              end) 
