@@ -423,8 +423,9 @@ defmodule CncfDashboardApi.GitlabMonitor do
 
       # ticket #230
       if status == "initial" do
+        status = "N/A"
         Logger.error fn ->
-          "invalid status for pipline: #{inspect(status)}, #{inspect(status)}"
+          "invalid status for pipline: #{inspect(cc_status)}, #{inspect(cp_status)}"
         end
       else
 
