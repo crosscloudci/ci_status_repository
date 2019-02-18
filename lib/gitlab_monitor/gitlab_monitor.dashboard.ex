@@ -39,9 +39,9 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
              order_by: :order)
              # insert one dashboard_badge for each cloud with status of N/A for the new ref_monitor
              |> Enum.map(fn(x) -> 
-               Logger.info fn ->
-                 "new dashboard badge status cloud: #{inspect(x)}"
-               end
+               # Logger.info fn ->
+               #   "new dashboard badge status cloud: #{inspect(x)}"
+               # end
                cloud_order = x.order + 1 # clouds start with 2 wrt badge status
                changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(%CncfDashboardApi.DashboardBadgeStatus{}, 
                                                                            %{ref: "N/A",
@@ -50,9 +50,9 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
                                                                              ref_monitor_id: rm_record.id,
                                                                              order: cloud_order })
                                                                              {_, dbs_record} = Repo.insert(changeset) 
-               Logger.info fn ->
-                 "new initialized dashboard badge status: #{inspect(dbs_record)}"
-               end
+               # Logger.info fn ->
+               #   "new initialized dashboard badge status: #{inspect(dbs_record)}"
+               # end
 
              end) 
   end
