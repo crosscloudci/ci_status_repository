@@ -66,3 +66,4 @@ history.txt
 *.patch
 /20.1
 trigger-special-kubernetes.sh
+kerl
