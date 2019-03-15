@@ -12,9 +12,9 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
 
   Returns `[:ok]`
   """
-  def new_n_a_ref_monitor(project_id, release_type, ref_order) do
+  def new_n_a_ref_monitor(project_id, release_type, test_env, ref_order) do
     Logger.info fn -> 
-      "new_n_a_ref_monitor project_id, release_type, ref_order: #{inspect(project_id)} #{inspect(release_type)} #{inspect(ref_order)}" 
+      "new_n_a_ref_monitor project_id, release_type, test_env,  ref_order: #{inspect(project_id)} #{inspect(release_type)} #{inspect(test_env)} #{inspect(ref_order)}" 
     end
     # insert a stable ref_monitor
     changeset = CncfDashboardApi.RefMonitor.changeset(%CncfDashboardApi.RefMonitor{}, 
@@ -22,6 +22,7 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
                                                         status: "N/A",
                                                         sha: "N/A",
                                                         release_type: release_type,
+                                                        test_env: test_env,
                                                         project_id: project_id,
                                                         order: ref_order 
                                                       })
@@ -71,25 +72,65 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
       "initialize_ref_monitor: initializing"
     end
 
-    {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: project_id, release_type: "stable"} 
-                            |> find_by([:project_id, :release_type])
+    # https://github.com/vulk/cncf_ci/issues/29
+    # Add test environment field to the database
+    # To add rows either: 
+    #   1) pass test environment field in dynamically
+    #   2) fill out all possible test environment 'rows'
+    #     -- for #29 this means four hard coded entries:
+    #       --  test environment 'head', project ref 'head'
+    #       --  test environment 'head', project ref 'stable'
+    #       --  test environment 'stable', project ref 'head'
+    #       --  test environment 'stable', project ref 'stable'
+    #   3) Probably pick (2) until test enviroments are enumerated in the yml file in a future
+    #   ticket (arm?) (hence not dynamic
+
+    # need a way to insert 4 empty builds *without* test env and then retreive them later ...
+    # stable, stable
+    {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: project_id, release_type: "stable", test_env: "stable"} 
+                            |> find_by([:project_id, :release_type, :test_env])
     case rm_found do
       :not_found ->
-        new_n_a_ref_monitor(project_id, "stable", 1) # stable order is always 1
+        new_n_a_ref_monitor(project_id, "stable", "stable", 1) # stable, stable order is always 1
       _ -> 
       Logger.info fn ->
-        "initialize_ref_monitor: Stable already exists for project_id: #{project_id} release type 'stable'"
+        "initialize_ref_monitor: Stable already exists for project_id: #{project_id} release type 'stable' test_env 'stable'"
       end
     end
 
-    {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: project_id, release_type: "head"} 
-                            |> find_by([:project_id, :release_type])
+    # head, stable
+    {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: project_id, release_type: "head", test_env: "stable"} 
+                            |> find_by([:project_id, :release_type, :test_env])
     case rm_found do
       :not_found ->
-        new_n_a_ref_monitor(project_id, "head", 2) # head order is always 2
+        new_n_a_ref_monitor(project_id, "head", "stable", 2) # head, stable order is always 2
       _ -> 
       Logger.info fn ->
-        "initialize_ref_monitor: Stable already exists for project_id: #{project_id} release type 'head'"
+        "initialize_ref_monitor: Stable already exists for project_id: #{project_id} release type 'head' test end 'stable'"
+      end
+    end
+
+    # head, head 
+    {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: project_id, release_type: "head", test_env: "head"} 
+                            |> find_by([:project_id, :release_type, :test_env])
+    case rm_found do
+      :not_found ->
+        new_n_a_ref_monitor(project_id, "head", "head", 3) # head, stable order is always 3
+      _ -> 
+      Logger.info fn ->
+        "initialize_ref_monitor: Stable already exists for project_id: #{project_id} release type 'head' test end 'head'"
+      end
+    end
+
+    # stable, head 
+    {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: project_id, release_type: "stable", test_env: "head"} 
+                            |> find_by([:project_id, :release_type, :test_env])
+    case rm_found do
+      :not_found ->
+        new_n_a_ref_monitor(project_id, "stable", "head", 4) # head, stable order is always 4
+      _ -> 
+      Logger.info fn ->
+        "initialize_ref_monitor: Stable already exists for project_id: #{project_id} release type 'stable' test end 'head'"
       end
     end
 
@@ -145,15 +186,18 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
 
   Returns `%RefMonitor`
   """
-  def upsert_ref_monitor(pipeline_monitor, target_pm, target_pl, pipeline_order) do
+  def upsert_ref_monitor(pipeline_monitor, target_pm, target_pl, pipeline_order, test_env) do
     #TODO remove pipeline_monitor
-      Logger.info fn ->
-        "upsert_ref_monitor pipeline_monitor, target_pm, target_pl, pipeline_order: #{inspect(pipeline_monitor)}, #{inspect(target_pm)},
-        #{inspect(target_pl)}, #{inspect(pipeline_order)}"
-      end
+    Logger.info fn ->
+      "upsert_ref_monitor pipeline_monitor, target_pm, target_pl, pipeline_order: #{inspect(pipeline_monitor)}, #{inspect(target_pm)},
+      #{inspect(target_pl)}, #{inspect(pipeline_order)}"
+    end
+    # if pipeline_monitor.pipeline_type == "deploy" do
+    #   test_env = pipeline_monitor.release_type
+    # end
     {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: target_pm.project_id,
-      release_type: target_pm.release_type} 
-      |> find_by([:project_id, :release_type])
+      release_type: target_pm.release_type, test_env: test_env} 
+      |> find_by([:project_id, :release_type, :test_env])
 
     Logger.info fn ->
       "upsert_ref_monitor rm_found, rm_record: #{inspect(rm_found)}, #{inspect(rm_record)}"
