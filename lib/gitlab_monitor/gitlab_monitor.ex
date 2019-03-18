@@ -227,12 +227,6 @@ defmodule CncfDashboardApi.GitlabMonitor do
     #  get all clouds
     clouds = Repo.all(from c in CncfDashboardApi.Clouds)
 
-    if pipeline.release_type == "stable" do
-      pipeline_order = 1
-    else
-      pipeline_order = 2
-    end
-
     # TODO if never given a release status for the pipeline, raise an error
 
     # if  deploy pipline, use the target project for the refmonitor
@@ -244,8 +238,38 @@ defmodule CncfDashboardApi.GitlabMonitor do
     end
 
     {target_pm, target_pl} = CncfDashboardApi.GitlabMonitor.Pipeline.target_pipeline_info(pipeline_monitor, pipeline)
+    
+    # https://github.com/vulk/cncf_ci/issues/29
+    # Only deploy pipelines will have a test_env.  
+    # Add test environment field to the database
+    #       --  test environment 'stable', project ref 'stable' = 1
+    #       --  test environment 'stable', project ref 'head' = 2
+    #       --  test environment 'head', project ref 'head' = 3
+    #       --  test environment 'head', project ref 'stable' = 4
+    case  pipeline_monitor.pipeline_type do
+      "build" -> 
+        if pipeline.release_type == "stable" do
+          rm_record = CncfDashboardApi.GitlabMonitor.Dashboard.upsert_ref_monitor(pipeline_monitor, target_pm, target_pl, 1, "stable")
+          rm_record = CncfDashboardApi.GitlabMonitor.Dashboard.upsert_ref_monitor(pipeline_monitor, target_pm, target_pl, 4, "head")
+        else
+          rm_record = CncfDashboardApi.GitlabMonitor.Dashboard.upsert_ref_monitor(pipeline_monitor, target_pm, target_pl, 2, "stable")
+          rm_record = CncfDashboardApi.GitlabMonitor.Dashboard.upsert_ref_monitor(pipeline_monitor, target_pm, target_pl, 3, "head")
+        end
+      "deploy" ->
+        cond do
+          pipeline_monitor.release_type == "stable" and target_pm.release_type == "stable" -> 
+            pipeline_order = 1
+          pipeline_monitor.release_type == "stable" and target_pm.release_type == "head" -> 
+            pipeline_order = 2
+          pipeline_monitor.release_type == "head" and target_pm.release_type == "head" -> 
+            pipeline_order = 3
+          pipeline_monitor.release_type == "head" and target_pm.release_type == "stable" -> 
+            pipeline_order = 4
+        end
+        rm_record = CncfDashboardApi.GitlabMonitor.Dashboard.upsert_ref_monitor(pipeline_monitor, target_pm, target_pl, pipeline_order, 
+                                                                                pipeline_monitor.release_type)
+    end
 
-    rm_record = CncfDashboardApi.GitlabMonitor.Dashboard.upsert_ref_monitor(pipeline_monitor, target_pm, target_pl, pipeline_order)
 
 
     job_names = CncfDashboardApi.GitlabMonitor.Job.monitored_job_list("project")

@@ -21,7 +21,7 @@
 ```
 
 # To run only the wip (work in progress) tests
-  * Add @wip before declaring a test
+  * Add @tag :wip before declaring a test
   * Run:
   ```
   . .env; iex -S mix test --only wip 
@@ -52,4 +52,11 @@ Repo.all ( from user in User, where: like(user.username, "%vulk%"))
 # Usefule file text search
 ```
 grep --exclude-dir={node_modules,_build,priv,deps,graphdoc} --exclude=*.sql -rnw '.' -e '.*YOURSEARCHTEXT.*'
+```
+
+# Problems with old function references/code?
+```
+mix deps.clean --all
+mix deps.get 
+mix do clean, compile
 ```
