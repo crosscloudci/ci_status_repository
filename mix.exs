@@ -48,7 +48,7 @@ defmodule CncfDashboardApi.Mixfile do
      {:ex_machina, "~> 2.0"},
      {:gproc, "0.3.1"},
      {:joken, "~> 1.2.1"},
-     {:retry, "~> 0.8"},
+     {:retry, "~> 0.8.0"},
      {:guardian, "~> 0.12.0"},
      {:export, "~> 0.1.1"}]
 

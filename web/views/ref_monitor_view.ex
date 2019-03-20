@@ -16,6 +16,7 @@ defmodule CncfDashboardApi.RefMonitorView do
       sha: ref_monitor.sha,
       head_commit: ref_monitor.sha,
       release_type: ref_monitor.release_type,
+      test_env: ref_monitor.test_env,
       stable_tag: ref_monitor.release_type,
       project_id: ref_monitor.project_id,
       order: ref_monitor.order,

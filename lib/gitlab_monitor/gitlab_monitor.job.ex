@@ -67,9 +67,9 @@ defmodule CncfDashboardApi.GitlabMonitor.Job do
   Returns `%{:status => "success", :job => %PipelineJob}`
   """
   def status_job(monitored_jobs, child_pipeline) do
-    Logger.info fn ->
-      "status_job monitored_jobs: #{inspect(monitored_jobs)}"
-    end
+    # Logger.info fn ->
+    #   "status_job monitored_jobs: #{inspect(monitored_jobs)}"
+    # end
     # loop through the jobs list in the order of precedence
     # monitor_job_list e.g. ["e2e", "App-Deploy"]
     # create status string e.g. "failure"
@@ -80,9 +80,9 @@ defmodule CncfDashboardApi.GitlabMonitor.Job do
     #      if all jobs are a success, return success
     status_job = monitored_jobs 
              |> Enum.reduce_while(%{:status => "initial", :job => :nojob}, fn(job, acc) ->
-               Logger.info fn ->
-                 "monitored job: #{inspect(job)}"
-               end
+               # Logger.info fn ->
+               #   "monitored job: #{inspect(job)}"
+               # end
                 cond do
                   job && (job.status =~ "failed" || job.status =~ "canceled") ->
                     acc = %{status: "failed", job: job}

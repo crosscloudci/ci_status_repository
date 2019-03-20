@@ -67,23 +67,60 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServer do
       "set_build_badge_to_failed"
     end
 
-    # only two ref monitors, head and stable
-    {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: pm_record.project_id, 
-      release_type: pm_record.release_type} 
-      |> find_by([:project_id, :release_type])
+    # https://github.com/vulk/cncf_ci/issues/29
+    # two ref monitors needs to be updated for each build pm_record: test_env: head and stable 
+    # TODO separate out the update into separate call
+    if pm_record.pipeline_type == "build" do
+      {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: pm_record.project_id, 
+        release_type: pm_record.release_type, test_env: "stable" } 
+        |> find_by([:project_id, :release_type, :test_env])
 
-      # TODO, remove in favor of setting *all* badges that are still running to failed
-    {dbs_found, dbs_record} = %CncfDashboardApi.DashboardBadgeStatus{ref_monitor_id: rm_record.id, order: order} 
-                              |> find_by([:ref_monitor_id, :order])
+        # TODO, remove in favor of setting *all* badges that are still running to failed
+        {dbs_found, dbs_record} = %CncfDashboardApi.DashboardBadgeStatus{ref_monitor_id: rm_record.id, order: order} 
+                                  |> find_by([:ref_monitor_id, :order])
 
-    Repo.all(from dbs in CncfDashboardApi.DashboardBadgeStatus, where: dbs.ref_monitor_id == ^rm_record.id and dbs.status == "running") 
-    |> Enum.map(fn(x) -> 
-      Logger.error fn ->
-        "Polling.Timeout.Pipeline setting badge to failed: #{inspect(x)}"
-      end
-      changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(x, %{status: "failed"})
-      {_, dbs_record} = Repo.update(changeset) 
-    end)
+        Repo.all(from dbs in CncfDashboardApi.DashboardBadgeStatus, where: dbs.ref_monitor_id == ^rm_record.id and dbs.status == "running") 
+        |> Enum.map(fn(x) -> 
+          Logger.error fn ->
+            "Polling.Timeout.Pipeline setting badge to failed: #{inspect(x)}"
+          end
+          changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(x, %{status: "failed"})
+          {_, dbs_record} = Repo.update(changeset) 
+        end)
+      {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: pm_record.project_id, 
+        release_type: pm_record.release_type, test_env: "head" } 
+        |> find_by([:project_id, :release_type, :test_env])
+
+        # TODO, remove in favor of setting *all* badges that are still running to failed
+        {dbs_found, dbs_record} = %CncfDashboardApi.DashboardBadgeStatus{ref_monitor_id: rm_record.id, order: order} 
+                                  |> find_by([:ref_monitor_id, :order])
+
+        Repo.all(from dbs in CncfDashboardApi.DashboardBadgeStatus, where: dbs.ref_monitor_id == ^rm_record.id and dbs.status == "running") 
+        |> Enum.map(fn(x) -> 
+          Logger.error fn ->
+            "Polling.Timeout.Pipeline setting badge to failed: #{inspect(x)}"
+          end
+          changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(x, %{status: "failed"})
+          {_, dbs_record} = Repo.update(changeset) 
+        end)
+    else
+      {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: pm_record.project_id, 
+        release_type: pm_record.release_type, test_env: pm_record.release_type} 
+        |> find_by([:project_id, :release_type, :test_env])
+
+        # TODO, remove in favor of setting *all* badges that are still running to failed
+      {dbs_found, dbs_record} = %CncfDashboardApi.DashboardBadgeStatus{ref_monitor_id: rm_record.id, order: order} 
+                                |> find_by([:ref_monitor_id, :order])
+
+      Repo.all(from dbs in CncfDashboardApi.DashboardBadgeStatus, where: dbs.ref_monitor_id == ^rm_record.id and dbs.status == "running") 
+      |> Enum.map(fn(x) -> 
+        Logger.error fn ->
+          "Polling.Timeout.Pipeline setting badge to failed: #{inspect(x)}"
+        end
+        changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(x, %{status: "failed"})
+        {_, dbs_record} = Repo.update(changeset) 
+      end)
+    end
   end
 
   defp set_run_to_fail(source_key_project_monitor_id) do

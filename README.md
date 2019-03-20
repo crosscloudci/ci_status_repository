@@ -1,10 +1,68 @@
 # CNCF Dashboard API server
 
-**Prerequisites:** Erlang 20, Elixir 1.5, Ruby 2.2.1, Node v7.6.0
+**Prerequisites:** Erlang 20.1, Elixir 1.5.1, Ruby 2.2.1, Node v7.6.0
+
+## Prerequisites
+You can install Erlang, Elixir, Ruby, and Node using a version manager like [kerl](https://github.com/kerl/kerl), [kiex](https://github.com/taylor/kiex), [rvm](https://github.com/rvm/rvm), or [nvm](https://github.com/creationix/nvm).
+
+# e.g.:
+
+# Install kerl
+```
+curl -O https://raw.githubusercontent.com/kerl/kerl/master/kerl
+chmod a+x kerl
+mv kerl /usr/bin
+```
+
+# Install erlang
+```
+kerl build 20.1 20.1
+kerl install 20.1 20.1
+# follow instructions for running . activate 
+```
+
+# Install kiex
+```
+\curl -sSL https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s
+# follow instructions for editing vim ~/.bashrc 
+```
+
+# Install elixir
+```
+kiex install 1.5.1
+```
+
+# Install rvm 
+```
+\curl -sSL https://get.rvm.io | bash -s stable
+source /etc/profile.d/rvm.sh
+```
+
+# Install ruby 
+```
+rvm install 2.2.1
+```
+
+# Install nvm
+```
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
+```
+
+# Install node
+```
+nvm install 7.6.0
+```
+
+# Create an environment file and test db file (.env and test.secret.exs) using the example files e.g.
+```
+vim .env.example
+vim config/test.secret.exs.example
+```
 
 ## Build & start the Dashboard API server
 
   * Install dependencies with `mix deps.get`
+  * Compile elixir application with `mix do compile`
   * Create and migrate your database with `mix ecto.create && mix ecto.migrate`
   * Load initial project and cloud data:
     ```
@@ -12,7 +70,7 @@
     . .env; mix gitlab_data.load_projects
     ```
   * Install Node.js dependencies with `npm install`
-  * Install gitlab lib deps `bundle install --path lib/gitlab`
+  * Install gitlab lib deps `cd lib/gitlab ; bundle install ; cd ../..`
   * Start Phoenix endpoint with `. .env ; mix phoenix.server`
 
 Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
