@@ -358,6 +358,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
       n when n in ["deploy", "provision"]   ->
       deploy_pipeline_monitors = Repo.all(from pm in CncfDashboardApi.PipelineMonitor, 
                                           where: pm.internal_build_pipeline_id == ^pipeline_monitor.internal_build_pipeline_id,
+                                          where: pm.provision_pipeline_id == ^pipeline_monitor.provision_pipeline_id,
                                           where: pm.pipeline_type == "deploy")
       _ -> 
       Logger.info fn ->
