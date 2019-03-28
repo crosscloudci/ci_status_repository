@@ -371,8 +371,10 @@ defmodule CncfDashboardApi.Factory do
       project_id: 1,
       pipeline_id: 1,
       running: true,
+      :provision_pipeline_id: 1, 
+      :kubernetes_release_type: "stable"
       release_type: "stable",
-      pipeline_type: "deploy"
+      pipeline_type: "provision"
     }
   end
 

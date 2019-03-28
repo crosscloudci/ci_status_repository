@@ -105,7 +105,7 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServer do
         end)
     else
       {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: pm_record.project_id, 
-        release_type: pm_record.release_type, test_env: pm_record.release_type} 
+        release_type: pm_record.release_type, test_env: pm_record.kubernetes_release_type} 
         |> find_by([:project_id, :release_type, :test_env])
 
         # TODO, remove in favor of setting *all* badges that are still running to failed

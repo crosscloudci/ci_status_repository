@@ -39,8 +39,8 @@ defmodule CncfDashboardApi.Polling.Pipeline do
     {_, pm_record} = Repo.update(pm_changeset) 
 
     # only two ref monitors, head and stable
-    {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: pm_record.project_id, release_type: pm_record.release_type} 
-      |> find_by([:project_id, :release_type])
+    {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: pm_record.project_id, release_type: pm_record.release_type, test_env: pm_record.kubernetes_release_type} 
+      |> find_by([:project_id, :release_type, :test_env])
 
     # TODO, remove in favor of setting all badges that are still running to failed
     {dbs_found, dbs_record} = %CncfDashboardApi.DashboardBadgeStatus{ref_monitor_id: rm_record.id, order: 1} 

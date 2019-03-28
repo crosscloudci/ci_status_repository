@@ -65,6 +65,10 @@ defmodule CncfDashboardApi.GitlabMonitor do
     source_key_pipeline = Repo.all(from skp in CncfDashboardApi.SourceKeyPipelines, 
                                    where: skp.source_id == ^monitor.source_pipeline_id) 
                                    |> List.first
+    # get the local provision pipeline
+    source_key_provision_pipeline = Repo.all(from skp in CncfDashboardApi.SourceKeyPipelines, 
+                                   where: skp.source_id == ^monitor.provision_pipeline_id) 
+                                   |> List.first
 
     # migrate missing internal id, if it doesn't exist
     unless target_project_exist?(monitor.target_project_name, monitor.project_build_pipeline_id) do
@@ -89,7 +93,10 @@ defmodule CncfDashboardApi.GitlabMonitor do
       "migrate_source_key_monitor: target_source_key_pipeline : #{inspect(target_source_key_pipeline)}"
     end
                                    
-    {:ok, {monitor, source_key_project, source_key_pipeline, source_key_project_monitor_id, target_source_key_pipeline}}
+    Logger.info fn ->
+      "migrate_source_key_monitor: source_key_provision_pipeline : #{inspect(source_key_provision_pipeline)}"
+    end
+    {:ok, {monitor, source_key_project, source_key_pipeline, source_key_project_monitor_id, target_source_key_pipeline, source_key_provision_pipeline}}
   end
 
  @doc """
@@ -112,45 +119,82 @@ defmodule CncfDashboardApi.GitlabMonitor do
 
   Returns `[%SourceKeyProjects, %SourceKeyPipelines]`
   """
-  def upsert_pipeline_monitor_info({monitor, source_key_project, source_key_pipeline, source_key_project_monitor_id, target_source_key_pipeline} = source_key_project_info) do
+  def upsert_pipeline_monitor_info({monitor, source_key_project, source_key_pipeline, source_key_project_monitor_id, target_source_key_pipeline, source_key_provision_pipeline} = source_key_project_info) do
 
     CncfDashboardApi.GitlabMonitor.Dashboard.last_checked()
 
     # determine pipeline type
-    case CncfDashboardApi.GitlabMonitor.Pipeline.is_deploy_pipeline_type(source_key_project.new_id) do
-      true -> pipeline_type = "deploy"
-      _ -> pipeline_type = "build"
-    end
+    # case CncfDashboardApi.GitlabMonitor.Pipeline.is_deploy_pipeline_type(source_key_project.new_id) do
+    #   true -> pipeline_type = "deploy"
+    #   _ -> pipeline_type = "build"
+    # end
+
+    pipeline_type =  CncfDashboardApi.GitlabMonitor.Pipeline.pipeline_type(source_key_project.new_id) 
 
     alternate_release = if (monitor.pipeline_release_type == "stable"), do: "head", else: "stable"
 
+    #TODO we now can monitor, for the same pipeline, multiple release types that are the same (two for stable but that have different *kubernetes* release types or archs)
     {pm_found, pm_record} = %CncfDashboardApi.PipelineMonitor{pipeline_id: source_key_pipeline.new_id, 
       project_id: source_key_project.new_id,
       release_type: alternate_release} 
       |> find_by([:pipeline_id, :project_id, :release_type])
 
       case pm_found do
-        :found -> raise "You may not monitor the same project and pipeline for two different branches"
+        :found -> 
+          # raise "You may not monitor the same project and pipeline for two different branches"
+          Logger.info fn ->
+            "upsert_pipeline_monitor_info Monitoring the same project and pipeline for two different branches #{inspect(source_key_project)}"
+          end
         _ -> :ok
       end
 
+      case pipeline_type do
+        "deploy" -> 
+          Logger.info fn ->
+            "upsert_pipeline_monitor_info source_key_provision_pipeline: #{inspect(source_key_provision_pipeline)}"
+          end
+
+          # provision_pm = CncfDashboardApi.GitlabMonitor.PipelineMonitor.provision_pipeline_monitor_by_deploy_pipeline_monitor(pm_record)
+          provision_pipeline_id = source_key_provision_pipeline.new_id
+          kubernetes_release_type = monitor.kubernetes_release_type
+          Logger.info fn ->
+            "upsert_pipeline_monitor_info provision_pipeline_id, kubernetes_release_type #{inspect(provision_pipeline_id)} #{inspect(kubernetes_release_type)} "
+          end
+        "provision" -> 
+          provision_pipeline_id = source_key_pipeline.new_id 
+          kubernetes_release_type = monitor.kubernetes_release_type 
+        "build" ->
+          provision_pipeline_id = 0 
+          kubernetes_release_type = monitor.kubernetes_release_type 
+        _ ->
+          Logger.error fn ->
+            "legacy pipeline (no pipeline_type): #{inspect(monitor)}"
+          end
+      end
       # Insert only if pipeline, project, and release type do not exist
       # else update
       {pm_found, pm_record} = %CncfDashboardApi.PipelineMonitor{pipeline_id: source_key_pipeline.new_id, 
         project_id: source_key_project.new_id,
         pipeline_type: pipeline_type,
-        release_type: monitor.pipeline_release_type} 
-        |> find_by([:pipeline_id, :project_id, :pipeline_type,:release_type])
+        release_type: monitor.pipeline_release_type } 
+        |> find_by([:pipeline_id, :project_id, :pipeline_type, :release_type])
 
-        changeset = CncfDashboardApi.PipelineMonitor.changeset(pm_record, 
+      Logger.info fn ->
+        "pm_record #{inspect(pm_record)}"
+      end
+
+      changeset = CncfDashboardApi.PipelineMonitor.changeset(pm_record, 
                                                                %{project_id: source_key_project.new_id,
                                                                  pipeline_id: source_key_pipeline.new_id,
                                                                  running: true,
                                                                  release_type: monitor.pipeline_release_type,
-                                                                 pipeline_type: pipeline_type ,
+                                                                 pipeline_type: pipeline_type,
                                                                  cloud: monitor.cloud,
                                                                  child_pipeline: monitor.child_pipeline,
                                                                  target_project_name: monitor.target_project_name,
+                                                                 kubernetes_release_type: kubernetes_release_type,
+                                                                 provision_pipeline_id: provision_pipeline_id,
+                                                                 arch: monitor.arch,
                                                                  internal_build_pipeline_id: target_source_key_pipeline.new_id
                                                                })
 
@@ -248,48 +292,93 @@ defmodule CncfDashboardApi.GitlabMonitor do
     #       --  test environment 'head', project ref 'stable' = 4
     case  pipeline_monitor.pipeline_type do
       "build" -> 
-        if pipeline.release_type == "stable" do
+        # no build jobs have test enviroments, but we must make a ref montitor entry for each test environment
+        # and update all of them when the build status changes for a project in order
+        # for the drop down to see a build change
+        job_names = CncfDashboardApi.GitlabMonitor.Job.monitored_job_list("project")
+        if pipeline_monitor.release_type == "stable" do
           rm_record = CncfDashboardApi.GitlabMonitor.Dashboard.upsert_ref_monitor(pipeline_monitor, target_pm, target_pl, 1, "stable")
+          dbs_record = CncfDashboardApi.GitlabMonitor.Dashboard.update_badge(rm_record,
+                                                                             target_pl.ref,
+                                                                             CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(job_names, false, "", target_pm.pipeline_id),
+                                                                             CncfDashboardApi.GitlabMonitor.Job.badge_url(job_names, false, target_pm.pipeline_id),
+                                                                             1)
           rm_record = CncfDashboardApi.GitlabMonitor.Dashboard.upsert_ref_monitor(pipeline_monitor, target_pm, target_pl, 4, "head")
+          dbs_record = CncfDashboardApi.GitlabMonitor.Dashboard.update_badge(rm_record,
+                                                                             target_pl.ref,
+                                                                             CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(job_names, false, "", target_pm.pipeline_id),
+                                                                             CncfDashboardApi.GitlabMonitor.Job.badge_url(job_names, false, target_pm.pipeline_id),
+                                                                             1)
         else
           rm_record = CncfDashboardApi.GitlabMonitor.Dashboard.upsert_ref_monitor(pipeline_monitor, target_pm, target_pl, 2, "stable")
+          dbs_record = CncfDashboardApi.GitlabMonitor.Dashboard.update_badge(rm_record,
+                                                                             target_pl.ref,
+                                                                             CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(job_names, false, "", target_pm.pipeline_id),
+                                                                             CncfDashboardApi.GitlabMonitor.Job.badge_url(job_names, false, target_pm.pipeline_id),
+                                                                             1)
           rm_record = CncfDashboardApi.GitlabMonitor.Dashboard.upsert_ref_monitor(pipeline_monitor, target_pm, target_pl, 3, "head")
+          dbs_record = CncfDashboardApi.GitlabMonitor.Dashboard.update_badge(rm_record,
+                                                                             target_pl.ref,
+                                                                             CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(job_names, false, "", target_pm.pipeline_id),
+                                                                             CncfDashboardApi.GitlabMonitor.Job.badge_url(job_names, false, target_pm.pipeline_id),
+                                                                             1)
         end
       "deploy" ->
+        Logger.info fn ->
+          "deploy pipeline monitor upsert_gitlab_to_ref_monitor"
+        end
         cond do
-          pipeline_monitor.release_type == "stable" and target_pm.release_type == "stable" -> 
+          pipeline_monitor.kubernetes_release_type == "stable" and target_pm.release_type == "stable" -> 
             pipeline_order = 1
-          pipeline_monitor.release_type == "stable" and target_pm.release_type == "head" -> 
+          pipeline_monitor.kubernetes_release_type == "stable" and target_pm.release_type == "head" -> 
             pipeline_order = 2
-          pipeline_monitor.release_type == "head" and target_pm.release_type == "head" -> 
+          pipeline_monitor.kubernetes_release_type == "head" and target_pm.release_type == "head" -> 
             pipeline_order = 3
-          pipeline_monitor.release_type == "head" and target_pm.release_type == "stable" -> 
+          pipeline_monitor.kubernetes_release_type == "head" and target_pm.release_type == "stable" -> 
             pipeline_order = 4
         end
         rm_record = CncfDashboardApi.GitlabMonitor.Dashboard.upsert_ref_monitor(pipeline_monitor, target_pm, target_pl, pipeline_order, 
-                                                                                pipeline_monitor.release_type)
+                                                                                pipeline_monitor.kubernetes_release_type)
+        # job_names = CncfDashboardApi.GitlabMonitor.Job.monitored_job_list("project")
+        # Logger.info fn ->
+        #   "deploy update badge: #{inspect(rm_record)} #{inspect(target_pl)} #{inspect( CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(job_names, false, "", target_pm.pipeline_id))}"
+        # end
+        # dbs_record = CncfDashboardApi.GitlabMonitor.Dashboard.update_badge(rm_record,
+        #                                                                    target_pl.ref,
+        #                                                                    CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(job_names, false, "", target_pm.pipeline_id),
+        #                                                                    CncfDashboardApi.GitlabMonitor.Job.badge_url(job_names, false, target_pm.pipeline_id),
+        #                                                                    2)
+      "provision" ->
+        Logger.info fn ->
+          "No ref_monitor_upsert for provision pipeline monitors: #{inspect(pipeline_monitor)}"
+        end
+      _ ->
+        Logger.error fn ->
+          "Legacy dependency.  A pipeline_monitor with no pipeline_type exists: #{inspect(pipeline_monitor)}"
+        end
+        raise "There should be no pipeline_monitors with no pipeline_type that is not a build, provision, or deploy type"
     end
 
 
 
-    job_names = CncfDashboardApi.GitlabMonitor.Job.monitored_job_list("project")
-    dbs_record = CncfDashboardApi.GitlabMonitor.Dashboard.update_badge(rm_record,
-                                                                       target_pl.ref,
-                                                                       CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(job_names, false, "", target_pm.pipeline_id),
-                                                                       CncfDashboardApi.GitlabMonitor.Job.badge_url(job_names, false, target_pm.pipeline_id),
-                                                                       1)
 
     # if pipeline_type = "build" then the project_id is a target project
     # if pipeline_type = "deploy" then this is a pipeline project 
     # deploy pipeline monitors correspond to the cloud badges on the dashboard
-    if pipeline_monitor.pipeline_type == "build" do
+    case pipeline_monitor.pipeline_type do
+      "build" ->
       deploy_pipeline_monitors = Repo.all(from pm in CncfDashboardApi.PipelineMonitor, 
                                           where: pm.internal_build_pipeline_id == ^pipeline_monitor.pipeline_id,
                                           where: pm.pipeline_type == "deploy") 
-    else
+      n when n in ["deploy", "provision"]   ->
       deploy_pipeline_monitors = Repo.all(from pm in CncfDashboardApi.PipelineMonitor, 
                                           where: pm.internal_build_pipeline_id == ^pipeline_monitor.internal_build_pipeline_id,
                                           where: pm.pipeline_type == "deploy")
+      _ -> 
+      Logger.info fn ->
+        "No deploy pipeline monitors for a provision pipeline: #{inspect(pipeline_monitor)}"
+      end
+
     end
 
     sorted_deploy_pipeline_monitors = deploy_pipeline_monitors 
@@ -434,11 +523,11 @@ defmodule CncfDashboardApi.GitlabMonitor do
       Logger.info fn ->
         "deploy_url: #{inspect(deploy_url)}"
       end
-      # Logger.info fn ->
-      #   "all dashboards status: #{inspect(Repo.all(
-      #     from dbs in CncfDashboardApi.DashboardBadgeStatus,
-      #     where: dbs.ref_monitor_id == ^rm_record.id))}"
-      # end
+      Logger.info fn ->
+        "all dashboards status: #{inspect(Repo.all(
+          from dbs in CncfDashboardApi.DashboardBadgeStatus,
+          where: dbs.ref_monitor_id == ^rm_record.id))}"
+      end
 
       cloud_order = cloud.order + 1
       Logger.info fn ->
