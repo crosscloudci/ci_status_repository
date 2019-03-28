@@ -106,8 +106,6 @@ defmodule CncfDashboardApi.GitlabMonitor do
   """
   def upsert_pipeline_monitor(source_key_project_monitor_id) do
     update_dashboard(source_key_project_monitor_id)
-    # {:ok, source_key_project_info} = migrate_source_key_monitor(source_key_project_monitor_id)
-    # upsert_pipeline_monitor_info(source_key_project_info)
   end
 
   def upsert_pipeline_monitor_info({:ok, source_key_project_info}) do
@@ -122,12 +120,6 @@ defmodule CncfDashboardApi.GitlabMonitor do
   def upsert_pipeline_monitor_info({monitor, source_key_project, source_key_pipeline, source_key_project_monitor_id, target_source_key_pipeline, source_key_provision_pipeline} = source_key_project_info) do
 
     CncfDashboardApi.GitlabMonitor.Dashboard.last_checked()
-
-    # determine pipeline type
-    # case CncfDashboardApi.GitlabMonitor.Pipeline.is_deploy_pipeline_type(source_key_project.new_id) do
-    #   true -> pipeline_type = "deploy"
-    #   _ -> pipeline_type = "build"
-    # end
 
     pipeline_type =  CncfDashboardApi.GitlabMonitor.Pipeline.pipeline_type(source_key_project.new_id) 
 
@@ -339,15 +331,6 @@ defmodule CncfDashboardApi.GitlabMonitor do
         end
         rm_record = CncfDashboardApi.GitlabMonitor.Dashboard.upsert_ref_monitor(pipeline_monitor, target_pm, target_pl, pipeline_order, 
                                                                                 pipeline_monitor.kubernetes_release_type)
-        # job_names = CncfDashboardApi.GitlabMonitor.Job.monitored_job_list("project")
-        # Logger.info fn ->
-        #   "deploy update badge: #{inspect(rm_record)} #{inspect(target_pl)} #{inspect( CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(job_names, false, "", target_pm.pipeline_id))}"
-        # end
-        # dbs_record = CncfDashboardApi.GitlabMonitor.Dashboard.update_badge(rm_record,
-        #                                                                    target_pl.ref,
-        #                                                                    CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(job_names, false, "", target_pm.pipeline_id),
-        #                                                                    CncfDashboardApi.GitlabMonitor.Job.badge_url(job_names, false, target_pm.pipeline_id),
-        #                                                                    2)
       "provision" ->
         Logger.info fn ->
           "No ref_monitor_upsert for provision pipeline monitors: #{inspect(pipeline_monitor)}"
@@ -436,10 +419,6 @@ defmodule CncfDashboardApi.GitlabMonitor do
       Logger.info fn ->
         "cloud_name: #{inspect(cloud.cloud_name)}"
       end
-    # deploy_pipeline_monitors |> Enum.filter(fn(x) -> x.cloud=="aws" end) |> Enum.sort_by(fn(x)-> NaiveDateTime.to_erl(x.updated_at) end) |> List.first
-      # cross_cloud_pipeline_monitor = Enum.find(deploy_pipeline_monitors, fn(x) ->
-      #   x.project_id == cc.id && x.cloud == cloud.cloud_name
-      # end)
       
       # Use latest deploy_pipeline_monitor for the current cloud
       cross_cloud_pipeline_monitor = Enum.filter(deploy_pipeline_monitors, fn(x) ->
@@ -447,10 +426,6 @@ defmodule CncfDashboardApi.GitlabMonitor do
       end)
       |> Enum.sort_by(fn(x)-> NaiveDateTime.to_erl(x.updated_at) end) 
       |> List.last
-
-      # cross_project_pipeline_monitor = Enum.find(deploy_pipeline_monitors, fn(x) ->
-      #   x.project_id == cp.id && x.cloud == cloud.cloud_name
-      # end)
 
       cross_project_pipeline_monitor = Enum.filter(deploy_pipeline_monitors, fn(x) ->
         x.project_id == cp.id && x.cloud == cloud.cloud_name

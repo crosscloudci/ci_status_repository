@@ -87,7 +87,7 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
     #   3) Probably pick (2) until test enviroments are enumerated in the yml file in a future
     #   ticket (arm?) (hence not dynamic
 
-    # need a way to insert 4 empty builds *without* test env and then retreive them later ...
+    # need a way to insert 4 empty builds *without* test env and then retrieve them later ...
     # stable, stable
     # {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: project_id, release_type: "stable", test_env: "stable", kubernetes_release_type: "stable", arch: "amd64"} 
     #                         |> find_by([:project_id, :release_type, :test_env, :kubernetes_release_type, :arch])
@@ -208,26 +208,6 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
       "upsert_ref_monitor pipeline_monitor, target_pm, target_pl, pipeline_order: #{inspect(pipeline_monitor)}, #{inspect(target_pm)},
       #{inspect(target_pl)}, #{inspect(pipeline_order)}"
     end
-    # if a build pipeline monitor, must update all of the build ref_monitors ..
-    # we should be passed in an order
-    #       --  test environment 'stable', project ref 'stable' = 1
-    #       --  test environment 'stable', project ref 'head' = 2
-    #       --  test environment 'head', project ref 'head' = 3
-    #       --  test environment 'head', project ref 'stable' = 4
-    # if a provision monitor, should skip (no updates for provisioning)
-    # if a deploy monitor, should update the ref monitor for that project, release_type, kubernetes_release_type/test_env combo
-    # if pipeline_monitor.pipeline_type == "deploy" do
-    #   provision_pm = CncfDashboardApi.GitlabMonitor.PipelineMonitor.provision_pipeline_monitor_by_deploy_pipeline_monitor(pipeline_monitor)
-    #   Logger.info fn ->
-    #     "upsert_ref_monitor provision_pm: #{inspect(provision_pm)}"
-    #   end
-    #   test_env = provision_pm.release_type
-    #   kubernetes_release_type = provision_pm.release_type
-    #   arch = provision_pm.arch
-    # else
-    #   kubernetes_release_type = pipeline_monitor.kubernetes_release_type
-    # end
-    # kubernetes_release_type = pipeline_monitor.kubernetes_release_type
     case pipeline_monitor.pipeline_type do
       "build" ->
         # loop through all ref monitors and update the builds (for all drop downs)
@@ -236,187 +216,55 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
         else
           kubernetes_release_type = test_env 
         end
-        {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: target_pm.project_id,
-          # release_type: target_pm.release_type, test_env: test_env, kubernetes_release_type: pipeline_monitor.kubernetes_release_type, arch: pipeline_monitor.arch} 
-          release_type: target_pm.release_type, test_env: test_env} 
-          |> find_by([:project_id, :release_type, :test_env])
-          # |> find_by([:project_id, :release_type, :test_env, :kubernetes_release_type, :arch])
-          changeset = CncfDashboardApi.RefMonitor.changeset(rm_record,  
-                                                            %{ref: target_pl.ref,
-                                                              status: target_pl.status,
-                                                              sha: target_pl.sha,
-                                                              release_type: target_pm.release_type,
-                                                              kubernetes_release_type: kubernetes_release_type,
-                                                              arch: pipeline_monitor.arch,
-                                                              test_env: test_env,
-                                                              project_id: target_pm.project_id,
-                                                              pipeline_id: target_pl.id,
-                                                              order: pipeline_order
-                                                            })
-          
-           case rm_found do
-             :found ->
-              {:ok, rm_record} = Repo.update(changeset) 
-              Logger.info fn ->
-                "ref_monitor found update: #{inspect(rm_record)}"
-              end
-            :not_found ->
-              {:ok, rm_record} = Repo.insert(changeset) 
-            Logger.error fn ->
-              "ref_monitor not found insert (should never happen): #{inspect(rm_record)}"
-            end
-           end
-           rm_record
-        # rm_records = CncfDashboardApi.Repo.all(from rm in CncfDashboardApi.RefMonitor,
-        #                                        where: rm.project_id == ^target_pm.project_id,
-        #                                        where: rm.release_type == ^target_pm.release_type, 
-        #                                        where: rm.test_env == ^test_env, 
-        #                                        where: rm.kubernetes_release_type == ^test_env) 
-        #                                        # where: rm.arch == ^pipeline_monitor.arch) 
-        #
-        # Logger.info fn ->
-        #   "upsert_ref_monitor rm_records: #{inspect(rm_records)}"
-        # end
-        # Enum.each(rm_records, fn(rm_record) ->
-        #   changeset = CncfDashboardApi.RefMonitor.changeset(rm_record,  
-        #                                                     %{ref: target_pl.ref,
-        #                                                       status: target_pl.status,
-        #                                                       # sha: target_pl.sha,
-        #                                                       # release_type: target_pm.release_type,
-        #                                                       # kubernetes_release_type: pipeline_monitor.kubernetes_release_type,
-        #                                                       # arch: pipeline_monitor.arch,
-        #                                                       # test_env: test_env,
-        #                                                       # project_id: target_pm.project_id,
-        #                                                       # pipeline_id: target_pl.id,
-        #                                                       # order: pipeline_order
-        #                                                     })
-        #   Logger.info fn ->
-        #     "upsert_ref_monitor changeset: #{inspect(changeset)}"
-        #   end
-        #
-        #   # case rm_found do
-        #   #   :found ->
-        #       {:ok, rm_record} = Repo.update(changeset) 
-        #     # Logger.info fn ->
-        #     #   "ref_monitor found update: #{inspect(rm_record)}"
-        #     # end
-        #     # :not_found ->
-        #     #   {:ok, rm_record} = Repo.insert(changeset) 
-        #     # Logger.error fn ->
-        #     #   "ref_monitor not found insert (should never happen): #{inspect(rm_record)}"
-        #     # end
-        #   # end
-        #   rm_record
-        # end)
+        derived_test_env = test_env
+        derived_arch = pipeline_monitor.arch
       "provision" ->
-        {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: target_pm.project_id,
-          release_type: target_pm.release_type, test_env: test_env} 
-          |> find_by([:project_id, :release_type, :test_env])
-          changeset = CncfDashboardApi.RefMonitor.changeset(rm_record,  
-                                                            %{ref: target_pl.ref,
-                                                              status: target_pl.status,
-                                                              sha: target_pl.sha,
-                                                              release_type: target_pm.release_type,
-                                                              kubernetes_release_type: target_pm.release_type,
-                                                              arch: pipeline_monitor.arch,
-                                                              test_env: target_pm.release_type,
-                                                              project_id: target_pm.project_id,
-                                                              pipeline_id: target_pl.id,
-                                                              order: pipeline_order
-                                                            })
-          
-           case rm_found do
-             :found ->
-              {:ok, rm_record} = Repo.update(changeset) 
-              Logger.info fn ->
-                "ref_monitor found update: #{inspect(rm_record)}"
-              end
-            :not_found ->
-              {:ok, rm_record} = Repo.insert(changeset) 
-            Logger.error fn ->
-              "ref_monitor not found insert (should never happen): #{inspect(rm_record)}"
-            end
-           end
-           rm_record
+        kubernetes_release_type = target_pm.release_type
+        derived_test_env = target_pm.release_type
+        derived_arch = pipeline_monitor.arch
       "deploy" ->
         provision_pm = CncfDashboardApi.GitlabMonitor.PipelineMonitor.provision_pipeline_monitor_by_deploy_pipeline_monitor(pipeline_monitor)
         Logger.info fn ->
           "upsert_ref_monitor provision_pm: #{inspect(provision_pm)}"
         end
-        test_env = provision_pm.release_type
+        derived_test_env = provision_pm.release_type
         kubernetes_release_type = provision_pm.release_type
-        arch = provision_pm.arch
-        {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: target_pm.project_id,
-          release_type: target_pm.release_type, test_env: test_env} 
-          |> find_by([:project_id, :release_type, :test_env])
-          changeset = CncfDashboardApi.RefMonitor.changeset(rm_record,  
-                                                            %{ref: target_pl.ref,
-                                                              status: target_pl.status,
-                                                              sha: target_pl.sha,
-                                                              release_type: target_pm.release_type,
-                                                              kubernetes_release_type: kubernetes_release_type,
-                                                              arch: arch,
-                                                              test_env: test_env,
-                                                              project_id: target_pm.project_id,
-                                                              pipeline_id: target_pl.id,
-                                                              order: pipeline_order
-                                                            })
-          
-           case rm_found do
-             :found ->
-              {:ok, rm_record} = Repo.update(changeset) 
-              Logger.info fn ->
-                "ref_monitor found update: #{inspect(rm_record)}"
-              end
-            :not_found ->
-              {:ok, rm_record} = Repo.insert(changeset) 
-            Logger.error fn ->
-              "ref_monitor not found insert (should never happen): #{inspect(rm_record)}"
-            end
-           end
-           rm_record
+        derived_arch = provision_pm.arch
+
       _ ->
         :ok
     end
-    # {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: target_pm.project_id,
-    #   release_type: target_pm.release_type, test_env: test_env, kubernetes_release_type: pipeline_monitor.kubernetes_release_type, arch: pipeline_monitor.arch} 
-    #   |> find_by([:project_id, :release_type, :test_env, :kubernetes_release_type, :arch])
-    # {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: target_pm.project_id,
-    #   release_type: target_pm.release_type, test_env: test_env} 
-    #   |> find_by([:project_id, :release_type, :test_env])
-    #
-    # Logger.info fn ->
-    #   "upsert_ref_monitor rm_found, rm_record: #{inspect(rm_found)}, #{inspect(rm_record)}"
-    # end
-    # changeset = CncfDashboardApi.RefMonitor.changeset(rm_record,  
-    #                                                   %{ref: target_pl.ref,
-    #                                                     status: target_pl.status,
-    #                                                     sha: target_pl.sha,
-    #                                                     release_type: target_pm.release_type,
-    #                                                     kubernetes_release_type: pipeline_monitor.kubernetes_release_type,
-    #                                                     arch: pipeline_monitor.arch,
-    #                                                     test_env: test_env,
-    #                                                     project_id: target_pm.project_id,
-    #                                                     pipeline_id: target_pl.id,
-    #                                                     order: pipeline_order
-    #                                                   })
-    # Logger.info fn ->
-    #   "upsert_ref_monitor changeset: #{inspect(changeset)}"
-    # end
-    #
-    # case rm_found do
-    #   :found ->
-    #     {:ok, rm_record} = Repo.update(changeset) 
-    #   Logger.info fn ->
-    #     "ref_monitor found update: #{inspect(rm_record)}"
-    #   end
-    #   :not_found ->
-    #     {:ok, rm_record} = Repo.insert(changeset) 
-    #   Logger.error fn ->
-    #     "ref_monitor not found insert (should never happen): #{inspect(rm_record)}"
-    #   end
-    # end
-    # rm_record
+    {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: target_pm.project_id,
+      # release_type: target_pm.release_type, test_env: test_env, kubernetes_release_type: pipeline_monitor.kubernetes_release_type, arch: pipeline_monitor.arch} 
+      release_type: target_pm.release_type, test_env: derived_test_env} 
+      |> find_by([:project_id, :release_type, :test_env])
+      # |> find_by([:project_id, :release_type, :test_env, :kubernetes_release_type, :arch])
+      changeset = CncfDashboardApi.RefMonitor.changeset(rm_record,  
+                                                        %{ref: target_pl.ref,
+                                                          status: target_pl.status,
+                                                          sha: target_pl.sha,
+                                                          release_type: target_pm.release_type,
+                                                          kubernetes_release_type: kubernetes_release_type,
+                                                          arch: derived_arch,
+                                                          test_env: derived_test_env,
+                                                          project_id: target_pm.project_id,
+                                                          pipeline_id: target_pl.id,
+                                                          order: pipeline_order
+                                                        })
+      
+       case rm_found do
+         :found ->
+          {:ok, rm_record} = Repo.update(changeset) 
+          Logger.info fn ->
+            "ref_monitor found update: #{inspect(rm_record)}"
+          end
+        :not_found ->
+          {:ok, rm_record} = Repo.insert(changeset) 
+        Logger.error fn ->
+          "ref_monitor not found insert (should never happen): #{inspect(rm_record)}"
+        end
+       end
+       rm_record
   end
 
  @doc """
@@ -469,10 +317,8 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
     case d_found do
       :found ->
         {_, d_record} = Repo.update(changeset) 
-         # Repo.update!(changeset) 
       :not_found ->
         {_, d_record} = Repo.insert(changeset) 
-         # Repo.insert!(changeset) 
     end
     d_record
   end
