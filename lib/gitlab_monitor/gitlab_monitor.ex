@@ -163,13 +163,14 @@ defmodule CncfDashboardApi.GitlabMonitor do
             "legacy pipeline (no pipeline_type): #{inspect(monitor)}"
           end
       end
-      # Insert only if pipeline, project, and release type do not exist
+      # Insert only if pipeline, project, and release type and kubernetes release type do not exist
       # else update
       {pm_found, pm_record} = %CncfDashboardApi.PipelineMonitor{pipeline_id: source_key_pipeline.new_id, 
         project_id: source_key_project.new_id,
         pipeline_type: pipeline_type,
-        release_type: monitor.pipeline_release_type } 
-        |> find_by([:pipeline_id, :project_id, :pipeline_type, :release_type])
+        release_type: monitor.pipeline_release_type,
+        kubernetes_release_type: monitor.kubernetes_release_type } 
+        |> find_by([:pipeline_id, :project_id, :pipeline_type, :release_type, :kubernetes_release_type])
 
       Logger.info fn ->
         "pm_record #{inspect(pm_record)}"
@@ -185,6 +186,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
                                                                  child_pipeline: monitor.child_pipeline,
                                                                  target_project_name: monitor.target_project_name,
                                                                  kubernetes_release_type: kubernetes_release_type,
+                                                                 test_env: kubernetes_release_type,
                                                                  provision_pipeline_id: provision_pipeline_id,
                                                                  arch: monitor.arch,
                                                                  internal_build_pipeline_id: target_source_key_pipeline.new_id
