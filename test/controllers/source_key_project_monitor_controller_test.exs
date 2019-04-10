@@ -1,9 +1,10 @@
+require Logger;
 defmodule CncfDashboardApi.SourceKeyProjectMonitorControllerTest do
   use CncfDashboardApi.ConnCase
   import CncfDashboardApi.Factory
 
   alias CncfDashboardApi.SourceKeyProjectMonitor
-  @valid_attrs %{source_pipeline_id: "1", source_project_id: "1", pipeline_release_type: "stable"}
+  @valid_attrs %{source_pipeline_id: "1", source_project_id: "1", pipeline_release_type: "stable", arch: ""}
   @invalid_attrs %{}
 
   setup %{conn: conn} = config do
@@ -33,6 +34,7 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitorControllerTest do
 
 
   @tag timeout: 320_000 
+  @tag :wip
   test "creates and renders resource when data is valid", %{conn: conn} do
     valid_att = params_for(:source_key_project_monitor)
     conn = post conn, source_key_project_monitor_path(conn, :create), source_key_project_monitor: valid_att
@@ -40,7 +42,8 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitorControllerTest do
     assert Repo.get_by(SourceKeyProjectMonitor, valid_att)
   end
 
-  @tag timeout: 320_000 
+  @tag timeout: 420_000 
+  @tag :wip
   test "creates and renders resource when deploy data is valid", %{conn: conn} do
     # pull over cross cloud and cross project projects manually in test mode 
     cc_project = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == "cross-cloud" end)
@@ -51,6 +54,10 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitorControllerTest do
     # must have valid corresponding build project in db before sending
     # a deploy project
     bskpm = insert(:build_source_key_project_monitor)
+    CncfDashboardApi.GitlabMonitor.migrate_source_key_monitor(bskpm.id)
+    Logger.info fn ->
+      "CncfDashboardApi.GitlabMonitor.migrate_source_key_monitor(bskpm.id): #{inspect(CncfDashboardApi.GitlabMonitor.migrate_source_key_monitor(bskpm.id))}"
+    end
     CncfDashboardApi.GitlabMonitor.migrate_source_key_monitor(bskpm.id)
     |> CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor_info
     |> CncfDashboardApi.GitlabMonitor.upsert_gitlab_to_ref_monitor

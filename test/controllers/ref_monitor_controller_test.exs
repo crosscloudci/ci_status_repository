@@ -30,7 +30,9 @@ defmodule CncfDashboardApi.RefMonitorControllerTest do
       "head_commit" => nil, 
       "jobs" => [], 
       "stable_tag" => nil,
-      "test_env" => nil
+      "test_env" => nil, 
+      "arch" => nil, 
+      "kubernetes_release_type" => nil
     }
   end
 

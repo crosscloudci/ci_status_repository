@@ -86,6 +86,7 @@ require CncfDashboardApi.DataMigrations;
   end
 
   @tag timeout: 320_000 
+  @tag :wip
   test "upsert_pipelines" do 
     # check insert 
     {:ok, upsert_count, project_map} = CncfDashboardApi.GitlabMigrations.upsert_projects()
@@ -101,6 +102,7 @@ require CncfDashboardApi.DataMigrations;
   end
 
   @tag timeout: 360_000 
+  @tag :wip
   test "upsert_pipeline (singular)" do 
     # check insert 
     {:ok, upsert_count, project_map} = CncfDashboardApi.GitlabMigrations.upsert_projects()
@@ -125,6 +127,7 @@ require CncfDashboardApi.DataMigrations;
   end
 
   @tag timeout: 320_000 
+  @tag :wip
   test "upsert_pipeline_jobs" do 
     # CncfDashboardApi.GitlabMigrations.upsert_pipeline_jobs(test_project_id, test_pipeline_id)
     {:ok, upsert_count, project_map} = CncfDashboardApi.GitlabMigrations.upsert_projects()
@@ -149,6 +152,7 @@ require CncfDashboardApi.DataMigrations;
   end
 
   @tag timeout: 320_000 
+  @tag :wip
   test "upsert_missing_target_project_pipeline" do 
     # check insert 
     {:ok, upsert_count, project_map} = CncfDashboardApi.GitlabMigrations.upsert_projects()

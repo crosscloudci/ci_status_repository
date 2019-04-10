@@ -131,7 +131,7 @@ defmodule CncfDashboardApi.GitlabMigrations do
     project_map_orig = map
     if Mix.env == :test do
       # ccp = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == "cross-cloud" end)
-      take_project_map =  Enum.take(project_map_orig, 2)
+      take_project_map =  Enum.take(project_map_orig, 1)
       # project_map = take_project_map ++ [ccp]
       project_map = take_project_map
     else
@@ -197,7 +197,7 @@ defmodule CncfDashboardApi.GitlabMigrations do
   def upsert_all_pipelines do
     source_key_projects_orig = CncfDashboardApi.Repo.all(from skp in CncfDashboardApi.SourceKeyProjects) 
     if Mix.env == :test do
-      source_key_projects =  Enum.take(source_key_projects_orig, 2) # limited in test mode for speed purposes.
+      source_key_projects =  Enum.take(source_key_projects_orig, 1) # limited in test mode for speed purposes.
     else
       source_key_projects = source_key_projects_orig
     end

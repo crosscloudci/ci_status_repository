@@ -156,7 +156,7 @@ defmodule CncfDashboardApi.GitlabMonitor do
           provision_pipeline_id = source_key_pipeline.new_id 
           kubernetes_release_type = monitor.kubernetes_release_type 
         "build" ->
-          provision_pipeline_id = 0 
+          provision_pipeline_id = nil 
           kubernetes_release_type = monitor.kubernetes_release_type 
         _ ->
           Logger.error fn ->
@@ -165,6 +165,9 @@ defmodule CncfDashboardApi.GitlabMonitor do
       end
       # Insert only if pipeline, project, and release type and kubernetes release type do not exist
       # else update
+          Logger.info fn ->
+            "upsert_pipeline_monitor_info source_key_pipeline: #{inspect(source_key_pipeline)}"
+          end
       {pm_found, pm_record} = %CncfDashboardApi.PipelineMonitor{pipeline_id: source_key_pipeline.new_id, 
         project_id: source_key_project.new_id,
         pipeline_type: pipeline_type,
@@ -191,6 +194,9 @@ defmodule CncfDashboardApi.GitlabMonitor do
                                                                  arch: monitor.arch,
                                                                  internal_build_pipeline_id: target_source_key_pipeline.new_id
                                                                })
+      Logger.info fn ->
+        "changeset to be upserted:  #{inspect(changeset)}"
+      end
 
     case pm_found do
       :found ->
