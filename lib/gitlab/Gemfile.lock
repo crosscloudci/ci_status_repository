@@ -28,5 +28,8 @@ DEPENDENCIES
   json
   prawn
 
+RUBY VERSION
+   ruby 2.4.6p354
+
 BUNDLED WITH
-   1.11.2
+   2.0.1
