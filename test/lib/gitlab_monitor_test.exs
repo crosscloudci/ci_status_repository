@@ -238,18 +238,19 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert 0 < source_pipeline_jobs_count
   end
 
-  @tag :wip
-  @tag timeout: 470_000 
-  test "upsert_pipeline_monitor should not allow the same project and pipeline to monitor two different branches" do 
-    skpm = insert(:source_key_project_monitor)
-    # {:ok, upsert_count, cloud_map} = CncfDashboardApi.GitlabMigrations.upsert_clouds()
-    projects = insert(:project)
-    CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm.id)
-    skpm = insert(:source_key_project_monitor, %{pipeline_release_type: "head"})
-    assert_raise RuntimeError, ~r/^You may not monitor the same project and pipeline for two different branches/, fn ->
-      CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm.id)
-    end
-  end
+  # TODO we now allow same project to have multiple build env and test env combinations (stable, stable / stable, head / head, stable / head , head), replace with test for this
+  # @tag :wip
+  # @tag timeout: 470_000 
+  # test "upsert_pipeline_monitor should not allow the same project and pipeline to monitor two different branches" do 
+  #   skpm = insert(:source_key_project_monitor)
+  #   # {:ok, upsert_count, cloud_map} = CncfDashboardApi.GitlabMigrations.upsert_clouds()
+  #   projects = insert(:project)
+  #   CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm.id)
+  #   skpm = insert(:source_key_project_monitor, %{pipeline_release_type: "head"})
+  #   assert_raise RuntimeError, ~r/^You may not monitor the same project and pipeline for two different branches/, fn ->
+  #     CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm.id)
+  #   end
+  # end
 
   test "Use upsert_ref_monitor to insert a ref monitor" do 
     # try with no ref_monitors

@@ -5,8 +5,7 @@ username: System.get_env("DB_USERNAME"),
 password: System.get_env("DB_PASSWORD"),
 database: System.get_env("DB_NAME"),
 hostname: System.get_env("DB_HOST"),
-pool_size: System.get_env("DB_POOL_SIZE"),
-timeout: 450000
+pool_size: System.get_env("DB_POOL_SIZE")
 
 config :guardian, Guardian,
   allowed_algos: ["HS256"], # optional
