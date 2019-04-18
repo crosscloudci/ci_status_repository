@@ -251,6 +251,8 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
   def project_rows_to_columns({"provision", pm, ref_monitors}) do
     dashboard_badge_statuses = []
     job_names = CncfDashboardApi.GitlabMonitor.Job.monitored_job_list("cross-cloud")
+    build_pipeline = Repo.all(from pm1 in CncfDashboardApi.Pipelines, 
+                           where: pm1.id == ^pm.internal_build_pipeline_id ) |> List.first
     provision_pipeline = Repo.all(from pm1 in CncfDashboardApi.Pipelines, 
                            where: pm1.id == ^pm.provision_pipeline_id ) |> List.first
     dashboard_badge_statuses = ref_monitors |> Enum.reduce([], fn(rm, acc) ->
@@ -263,7 +265,7 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
           "badge_url: #{inspect(badge_url)}"
         end
         dbs_record = CncfDashboardApi.GitlabMonitor.Dashboard.update_badge(rm, 
-                                                                           provision_pipeline.ref, 
+                                                                           build_pipeline.ref, 
                                                                            badge_status, 
                                                                            badge_url, 
                                                                            provision_badge_order(),
