@@ -122,20 +122,6 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
                                      build_pipeline, # pipeline for source project
                                      pt.order, # order for the project release/k8/test_env combination
                                      pt.kubernetes_release_type)
-         # dbs_record = CncfDashboardApi.GitlabMonitor.Dashboard.
-         # update_badge(rm_record,
-         #              build_pipeline.ref,
-         #              CncfDashboardApi.GitlabMonitor.Job.
-         #              badge_status_by_pipeline_id(job_names, 
-         #                                          false, 
-         #                                          "", 
-         #                                          pm.pipeline_id),
-         #                                          CncfDashboardApi.GitlabMonitor.Job.
-         #                                          badge_url(job_names, 
-         #                                                    false, 
-         #                                                    pm.pipeline_id),
-         #                                                    build_badge_order())
-                                                                                  
         [rm_record | acc]
       else
         acc
@@ -189,25 +175,6 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
         Logger.info fn ->
           "rm_record: #{inspect(rm_record)}"
         end
-        # badge_status = CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(job_names, false, "", pm.pipeline_id)
-        # Logger.info fn ->
-        #   "badge_status: #{inspect(badge_status)}"
-        # end
-        # badge_url = CncfDashboardApi.GitlabMonitor.Job.badge_url(job_names, false, pm.pipeline_id)
-        # Logger.info fn ->
-        #   "badge_url: #{inspect(badge_url)}"
-        # end
-        # dbs_record = CncfDashboardApi.GitlabMonitor.Dashboard.update_badge(rm_record, 
-        #                                                                    provision_pipeline.ref, 
-        #                                                                    badge_status, 
-        #                                                                    badge_url, 
-        #                                                                    provision_badge_order(),
-        #                                                                    provision_badge_order())
-        #                                                                           
-        # Logger.info fn ->
-        #   "dbs_record: #{inspect(dbs_record)}"
-        # end
-
         [rm_record | acc]
       else
         acc
@@ -225,47 +192,16 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
     Logger.info fn ->
       "pm_stage_to_project_rows #{inspect({"deploy", pm})}"
     end
-    # ref_monitors = []
-    # packet = Repo.get_by(CncfDashboardApi.Clouds, cloud_name: "packet")
     build_pm = CncfDashboardApi.GitlabMonitor.PipelineMonitor.build_pipeline_monitor_by_deploy_pipeline_monitor(pm)
     provision_pm = CncfDashboardApi.GitlabMonitor.PipelineMonitor.provision_pipeline_monitor_by_deploy_pipeline_monitor(pm)
     deploy_pipeline = Repo.all(from pm1 in CncfDashboardApi.Pipelines, 
                                where: pm1.id == ^pm.pipeline_id ) |> List.first
-    # job_names = CncfDashboardApi.GitlabMonitor.Job.monitored_job_list("cross-project")
 
     pt = pipeline_types() |> Enum.find(fn(x) ->
       x.kubernetes_release_type == provision_pm.release_type and x.project_release_type == provision_pm.release_type
     end)
 
     rm_record = CncfDashboardApi.GitlabMonitor.Dashboard.upsert_ref_monitor(pm, build_pm, deploy_pipeline, pt.order, pm.kubernetes_release_type)
-    # cp_deploy_url = CncfDashboardApi.GitlabMonitor.Job.badge_url(job_names, pm.child_pipeline, pm.pipeline_id) 
-    # # https://gitlab.vulk.coop/cncf/ci-dashboard/issues/423
-    # # if build for a project fails, all deploy badges should be N/A 
-    # build_jobs = CncfDashboardApi.GitlabMonitor.Job.monitored_job_list("project")
-    # if CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(build_jobs, false, "", build_pm.pipeline_id) == "failed" do
-    #   cp_status = "N/A"
-    # else
-    #   cp_status = CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(job_names, pm.child_pipeline, packet.cloud_name, pm.pipeline_id)
-    # end
-    # cond do
-    #   (cp_status && cp_status != "") -> 
-    #     status = cp_status 
-    #     deploy_url = cp_deploy_url
-    #   true ->
-    #     status = "N/A"
-    #     deploy_url = "" 
-    # end
-    # # ticket #230
-    # if status == "initial" do
-    #   status = "N/A"
-    # end
-    # cloud_order = packet.order + 1
-    # dbs_record = CncfDashboardApi.GitlabMonitor.Dashboard.update_badge(rm_record,
-    #                                                                    deploy_pipeline.ref,
-    #                                                                    status,
-    #                                                                    deploy_url,
-    #                                                                    cloud_order, 
-    #                                                                    packet.id)
     {"deploy", pm, [rm_record]} 
   end
 
