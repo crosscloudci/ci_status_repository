@@ -149,9 +149,9 @@ defmodule CncfDashboardApi.GitlabMonitor.Job do
         "status_job.job != :nojob"
       end
       source_key_pipeline_jobs = Repo.all(from skpj in CncfDashboardApi.SourceKeyPipelineJobs)
-      Logger.info fn ->
-        "All source key pipeline jobs #{inspect(source_key_pipeline_jobs)}"
-      end
+      # Logger.info fn ->
+      #   "All source key pipeline jobs #{inspect(source_key_pipeline_jobs)}"
+      # end
       source_key_pipeline_jobs = Repo.all(from skpj in CncfDashboardApi.SourceKeyPipelineJobs, where: skpj.new_id == ^status_job.job.id) |> List.first
       if source_key_pipeline_jobs do
         "#{project.web_url}/-/jobs/#{source_key_pipeline_jobs.source_id}"

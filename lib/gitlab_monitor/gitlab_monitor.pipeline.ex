@@ -127,7 +127,7 @@ defmodule CncfDashboardApi.GitlabMonitor.Pipeline do
       provision_pl = pipeline
      _ ->
       Logger.error fn ->
-        " provision_pipeline_info build pm will not ever refer to a provision pm: #{inspect(pipeline_monitor)}"
+        " provision_pipeline_info A build pipeline monitor will not ever refer to a provision pm: #{inspect(pipeline_monitor)}"
       end
     end
     {provision_pm, provision_pl}
