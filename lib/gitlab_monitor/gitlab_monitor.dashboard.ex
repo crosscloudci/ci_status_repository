@@ -240,7 +240,9 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
         derived_test_env = provision_pm.release_type
         kubernetes_release_type = provision_pm.release_type
         derived_arch = provision_pm.arch
-        ref = target_pl.ref
+        build_pl = Repo.all(from pm1 in CncfDashboardApi.Pipelines, 
+          where: pm1.id == ^pipeline_monitor.internal_build_pipeline_id ) |> List.first
+        ref = build_pl.ref
       _ ->
         :ok
     end
