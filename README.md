@@ -75,6 +75,21 @@ vim config/test.secret.exs.example
 
 Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 
+### Building for Docker
+
+
+Build and publish the base container:
+```
+docker build -f Dockerfile.deps -t crosscloudci/backend-deps:latest .
+docker push crosscloudci/backend-deps:latest
+```
+
+Build the app container:
+```
+docker build -t backend .
+```
+
+
 ## Dashboard Backend configuration
 
 Create a .env file and update the setting (see [.env.example](.env.example)):

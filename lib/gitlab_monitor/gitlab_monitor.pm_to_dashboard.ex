@@ -256,7 +256,7 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
     provision_pipeline = Repo.all(from pm1 in CncfDashboardApi.Pipelines, 
                            where: pm1.id == ^pm.provision_pipeline_id ) |> List.first
     dashboard_badge_statuses = ref_monitors |> Enum.reduce([], fn(rm, acc) ->
-        badge_status = CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(job_names, false, "", pm.pipeline_id)
+        badge_status = CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(job_names, false, "", provision_pipeline.id)
         Logger.info fn ->
           "badge_status: #{inspect(badge_status)}"
         end
