@@ -10,8 +10,7 @@ defmodule CncfDashboardApi.GitlabMonitor.DashboardTest do
   use ExUnit.Case
   
 
-  @moduletag :wip
-
+  @tag :wip
   test "new_n_a_ref_monitor" do 
     project = insert(:project, %{ref_monitors: [], pipelines: 
       [build(:pipeline, %{pipeline_jobs:
@@ -21,7 +20,7 @@ defmodule CncfDashboardApi.GitlabMonitor.DashboardTest do
       })]} )
     CncfDashboardApi.GitlabMigrations.upsert_clouds()
 
-    new_ref =  CncfDashboardApi.GitlabMonitor.Dashboard.new_n_a_ref_monitor(project.id, "stable", "stable", 1)
+    new_ref =  CncfDashboardApi.GitlabMonitor.Dashboard.new_n_a_ref_monitor(project.id, "stable", "stable", 1, "stable", "amd")
     r_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.RefMonitor, :count, :id)  
     b_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.DashboardBadgeStatus, :count, :id)  
     assert 0 < r_count  

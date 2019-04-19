@@ -27,11 +27,15 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
 		Application.ensure_all_started :inets
     try do
       retry with: exp_backoff |> randomize |> cap(1_000) |> expiry(6_000), rescue_only: [MatchError] do  
-        Logger.info fn ->
-          "Trying gitlab_ci http get on #{inspect(configuration_repo)}"
+        if is_nil(configuration_repo) == false do
+          Logger.info fn ->
+            "Trying getcncfci http get on #{inspect(configuration_repo)}"
+          end
+          {:ok, {{_, 200, 'OK'}, _headers, body}} = :httpc.request(:get, {configuration_repo |> to_charlist, []}, [], [body_format: :binary])
+          body
+        else
+          {:error, :not_found}
         end
-        {:ok, {{_, 200, 'OK'}, _headers, body}} = :httpc.request(:get, {configuration_repo |> to_charlist, []}, [], [body_format: :binary])
-        body
       end
     rescue
       e in MatchError -> 
