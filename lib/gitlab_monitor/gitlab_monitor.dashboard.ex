@@ -224,6 +224,7 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
         derived_test_env = test_env
         derived_arch = pipeline_monitor.arch
         ref = target_pl.ref
+        sha = target_pl.sha
       "provision" ->
         kubernetes_release_type = target_pm.release_type
         # derived_test_env = target_pm.release_type
@@ -232,6 +233,7 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
         build_pl = Repo.all(from pm1 in CncfDashboardApi.Pipelines, 
           where: pm1.id == ^pipeline_monitor.internal_build_pipeline_id ) |> List.first
         ref = build_pl.ref
+        sha = build_pl.sha
       "deploy" ->
         provision_pm = CncfDashboardApi.GitlabMonitor.PipelineMonitor.provision_pipeline_monitor_by_deploy_pipeline_monitor(pipeline_monitor)
         Logger.info fn ->
@@ -243,6 +245,7 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
         build_pl = Repo.all(from pm1 in CncfDashboardApi.Pipelines, 
           where: pm1.id == ^pipeline_monitor.internal_build_pipeline_id ) |> List.first
         ref = build_pl.ref
+        sha = build_pl.sha
       _ ->
         :ok
     end
