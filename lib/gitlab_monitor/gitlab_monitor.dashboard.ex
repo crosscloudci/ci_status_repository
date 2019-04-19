@@ -210,6 +210,10 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
       #{inspect(target_pl)}, #{inspect(pipeline_order)}"
     end
     case pipeline_monitor.pipeline_type do
+      #TODO Get the ref (or status?) dynamically based on pipeline_monitor type
+      # if build -> ref comes from target pipeline
+        # if provision, ref comes from a retrieved build pipeline
+        # if deploy ref comes from target pipeline
       "build" ->
         # loop through all ref monitors and update the builds (for all drop downs)
         if target_pm.target_project_name == "kubernetes" do
@@ -219,11 +223,17 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
         end
         derived_test_env = test_env
         derived_arch = pipeline_monitor.arch
+        ref = target_pl.ref
       "provision" ->
         kubernetes_release_type = target_pm.release_type
         # derived_test_env = target_pm.release_type
         derived_test_env = test_env 
         derived_arch = pipeline_monitor.arch
+        build_pl = Repo.all(from pm in CncfDashboardApi.PipelineMonitor, 
+          where: pm.pipeline_id == ^pipeline_monitor.internal_build_pipeline_id, 
+          where: pm.pipeline_type == "build") 
+          |> List.first()
+        ref = build_pl.ref
       "deploy" ->
         provision_pm = CncfDashboardApi.GitlabMonitor.PipelineMonitor.provision_pipeline_monitor_by_deploy_pipeline_monitor(pipeline_monitor)
         Logger.info fn ->
@@ -232,7 +242,7 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
         derived_test_env = provision_pm.release_type
         kubernetes_release_type = provision_pm.release_type
         derived_arch = provision_pm.arch
-
+        ref = target_pl.ref
       _ ->
         :ok
     end
@@ -242,7 +252,7 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
       |> find_by([:project_id, :release_type, :test_env])
       # |> find_by([:project_id, :release_type, :test_env, :kubernetes_release_type, :arch])
       changeset = CncfDashboardApi.RefMonitor.changeset(rm_record,  
-                                                        %{ref: target_pl.ref,
+                                                        %{ref: ref,
                                                           status: target_pl.status,
                                                           sha: target_pl.sha,
                                                           release_type: target_pm.release_type,
