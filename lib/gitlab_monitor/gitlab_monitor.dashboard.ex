@@ -257,7 +257,7 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
       changeset = CncfDashboardApi.RefMonitor.changeset(rm_record,  
                                                         %{ref: ref,
                                                           status: target_pl.status,
-                                                          sha: target_pl.sha,
+                                                          sha: sha,
                                                           release_type: target_pm.release_type,
                                                           kubernetes_release_type: kubernetes_release_type,
                                                           arch: derived_arch,
