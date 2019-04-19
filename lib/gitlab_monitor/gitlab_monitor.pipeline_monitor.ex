@@ -36,10 +36,11 @@ defmodule CncfDashboardApi.GitlabMonitor.PipelineMonitor do
   def pipeline_monitor(source_key_project_monitor_id) do
     {:ok, monitor, source_key_project, source_key_pipeline} = source_models(source_key_project_monitor_id)
 
-    case CncfDashboardApi.GitlabMonitor.Pipeline.is_deploy_pipeline_type(source_key_project.new_id) do
-      true -> pipeline_type = "deploy"
-      _ -> pipeline_type = "build"
-    end
+    # case CncfDashboardApi.GitlabMonitor.Pipeline.is_deploy_pipeline_type(source_key_project.new_id) do
+    #   true -> pipeline_type = "deploy"
+    #   _ -> pipeline_type = "build"
+    # end
+    pipeline_type = CncfDashboardApi.GitlabMonitor.Pipeline.pipeline_type(source_key_project.new_id)
 
     {pm_found, pm_record} = %CncfDashboardApi.PipelineMonitor{pipeline_id: source_key_pipeline.new_id, 
       project_id: source_key_project.new_id,
@@ -53,7 +54,8 @@ defmodule CncfDashboardApi.GitlabMonitor.PipelineMonitor do
   Returns `%PipelineMonitor`
   """
   def build_pipeline_monitor_by_deploy_pipeline_monitor(deploy_pipeline_monitor) do
-    if deploy_pipeline_monitor.pipeline_type == "deploy" do
+    if (deploy_pipeline_monitor.pipeline_type == "deploy") ||
+      (deploy_pipeline_monitor.pipeline_type == "provision") do
       Repo.all(from pm in CncfDashboardApi.PipelineMonitor, 
                            where: pm.pipeline_id == ^deploy_pipeline_monitor.internal_build_pipeline_id, 
                            where: pm.pipeline_type == "build") 
@@ -61,6 +63,35 @@ defmodule CncfDashboardApi.GitlabMonitor.PipelineMonitor do
     else
       # pipeline is a build pipeline
       deploy_pipeline_monitor
+    end
+  end
+
+ @doc """
+  Gets the corresponding provision pipeline based on `%PipelineMonitor`.
+  Returns `%PipelineMonitor`
+  """
+  def provision_pipeline_monitor_by_deploy_pipeline_monitor(deploy_pipeline_monitor) do
+    Logger.info fn ->
+      "provision_pipeline_monitor_by_deploy_pipeline_monitor: #{inspect(deploy_pipeline_monitor)}"
+    end
+    case deploy_pipeline_monitor.pipeline_type do
+      "deploy" ->
+        Repo.all(from pm in CncfDashboardApi.PipelineMonitor, 
+                             where: pm.pipeline_id == ^deploy_pipeline_monitor.provision_pipeline_id, 
+                             where: pm.pipeline_type == "provision") 
+                             |> List.first()
+      "provision" ->
+        # pipeline is a provision pipeline
+        deploy_pipeline_monitor
+      "build" ->
+        Logger.info fn ->
+          "Can't get a provision pipeline from a build pipeline deploy_pipeline_monitor: #{inspect(deploy_pipeline_monitor)}"
+        end
+      _ ->
+        Logger.info fn ->
+           "No provision pipeline type for deploy_pipeline_monitor: #{inspect(deploy_pipeline_monitor)}"
+        end
+        raise "No provision pipeline type for deploy_pipeline_monitor: #{inspect(deploy_pipeline_monitor)}"
     end
   end
 
