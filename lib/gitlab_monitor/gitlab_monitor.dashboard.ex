@@ -229,10 +229,8 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
         # derived_test_env = target_pm.release_type
         derived_test_env = test_env 
         derived_arch = pipeline_monitor.arch
-        build_pl = Repo.all(from pm in CncfDashboardApi.PipelineMonitor, 
-          where: pm.pipeline_id == ^pipeline_monitor.internal_build_pipeline_id, 
-          where: pm.pipeline_type == "build") 
-          |> List.first()
+        build_pl = Repo.all(from pm1 in CncfDashboardApi.Pipelines, 
+          where: pm1.id == ^pipeline_monitor.internal_build_pipeline_id ) |> List.first
         ref = build_pl.ref
       "deploy" ->
         provision_pm = CncfDashboardApi.GitlabMonitor.PipelineMonitor.provision_pipeline_monitor_by_deploy_pipeline_monitor(pipeline_monitor)
