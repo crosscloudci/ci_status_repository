@@ -1,6 +1,6 @@
 # CNCF Dashboard API server
 
-**Prerequisites:** Erlang 20.1, Elixir 1.5.1, Ruby 2.2.1, Node v7.6.0
+**Prerequisites:** Erlang 20.1, Elixir 1.5.1, Ruby 2.4.6, Node v7.6.0
 
 ## Prerequisites
 You can install Erlang, Elixir, Ruby, and Node using a version manager like [kerl](https://github.com/kerl/kerl), [kiex](https://github.com/taylor/kiex), [rvm](https://github.com/rvm/rvm), or [nvm](https://github.com/creationix/nvm).
@@ -74,6 +74,21 @@ vim config/test.secret.exs.example
   * Start Phoenix endpoint with `. .env ; mix phoenix.server`
 
 Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+
+### Building for Docker
+
+
+Build and publish the base container:
+```
+docker build -f Dockerfile.deps -t crosscloudci/backend-deps:latest .
+docker push crosscloudci/backend-deps:latest
+```
+
+Build the app container:
+```
+docker build -t backend .
+```
+
 
 ## Dashboard Backend configuration
 

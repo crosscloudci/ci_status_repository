@@ -84,7 +84,7 @@ defmodule GitLabProxy do
   def get_gitlab_pipelines(project_id) do
     retry with: exp_backoff |> randomize |> cap(1_000) |> expiry(10_000), rescue_only: [MatchError] do  
     Logger.info fn ->
-      "Trying get_gitlab_pipelines"
+      "Trying get_gitlab_pipelines for project id: #{inspect(project_id)}"
     end
     {:ok, ruby} = Ruby.start(ruby_lib: Path.expand("lib/gitlab"))
     {:ok, pipelines} = ruby |> Ruby.call("gitlab_proxy", "get_pipelines", [project_id])
@@ -96,7 +96,7 @@ defmodule GitLabProxy do
   def get_gitlab_pipeline(project_id, pipeline_id) do
     retry with: exp_backoff |> randomize |> cap(1_000) |> expiry(10_000), rescue_only: [MatchError] do  
     Logger.info fn ->
-      "Trying get_gitlab_pipeline"
+      "Trying get_gitlab_pipeline for project_id: #{inspect(project_id)} pipeline_id #{inspect(pipeline_id)}"
     end
     {:ok, ruby} = Ruby.start(ruby_lib: Path.expand("lib/gitlab"))
     {:ok, pipelines} = ruby |> Ruby.call("gitlab_proxy", "get_pipeline", [project_id, pipeline_id])

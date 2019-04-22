@@ -12,6 +12,7 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
   use ExUnit.Case
   # use CncfDashboardApi.ModelCase
   
+  @tag :wip
   test "target_project_exist?" do
     {:ok, upsert_count, project_map} = CncfDashboardApi.GitlabMigrations.upsert_projects()
     project = Enum.find(project_map, fn(x) ->
@@ -26,6 +27,7 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert CncfDashboardApi.GitlabMonitor.target_project_exist?(project["name"], pipeline["id"] |> Integer.to_string) == true
   end
 
+  @tag :wip
   test "stable update: update_dashboard" do 
     skpm = insert(:source_key_project_monitor)
     # check insert 
@@ -62,6 +64,7 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert 0 < source_pipeline_jobs_count
   end
 
+  @tag :wip
   test "stable update: upsert_pipeline_monitor" do 
     skpm = insert(:source_key_project_monitor)
     # check insert 
@@ -112,6 +115,7 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
   # 5. check head build badge for fail
   # 6. check first head cloud badge is N/A
   @tag timeout: 600_000 
+  @tag :wip
   test "stable update: upsert_pipeline_monitor if project fails, deploys should be N/A" do 
     # inserts data as if a valid ONAP project build pipeline post with valid gitlab id was made 
     skpm = insert(:source_key_failed_project_monitor)
@@ -197,7 +201,8 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert 0 < source_pipeline_jobs_count
   end
 
-  @tag timeout: 300_000 
+  @tag timeout: 600_000 
+  @tag :wip
   test "head update: upsert_pipeline_monitor" do 
     skpm = insert(:head_source_key_project_monitor)
     # check insert 
@@ -233,16 +238,19 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     assert 0 < source_pipeline_jobs_count
   end
 
-  test "upsert_pipeline_monitor should not allow the same project and pipeline to monitor two different branches" do 
-    skpm = insert(:source_key_project_monitor)
-    # {:ok, upsert_count, cloud_map} = CncfDashboardApi.GitlabMigrations.upsert_clouds()
-    projects = insert(:project)
-    CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm.id)
-    skpm = insert(:source_key_project_monitor, %{pipeline_release_type: "head"})
-    assert_raise RuntimeError, ~r/^You may not monitor the same project and pipeline for two different branches/, fn ->
-      CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm.id)
-    end
-  end
+  # TODO we now allow same project to have multiple build env and test env combinations (stable, stable / stable, head / head, stable / head , head), replace with test for this
+  # @tag :wip
+  # @tag timeout: 470_000 
+  # test "upsert_pipeline_monitor should not allow the same project and pipeline to monitor two different branches" do 
+  #   skpm = insert(:source_key_project_monitor)
+  #   # {:ok, upsert_count, cloud_map} = CncfDashboardApi.GitlabMigrations.upsert_clouds()
+  #   projects = insert(:project)
+  #   CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm.id)
+  #   skpm = insert(:source_key_project_monitor, %{pipeline_release_type: "head"})
+  #   assert_raise RuntimeError, ~r/^You may not monitor the same project and pipeline for two different branches/, fn ->
+  #     CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm.id)
+  #   end
+  # end
 
   test "Use upsert_ref_monitor to insert a ref monitor" do 
     # try with no ref_monitors

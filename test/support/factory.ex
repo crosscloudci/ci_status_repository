@@ -167,6 +167,9 @@ defmodule CncfDashboardApi.Factory do
       cloud: "",
       child_pipeline: false,
       target_project_name: "coredns",
+      provision_pipeline_id: "",
+      kubernetes_release_type: "",
+      arch: "",
       project_build_pipeline_id: pipelines["id"] |> Integer.to_string,
     }
   end
@@ -189,6 +192,9 @@ defmodule CncfDashboardApi.Factory do
       cloud: "aws",
       child_pipeline: true,
       target_project_name: "coredns",
+      kubernetes_release_type: "",
+      arch: "",
+      provision_pipeline_id: "",
       project_build_pipeline_id: build_pipelines["id"] |> Integer.to_string,
     }
   end
@@ -196,10 +202,12 @@ defmodule CncfDashboardApi.Factory do
   def cross_project_source_key_project_monitor_factory do
     # use a real source key project id 
     projects = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == "cross-project" end)
+    provision_project = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == "cross-cloud" end)
     working_project = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == "coredns" end)
     # use a real pipeline id 
     pipelines = GitLabProxy.get_gitlab_pipelines(projects["id"]) |> List.first
     build_pipelines = GitLabProxy.get_gitlab_pipelines(working_project["id"]) |> List.first
+    provision_pipelines = GitLabProxy.get_gitlab_pipelines(provision_project["id"]) |> List.first
     %CncfDashboardApi.SourceKeyProjectMonitor{
       # source_project_id: "1",
       source_project_id: projects["id"] |> Integer.to_string,
@@ -211,6 +219,9 @@ defmodule CncfDashboardApi.Factory do
       cloud: "aws",
       child_pipeline: true,
       target_project_name: "coredns",
+      kubernetes_release_type: "",
+      arch: "",
+      provision_pipeline_id: provision_pipelines["id"] |> Integer.to_string,
       project_build_pipeline_id: build_pipelines["id"] |> Integer.to_string,
     }
   end
@@ -253,6 +264,8 @@ defmodule CncfDashboardApi.Factory do
       active: true, 
       cloud: "aws",
       child_pipeline: false,
+      kubernetes_release_type: "",
+      arch: "",
       target_project_name: "so",
     }
   end
@@ -280,6 +293,8 @@ defmodule CncfDashboardApi.Factory do
       active: true, 
       cloud: "aws",
       child_pipeline: false,
+      kubernetes_release_type: "",
+      arch: "",
       target_project_name: "so",
     }
   end
@@ -290,6 +305,9 @@ defmodule CncfDashboardApi.Factory do
       "factory: first_active_project: #{inspect(first_active_project)}"
     end
     projects = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == first_active_project["yml_name"] end)
+    Logger.info fn ->
+      "factory: GitLabProxy.get_gitlab_projects  first_active_project: #{inspect(projects)}"
+    end
     # use a real pipeline id 
     pipelines = GitLabProxy.get_gitlab_pipelines(projects["id"]) |> List.first
     %CncfDashboardApi.SourceKeyProjectMonitor{
@@ -303,6 +321,8 @@ defmodule CncfDashboardApi.Factory do
       cloud: "aws",
       child_pipeline: false,
       target_project_name: "prometheus",
+      kubernetes_release_type: "",
+      arch: "",
       project_build_pipeline_id: pipelines["id"] |> Integer.to_string
     }
   end
@@ -324,6 +344,8 @@ defmodule CncfDashboardApi.Factory do
       cloud: "aws",
       child_pipeline: false,
       target_project_name: "prometheus",
+      kubernetes_release_type: "",
+      arch: "",
       project_build_pipeline_id: pipelines["id"] |> Integer.to_string
     }
   end
@@ -371,8 +393,10 @@ defmodule CncfDashboardApi.Factory do
       project_id: 1,
       pipeline_id: 1,
       running: true,
+      provision_pipeline_id: 1, 
+      kubernetes_release_type: "stable",
       release_type: "stable",
-      pipeline_type: "deploy"
+      pipeline_type: "provision"
     }
   end
 

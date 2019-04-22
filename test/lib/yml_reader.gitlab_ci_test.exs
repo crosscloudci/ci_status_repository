@@ -31,29 +31,30 @@ defmodule CncfDashboardApi.YmlReader.GitlabCiTest do
   @tag :wip
   test "projects_with_ymls" do 
     project_list = CncfDashboardApi.YmlReader.GitlabCi.projects_with_yml()
-    assert Enum.find_value(project_list, fn(x) -> x["project_name"] == "prometheus" end) 
+    # assert Enum.find_value(project_list, fn(x) -> x["project_name"] == "prometheus" end) 
+    assert Enum.find_value(project_list, fn(x) -> x["project_name"] == "coredns" end) 
   end
 
   @tag :wip
-  test "prometheus_project_list" do 
+  test "coredns_project_list" do 
     full_project_list = CncfDashboardApi.YmlReader.GitlabCi.project_list()
 
     project_list = Enum.reduce(full_project_list, [], fn (x, acc) -> 
       case x["yml_name"] do
-        "prometheus" -> [x | acc]
+        "coredns" -> [x | acc]
         _ -> acc 
       end 
     end)
 
-    assert Enum.find_value(project_list, fn(x) -> x["yml_name"] == "prometheus" end) 
+    assert Enum.find_value(project_list, fn(x) -> x["yml_name"] == "coredns" end) 
     assert Enum.find_value(project_list, fn(x) -> x["active"] == true end) 
-    assert Enum.find_value(project_list, fn(x) -> x["display_name"] == "Prometheus" end) 
-    assert Enum.find_value(project_list, fn(x) -> x["sub_title"] == "Monitoring" end) 
-    assert Enum.find_value(project_list, fn(x) -> x["yml_gitlab_name"] == "prometheus" end) 
+    assert Enum.find_value(project_list, fn(x) -> x["display_name"] == "CoreDNS" end) 
+    assert Enum.find_value(project_list, fn(x) -> x["sub_title"] == "Service Discovery" end) 
+    assert Enum.find_value(project_list, fn(x) -> x["yml_gitlab_name"] == "coredns" end) 
     assert Enum.find_value(project_list, fn(x) -> x["order"] == 2 end) 
-    assert Enum.find_value(project_list, fn(x) -> x["repository_url"] == "https://github.com/prometheus/prometheus" end) 
+    assert Enum.find_value(project_list, fn(x) -> x["repository_url"] == "https://github.com/coredns/coredns" end) 
     assert Enum.find_value(project_list, fn(x) -> is_number(x["timeout"]) end) 
-    assert Enum.find_value(project_list, fn(x) -> x["project_url"] == "https://github.com/prometheus/prometheus" end) 
+    assert Enum.find_value(project_list, fn(x) -> x["project_url"] == "https://github.com/coredns/coredns" end) 
     assert Enum.find_value(project_list, fn(x) -> Map.has_key?(x,"logo_url") end)  
   end
 

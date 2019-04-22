@@ -11,6 +11,9 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitorController do
   end
 
   def create(conn, %{"source_key_project_monitor" => source_key_project_monitor_params}) do
+    Logger.info fn ->
+      "SourceKeyProjectMonitorController source_key_project_monitor_params: #{inspect(source_key_project_monitor_params)}"
+    end
     changeset = SourceKeyProjectMonitor.changeset(%SourceKeyProjectMonitor{}, source_key_project_monitor_params)
 
     case Repo.insert(changeset) do
@@ -30,7 +33,7 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitorController do
             end
             CncfDashboardApi.Polling.Supervisor.Pipeline.start_pipeline(source_key_project_monitor.source_pipeline_id, source_key_project_monitor.id, project.timeout * 1000) 
             # Process.sleep(13000)
-          "deploy" ->
+          n when n in ["deploy", "provision"] ->
             config = CncfDashboardApi.YmlReader.GitlabCi.gitlab_pipeline_config()
             cc = Enum.find(config, fn(x) -> x["pipeline_name"] == project.name end) 
             Logger.info fn ->

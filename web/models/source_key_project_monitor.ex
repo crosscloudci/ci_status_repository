@@ -11,6 +11,9 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitor do
     field :child_pipeline, :boolean
     field :target_project_name, :string
     field :project_build_pipeline_id, :string
+    field :provision_pipeline_id, :string, default: ""
+    field :kubernetes_release_type, :string, default: ""
+    field :arch, :string, default: ""
     # causes errors
     # belongs_to :source_key_project, CncfDashboardApi.SourceKeyProjects, foreign_key: :source_project_id, references: :source_id
 
@@ -23,7 +26,8 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitor do
   def changeset(struct, params \\ %{}) do
     struct
     |> cast(params, [:source_project_id, :source_pipeline_id, :source_pipeline_job_id, :pipeline_release_type, 
-                     :active, :cloud, :child_pipeline, :target_project_name, :project_build_pipeline_id])
+                     :active, :cloud, :child_pipeline, :target_project_name, :project_build_pipeline_id, 
+                     :provision_pipeline_id, :kubernetes_release_type, :arch])
     |> validate_required([:source_project_id, :source_pipeline_id, :pipeline_release_type])
   end
 end

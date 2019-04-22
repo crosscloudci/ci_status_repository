@@ -6,6 +6,8 @@ defmodule CncfDashboardApi.RefMonitor do
     field :status, :string
     field :sha, :string
     field :release_type, :string
+    field :kubernetes_release_type, :string
+    field :arch, :string
     field :test_env, :string
     # field :project_id, :integer
     belongs_to :project, CncfDashboardApi.Projects
@@ -21,7 +23,7 @@ defmodule CncfDashboardApi.RefMonitor do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:ref, :status, :sha, :release_type, :project_id, :order, :pipeline_id, :test_env])
+    |> cast(params, [:ref, :status, :sha, :release_type, :project_id, :order, :pipeline_id, :test_env, :kubernetes_release_type, :arch])
     # |> validate_required([:ref, :status, :sha, :release_type, :project_id, :order, :pipeline_id])
     # initialized ref_monitors will have no pipeline (they exist before a build)
     |> validate_required([:ref, :status, :sha, :release_type, :project_id, :order, :test_env])

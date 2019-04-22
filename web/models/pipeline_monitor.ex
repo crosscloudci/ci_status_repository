@@ -11,6 +11,9 @@ defmodule CncfDashboardApi.PipelineMonitor do
     field :child_pipeline, :boolean
     field :target_project_name, :string
     field :internal_build_pipeline_id, :integer
+    field :provision_pipeline_id, :integer
+    field :kubernetes_release_type, :string, default: ""
+    field :arch, :string, default: ""
     # belongs_to :internal_pipeline, CncfDashboardApi.Pipelines, foreign_key: :internal_build_pipeline_id, references: :id
 
 
@@ -23,7 +26,8 @@ defmodule CncfDashboardApi.PipelineMonitor do
   def changeset(struct, params \\ %{}) do
     struct
     |> cast(params, [:pipeline_id, :running, :release_type, :pipeline_type, :project_id, :cloud,
-    :child_pipeline, :target_project_name, :internal_build_pipeline_id])
+                     :child_pipeline, :target_project_name, :internal_build_pipeline_id, :provision_pipeline_id,
+    :kubernetes_release_type, :arch])
     |> validate_required([:pipeline_id, :running, :release_type, :pipeline_type, :project_id])
   end
 end
