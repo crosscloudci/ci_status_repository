@@ -36,6 +36,10 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
     packet.order + 1
   end
 
+  def deploy_badge_order do
+    provision_badge_order()
+  end
+
  @doc """
   Kubernetes release types
 
@@ -69,16 +73,36 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
     [
       %{:project_release_type => "stable",
       :kubernetes_release_type => "stable",
-      :order => 1}, # stable, stable order is always 1
+      :order => 1,
+      :arch => "amd64"}, # stable, stable order is always 1
       %{:project_release_type => "stable",
       :kubernetes_release_type => "head",
-      :order => 2}, # stable, head order is always 2
+      :order => 2,
+      :arch => "amd64"}, # stable, head order is always 2
       %{:project_release_type => "head",
       :kubernetes_release_type => "head",
-      :order => 3}, # head, head order is always 3
+      :order => 3,
+      :arch => "amd64"}, # head, head order is always 3
       %{:project_release_type => "head",
       :kubernetes_release_type => "stable",
-      :order => 4}, # head, stable order is always 4
+      :order => 4,
+      :arch => "amd64"}, # head, stable order is always 4
+      %{:project_release_type => "stable",
+      :kubernetes_release_type => "stable",
+      :order => 5,
+      :arch => "arm64"}, # stable, stable order is always 1
+      %{:project_release_type => "stable",
+      :kubernetes_release_type => "head",
+      :order => 6,
+      :arch => "arm64"}, # stable, head order is always 2
+      %{:project_release_type => "head",
+      :kubernetes_release_type => "head",
+      :order => 7,
+      :arch => "arm64"}, # head, head order is always 3
+      %{:project_release_type => "head",
+      :kubernetes_release_type => "stable",
+      :order => 8,
+      :arch => "arm64"}, # head, stable order is always 4
     ]
   end
 
@@ -112,17 +136,29 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
                            where: pm1.id == ^pm.internal_build_pipeline_id ) |> List.first
 
     job_names = CncfDashboardApi.GitlabMonitor.Job.monitored_job_list("project")
-    
+    {p_found, p_record} = %CncfDashboardApi.Projects{id: pm.project_id, 
+      name: "Kubernetes"} |> find_by([:id, :name])
     ref_monitors = pipeline_types() |> Enum.reduce([], fn(pt, acc) ->
-      # only set the rows to running for the currently monitored pipeline's release types
-      if pm.release_type == pt.project_release_type do
-        rm_record = CncfDashboardApi.GitlabMonitor.
-        Dashboard.upsert_ref_monitor(pm, # current pipeline monitor 
-                                     pm, # target (project) pipeline monitor
-                                     build_pipeline, # pipeline for source project
-                                     pt.order, # order for the project release/k8/test_env combination
-                                     pt.kubernetes_release_type)
-        [rm_record | acc]
+      # The Kubernetes cluster must match the Kubernetes binaries
+      # i.e. there are no 'head' Kubenenetes binaries installed on a
+      # 'stable' Kubernetes cluster
+      if (p_found == :found and 
+        pt.project_release_type == pt.kubernetes_release_type) ||
+          (p_found == :not_found) do
+        # only set the rows to running for the currently monitored pipeline's release types
+        if pm.release_type == pt.project_release_type and 
+          pm.arch == pt.arch do
+          rm_record = CncfDashboardApi.GitlabMonitor.
+          Dashboard.upsert_ref_monitor(pm, # current pipeline monitor 
+            pm, # target (project) pipeline monitor
+            build_pipeline, # pipeline for source project
+            pt.order, # order for the project release/k8/test_env combination
+            pt.kubernetes_release_type,
+            pt.arch)
+          [rm_record | acc]
+        else
+          acc
+        end
       else
         acc
       end
@@ -150,32 +186,42 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
     Logger.info fn ->
       "provision_pipeline: #{inspect(provision_pipeline)}"
     end
-    # job_names = CncfDashboardApi.GitlabMonitor.Job.monitored_job_list("cross-cloud")
-    
-    # loop for all four kubernetes rows (for provisioning there really is only
-    # 2 types of clusters, but we have 2 rows (head and stable) for each of the 
-    # other projects, so for consistency we update all the rows
+    {p_found, p_record} = %CncfDashboardApi.Projects{id: pm.project_id, 
+      name: "Kubernetes"} |> find_by([:id, :name])
+
     ref_monitors = pipeline_types() |> Enum.reduce([], fn(pt, acc) ->
       Logger.info fn ->
         "pipeline_type: #{inspect(pt)}"
       end
-      # only set the rows to running for the currently monitored pipeline's release types
-      # The release type of the provision monitor is the kubernetes release type
-      if pm.release_type == pt.kubernetes_release_type do
-        Logger.info fn ->
-          "pm.kubernetes_release_type == pt.kubernetes_release_type"
+      # The Kubernetes cluster must match the Kubernetes binaries
+      # i.e. there are no 'head' Kubenenetes binaries installed on a
+      # 'stable' Kubernetes cluster
+      if (p_found == :found and 
+        pt.project_release_type == pt.kubernetes_release_type) ||
+          (p_found == :not_found) do
+        # only set the rows to running for the currently monitored pipeline's release types
+        #  kubernetes release type is either the regular release type on a provision
+        # project monitor or the release type on its build (kubernetes) project monitor
+        if pm.release_type == pt.kubernetes_release_type  and
+          pm.arch == pt.arch do
+          Logger.info fn ->
+            "pm.kubernetes_release_type == pt.kubernetes_release_type"
+          end
+          rm_record = CncfDashboardApi.GitlabMonitor.
+          Dashboard.upsert_ref_monitor(pm, # current pipeline monitor 
+            build_pm, # target (project) pipeline monitor (kubernetes)
+            provision_pipeline, # pipeline for provisioner
+            pt.order, # order for the project release/k8/test_env combination
+            pt.kubernetes_release_type, #manually alternate the test_envs (head, stable)
+            pt.arch
+          )
+          Logger.info fn ->
+            "rm_record: #{inspect(rm_record)}"
+          end
+          [rm_record | acc]
+        else
+          acc
         end
-        rm_record = CncfDashboardApi.GitlabMonitor.
-        Dashboard.upsert_ref_monitor(pm, # current pipeline monitor 
-                                     build_pm, # target (project) pipeline monitor (kubernetes)
-                                     provision_pipeline, # pipeline for provisioner
-                                     pt.order, # order for the project release/k8/test_env combination
-                                     pt.project_release_type #manually alternate the test_envs (head, stable)
-        )
-        Logger.info fn ->
-          "rm_record: #{inspect(rm_record)}"
-        end
-        [rm_record | acc]
       else
         acc
       end
@@ -198,10 +244,12 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
                                where: pm1.id == ^pm.pipeline_id ) |> List.first
 
     pt = pipeline_types() |> Enum.find(fn(x) ->
-      x.kubernetes_release_type == provision_pm.release_type and x.project_release_type == provision_pm.release_type
+      x.kubernetes_release_type == provision_pm.release_type and 
+      x.project_release_type == provision_pm.release_type and
+      x.arch == provision_pm.arch 
     end)
 
-    rm_record = CncfDashboardApi.GitlabMonitor.Dashboard.upsert_ref_monitor(pm, build_pm, deploy_pipeline, pt.order, pm.kubernetes_release_type)
+    rm_record = CncfDashboardApi.GitlabMonitor.Dashboard.upsert_ref_monitor(pm, build_pm, deploy_pipeline, pt.order, pm.kubernetes_release_type, pm.arch)
     {"deploy", pm, [rm_record]} 
   end
 
@@ -233,6 +281,9 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
       Logger.info fn ->
         "badge_status: #{inspect(badge_status)}"
       end
+      Logger.info fn ->
+        "badge ref: #{inspect(build_pipeline.ref)}"
+      end
       dbs_record = CncfDashboardApi.GitlabMonitor.Dashboard.update_badge(rm, build_pipeline.ref, badge_status, badge_url, build_badge_order())
       Logger.info fn ->
         "dbs_record: #{inspect(dbs_record)}"
@@ -240,8 +291,12 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
 
       [dbs_record | acc]
     end)
-    {:build, ref_monitors, dashboard_badge_statuses}
+    Logger.info fn ->
+      "return project_rows_to_columns #{inspect({"build", ref_monitors, dashboard_badge_statuses})}"
+    end
+    {"build", ref_monitors, dashboard_badge_statuses}
   end
+
 
  @doc """
   Converts project_rows into project_rows with updated dashboard badge statuses.
@@ -276,7 +331,7 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
         end
         [dbs_record | acc]
     end)
-    {:provision, ref_monitors, dashboard_badge_statuses}
+    {"provision", ref_monitors, dashboard_badge_statuses}
   end
 
  @doc """
@@ -322,7 +377,80 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
                                                                          packet.id)
       [dbs_record | acc]
     end)
-    {:deploy, ref_monitors, dashboard_badge_statuses}
+    {"deploy", ref_monitors, dashboard_badge_statuses}
   end
 
+ @doc """
+  Converts columns into timed-out columns as dashboard badge statuses.
+
+  Returns `{:<stage_type>, ref_monitors, dashboard_badge_statuses}`
+  """
+  def columns_to_timedout_columns({"build", ref_monitors, dashboard_badge_statuses}) do
+    Logger.info fn ->
+      "columns_to_timedout_columns #{inspect({"build", ref_monitors, dashboard_badge_statuses})}"
+    end
+    timedout_dashboard_badge_statuses = dashboard_badge_statuses |> Enum.reduce([], fn(dbs, acc) ->
+      Logger.info fn ->
+        "columns_to_timedout_columns dbs: #{inspect(dbs)}"
+      end
+      Repo.all(from dbs1 in CncfDashboardApi.DashboardBadgeStatus, where: dbs1.id == ^dbs.id and 
+        dbs1.status == "running" and
+        dbs1.order == ^build_badge_order()) 
+      |> Enum.map(fn(x) -> 
+        Logger.error fn ->
+          "Polling.Timeout.Pipeline setting badge to failed: #{inspect(x)}"
+        end
+        changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(x, %{status: "failed"})
+        {_, dbs_record} = Repo.update(changeset) 
+        Logger.info fn ->
+          "dbs_record: #{inspect(dbs_record)}"
+        end
+        acc = [dbs_record | acc]
+      end)
+    end)
+    {"build", ref_monitors, dashboard_badge_statuses}
+  end
+
+ @doc """
+  Converts columns into timed-out columns as dashboard badge statuses.
+
+  Returns `{:<stage_type>, ref_monitors, dashboard_badge_statuses}`
+  """
+  def columns_to_timedout_columns({"deploy", ref_monitors, dashboard_badge_statuses}) do
+    Logger.info fn ->
+      "columns_to_timedout_columns #{inspect({"deploy", ref_monitors, dashboard_badge_statuses})}"
+    end
+    timedout_dashboard_badge_statuses = dashboard_badge_statuses |> Enum.reduce([], fn(dbs, acc) ->
+      Logger.info fn ->
+        "columns_to_timedout_columns dbs: #{inspect(dbs)}"
+      end
+      Repo.all(from dbs1 in CncfDashboardApi.DashboardBadgeStatus, where: dbs1.id == ^dbs.id and 
+        dbs1.status == "running") 
+      |> Enum.map(fn(x) -> 
+        Logger.error fn ->
+          "Polling.Timeout.Pipeline setting badge to failed: #{inspect(x)}"
+        end
+        changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(x, %{status: "failed"})
+        {_, dbs_record} = Repo.update(changeset) 
+        Logger.info fn ->
+          "dbs_record: #{inspect(dbs_record)}"
+        end
+        acc = [dbs_record | acc]
+      end)
+    end)
+    {"deploy", ref_monitors, dashboard_badge_statuses}
+  end
+
+ @doc """
+  Converts columns into timed-out columns as dashboard badge statuses.
+
+  Returns `{:<stage_type>, ref_monitors, dashboard_badge_statuses}`
+  """
+  def columns_to_timedout_columns({"provision", ref_monitors, dashboard_badge_statuses}) do
+    Logger.info fn ->
+      "columns_to_timedout_columns #{inspect({"provision", ref_monitors, dashboard_badge_statuses})}"
+    end
+    {_, ref_monitors, dashboard_badge_statuses} = columns_to_timedout_columns({"deploy", ref_monitors, dashboard_badge_statuses})
+    {"provision", ref_monitors, dashboard_badge_statuses}
+  end
 end

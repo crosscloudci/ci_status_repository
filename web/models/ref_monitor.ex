@@ -28,6 +28,6 @@ defmodule CncfDashboardApi.RefMonitor do
     # initialized ref_monitors will have no pipeline (they exist before a build)
     |> validate_required([:ref, :status, :sha, :release_type, :project_id, :order, :test_env])
     
-    |> unique_constraint(:project_id_release_type_test_env, message: "Project Id, Release Type, and Test Env must be unique for a Ref Monitor")
+    |> unique_constraint(:project_id_release_type_kubernetes_release_type_test_env_arch, message: "Project Id, Release Type, kubernetes_release_type, Test Env, arch must be unique for a Ref Monitor")
   end
 end
