@@ -294,7 +294,7 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
     Logger.info fn ->
       "return project_rows_to_columns #{inspect({"build", ref_monitors, dashboard_badge_statuses})}"
     end
-    {"build", ref_monitors, dashboard_badge_statuses}
+    {"build", pm, ref_monitors, dashboard_badge_statuses}
   end
 
 
@@ -334,7 +334,7 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
         end
         [dbs_record | acc]
     end)
-    {"provision", ref_monitors, dashboard_badge_statuses}
+    {"provision", pm, ref_monitors, dashboard_badge_statuses}
   end
 
  @doc """
@@ -383,7 +383,7 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
                                                                          packet.id)
       [dbs_record | acc]
     end)
-    {"deploy", ref_monitors, dashboard_badge_statuses}
+    {"deploy", pm, ref_monitors, dashboard_badge_statuses}
   end
 
  @doc """
@@ -391,7 +391,7 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
 
   Returns `{:<stage_type>, ref_monitors, dashboard_badge_statuses}`
   """
-  def columns_to_timedout_columns({"build", ref_monitors, dashboard_badge_statuses}) do
+  def columns_to_timedout_columns({"build", pm, ref_monitors, dashboard_badge_statuses}) do
     Logger.info fn ->
       "columns_to_timedout_columns #{inspect({"build", ref_monitors, dashboard_badge_statuses})}"
     end
@@ -422,7 +422,7 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
 
   Returns `{:<stage_type>, ref_monitors, dashboard_badge_statuses}`
   """
-  def columns_to_timedout_columns({"deploy", ref_monitors, dashboard_badge_statuses}) do
+  def columns_to_timedout_columns({"deploy", pm, ref_monitors, dashboard_badge_statuses}) do
     Logger.info fn ->
       "columns_to_timedout_columns #{inspect({"deploy", ref_monitors, dashboard_badge_statuses})}"
     end
@@ -436,7 +436,16 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
         Logger.error fn ->
           "Polling.Timeout.Pipeline setting badge to failed: #{inspect(x)}"
         end
-        changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(x, %{status: "failed"})
+        build_pm = CncfDashboardApi.GitlabMonitor.PipelineMonitor.build_pipeline_monitor_by_deploy_pipeline_monitor(pm)
+        build_jobs = CncfDashboardApi.GitlabMonitor.Job.monitored_job_list("project")
+        # https://gitlab.vulk.coop/cncf/ci-dashboard/issues/423
+        # if build for a project fails, all deploy badges should be N/A 
+        if CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(build_jobs, false, "", build_pm.pipeline_id) == "failed" do
+          cp_status = "N/A"
+        else
+          cp_status = "failed" 
+        end
+        changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(x, %{status: cp_status})
         {_, dbs_record} = Repo.update(changeset) 
         Logger.info fn ->
           "dbs_record: #{inspect(dbs_record)}"
@@ -452,7 +461,7 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
 
   Returns `{:<stage_type>, ref_monitors, dashboard_badge_statuses}`
   """
-  def columns_to_timedout_columns({"provision", ref_monitors, dashboard_badge_statuses}) do
+  def columns_to_timedout_columns({"provision", pm, ref_monitors, dashboard_badge_statuses}) do
     Logger.info fn ->
       "columns_to_timedout_columns #{inspect({"provision", ref_monitors, dashboard_badge_statuses})}"
     end
