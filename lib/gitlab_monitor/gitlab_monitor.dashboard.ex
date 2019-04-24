@@ -167,11 +167,7 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
         # if deploy ref comes from target pipeline
       "build" ->
         # loop through all ref monitors and update the builds (for all drop downs)
-        # if target_pm.target_project_name == "kubernetes" do
-          # kubernetes_release_type = target_pm.release_type
-        # else
         kubernetes_release_type = test_env 
-        # end
         # there is no test_env for builds.  set to passed env
         derived_test_env = test_env
         derived_arch = arch 
@@ -203,10 +199,8 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
         :ok
     end
     {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: target_pm.project_id,
-      # release_type: target_pm.release_type, test_env: test_env, kubernetes_release_type: pipeline_monitor.kubernetes_release_type, arch: pipeline_monitor.arch} 
       release_type: target_pm.release_type, kubernetes_release_type: kubernetes_release_type, test_env: derived_test_env, arch: derived_arch} 
       |> find_by([:project_id, :release_type, :kubernetes_release_type, :test_env, :arch])
-      # |> find_by([:project_id, :release_type, :test_env, :kubernetes_release_type, :arch])
       changeset = CncfDashboardApi.RefMonitor.changeset(rm_record,  
                                                         %{ref: ref,
                                                           status: target_pl.status,

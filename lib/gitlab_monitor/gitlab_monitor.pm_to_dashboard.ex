@@ -304,6 +304,9 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
   Returns `{:<stage_type>, ref_monitors, dashboard_badge_statuses}`
   """
   def project_rows_to_columns({"provision", pm, ref_monitors}) do
+    Logger.info fn ->
+      "project_rows_to_columns #{inspect({"provision", pm, ref_monitors})}"
+    end
     dashboard_badge_statuses = []
     job_names = CncfDashboardApi.GitlabMonitor.Job.monitored_job_list("cross-cloud")
     build_pipeline = Repo.all(from pm1 in CncfDashboardApi.Pipelines, 
@@ -340,6 +343,9 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
   Returns `{:<stage_type>, ref_monitors, dashboard_badge_statuses}`
   """
   def project_rows_to_columns({"deploy", pm, ref_monitors}) do
+    Logger.info fn ->
+      "project_rows_to_columns #{inspect({"deploy", pm, ref_monitors})}"
+    end
     dashboard_badge_statuses = []
     packet = Repo.get_by(CncfDashboardApi.Clouds, cloud_name: "packet")
     build_pm = CncfDashboardApi.GitlabMonitor.PipelineMonitor.build_pipeline_monitor_by_deploy_pipeline_monitor(pm)
