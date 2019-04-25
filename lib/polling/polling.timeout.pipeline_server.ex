@@ -62,7 +62,7 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServer do
     end
   end
 
-  defp set_badge_to_failed(pm_record, order) do
+  defp set_badge_to_failed(pm_record) do
     Logger.info fn ->
       "set_build_badge_to_failed"
     end
@@ -70,67 +70,14 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServer do
     # https://github.com/vulk/cncf_ci/issues/29
     # two ref monitors needs to be updated for each build pm_record: test_env: head and stable 
     # TODO separate out the update into separate call
-    case pm_record.pipeline_type do
-      "build" ->
-        {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: pm_record.project_id, 
-          release_type: pm_record.release_type, test_env: "stable" } 
-          |> find_by([:project_id, :release_type, :test_env])
-
-          # TODO, remove in favor of setting *all* badges that are still running to failed
-          {dbs_found, dbs_record} = %CncfDashboardApi.DashboardBadgeStatus{ref_monitor_id: rm_record.id, order: order} 
-                                    |> find_by([:ref_monitor_id, :order])
-
-          Repo.all(from dbs in CncfDashboardApi.DashboardBadgeStatus, where: dbs.ref_monitor_id == ^rm_record.id and dbs.status == "running") 
-          |> Enum.map(fn(x) -> 
-            Logger.error fn ->
-              "Polling.Timeout.Pipeline setting badge to failed: #{inspect(x)}"
-            end
-            changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(x, %{status: "failed"})
-            {_, dbs_record} = Repo.update(changeset) 
-          end)
-        {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: pm_record.project_id, 
-          release_type: pm_record.release_type, test_env: "head" } 
-          |> find_by([:project_id, :release_type, :test_env])
-
-          # TODO, remove in favor of setting *all* badges that are still running to failed
-          {dbs_found, dbs_record} = %CncfDashboardApi.DashboardBadgeStatus{ref_monitor_id: rm_record.id, order: order} 
-                                    |> find_by([:ref_monitor_id, :order])
-
-          Repo.all(from dbs in CncfDashboardApi.DashboardBadgeStatus, where: dbs.ref_monitor_id == ^rm_record.id and dbs.status == "running") 
-          |> Enum.map(fn(x) -> 
-            Logger.error fn ->
-              "Polling.Timeout.Pipeline setting badge to failed: #{inspect(x)}"
-            end
-            changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(x, %{status: "failed"})
-            {_, dbs_record} = Repo.update(changeset) 
-          end)
-      "deploy" -> 
-         {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: pm_record.project_id, 
-           release_type: pm_record.release_type, test_env: pm_record.kubernetes_release_type} 
-           |> find_by([:project_id, :release_type, :test_env])
-
-           # TODO, remove in favor of setting *all* badges that are still running to failed
-         {dbs_found, dbs_record} = %CncfDashboardApi.DashboardBadgeStatus{ref_monitor_id: rm_record.id, order: order} 
-                                   |> find_by([:ref_monitor_id, :order])
-
-         Repo.all(from dbs in CncfDashboardApi.DashboardBadgeStatus, where: dbs.ref_monitor_id == ^rm_record.id and dbs.status == "running") 
-         |> Enum.map(fn(x) -> 
-           Logger.error fn ->
-             "Polling.Timeout.Pipeline setting badge to failed: #{inspect(x)}"
-           end
-           changeset = CncfDashboardApi.DashboardBadgeStatus.changeset(x, %{status: "failed"})
-           {_, dbs_record} = Repo.update(changeset) 
-         end)
-       _ ->
-         Logger.error fn ->
-           "Polling.Timeout provision monitor ignored"
-         end
-    end
+        CncfDashboardApi.GitlabMonitor.PMToDashboard.pm_stage_to_project_rows({pm_record.pipeline_type, pm_record})
+        |> CncfDashboardApi.GitlabMonitor.PMToDashboard.project_rows_to_columns()
+        |> CncfDashboardApi.GitlabMonitor.PMToDashboard.columns_to_timedout_columns
   end
 
   defp set_run_to_fail(source_key_project_monitor_id) do
     Logger.info fn ->
-      "set_run_to_fail"
+      "upserting and checking one last time: set_run_to_fail"
     end
 
     {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.PipelineMonitor.pipeline_monitor(source_key_project_monitor_id) 
@@ -143,18 +90,7 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServer do
       "set_run_to_fail pm_record: #{inspect(pm_record)}"
     end
 
-    case CncfDashboardApi.GitlabMonitor.Pipeline.is_deploy_pipeline_type(pm_record.project_id) do
-      true -> true
-        badge_order = CncfDashboardApi.GitlabMonitor.cloud_order_by_name(pm_record.cloud)
-        build_pm_record = CncfDashboardApi.GitlabMonitor.PipelineMonitor.build_pipeline_monitor_by_deploy_pipeline_monitor(pm_record)
-        Logger.info fn ->
-          "set_run_to_fail badge_order, build_pm_record: #{inspect(badge_order)}, #{inspect(build_pm_record)}"
-        end
-        set_badge_to_failed(build_pm_record, badge_order) 
-      _ -> "build"
-        build_badge_order = 1 
-        set_badge_to_failed(pm_record, build_badge_order) 
-    end
+    set_badge_to_failed(pm_record) 
 
     # Call dashboard channel
     CncfDashboardApi.GitlabMonitor.Dashboard.broadcast()
