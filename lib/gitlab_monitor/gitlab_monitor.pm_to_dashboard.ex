@@ -351,13 +351,18 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
     build_pm = CncfDashboardApi.GitlabMonitor.PipelineMonitor.build_pipeline_monitor_by_deploy_pipeline_monitor(pm)
     deploy_pipeline = Repo.all(from pm1 in CncfDashboardApi.Pipelines, 
                                where: pm1.id == ^pm.pipeline_id ) |> List.first
+    provision_pipeline = Repo.all(from pm1 in CncfDashboardApi.Pipelines, 
+                           where: pm1.id == ^pm.provision_pipeline_id ) |> List.first
     job_names = CncfDashboardApi.GitlabMonitor.Job.monitored_job_list("cross-project")
     build_jobs = CncfDashboardApi.GitlabMonitor.Job.monitored_job_list("project")
+    provision_jobs = CncfDashboardApi.GitlabMonitor.Job.monitored_job_list("cross-cloud")
     dashboard_badge_statuses = ref_monitors |> Enum.reduce([], fn(rm, acc) ->
       cp_deploy_url = CncfDashboardApi.GitlabMonitor.Job.badge_url(job_names, pm.child_pipeline, pm.pipeline_id) 
       # https://gitlab.vulk.coop/cncf/ci-dashboard/issues/423
       # if build for a project fails, all deploy badges should be N/A 
-      if CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(build_jobs, false, "", build_pm.pipeline_id) == "failed" do
+      # if provision for a pipeline_monitor fails, all deploy badges should be N/A 
+      if CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(build_jobs, false, "", build_pm.pipeline_id) == "failed" || 
+        CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(provision_jobs, false, "", provision_pipeline.id) == "failed" do
         cp_status = "N/A"
       else
         cp_status = CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(job_names, pm.child_pipeline, packet.cloud_name, pm.pipeline_id)
@@ -426,21 +431,30 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
     Logger.info fn ->
       "columns_to_timedout_columns #{inspect({"deploy", ref_monitors, dashboard_badge_statuses})}"
     end
-    timedout_dashboard_badge_statuses = dashboard_badge_statuses |> Enum.reduce([], fn(dbs, acc) ->
+
+    # set all of the badges for the running ref monitor (rows) to failed
+    timedout_dashboard_badge_statuses = ref_monitors |> Enum.reduce([], fn(rm, acc) ->
+    # timedout_dashboard_badge_statuses = dashboard_badge_statuses |> Enum.reduce([], fn(dbs, acc) ->
       Logger.info fn ->
-        "columns_to_timedout_columns dbs: #{inspect(dbs)}"
+        "columns_to_timedout_columns rm: #{inspect(rm)}"
       end
-      Repo.all(from dbs1 in CncfDashboardApi.DashboardBadgeStatus, where: dbs1.id == ^dbs.id and 
-        dbs1.status == "running") 
+      Repo.all(from dbs in CncfDashboardApi.DashboardBadgeStatus, where: dbs.ref_monitor_id == ^rm.id and dbs.status == "running") 
+      # Repo.all(from dbs1 in CncfDashboardApi.DashboardBadgeStatus, where: dbs1.id == ^dbs.id and 
+        # dbs1.status == "running") 
       |> Enum.map(fn(x) -> 
         Logger.error fn ->
           "Polling.Timeout.Pipeline setting badge to failed: #{inspect(x)}"
         end
         build_pm = CncfDashboardApi.GitlabMonitor.PipelineMonitor.build_pipeline_monitor_by_deploy_pipeline_monitor(pm)
         build_jobs = CncfDashboardApi.GitlabMonitor.Job.monitored_job_list("project")
+        provision_pipeline = Repo.all(from pm1 in CncfDashboardApi.Pipelines, 
+          where: pm1.id == ^pm.provision_pipeline_id ) |> List.first
+        provision_jobs = CncfDashboardApi.GitlabMonitor.Job.monitored_job_list("cross-cloud")
         # https://gitlab.vulk.coop/cncf/ci-dashboard/issues/423
         # if build for a project fails, all deploy badges should be N/A 
-        if CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(build_jobs, false, "", build_pm.pipeline_id) == "failed" do
+        # if provision for a project fails, all deploy badges should be N/A
+        if CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(build_jobs, false, "", build_pm.pipeline_id) == "failed" || 
+          CncfDashboardApi.GitlabMonitor.Job.badge_status_by_pipeline_id(provision_jobs, false, "", provision_pipeline.id) == "failed" do
           cp_status = "N/A"
         else
           cp_status = "failed" 
@@ -465,7 +479,7 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
     Logger.info fn ->
       "columns_to_timedout_columns #{inspect({"provision", ref_monitors, dashboard_badge_statuses})}"
     end
-    {_, ref_monitors, dashboard_badge_statuses} = columns_to_timedout_columns({"deploy", ref_monitors, dashboard_badge_statuses})
+    {_, ref_monitors, dashboard_badge_statuses} = columns_to_timedout_columns({"deploy", pm, ref_monitors, dashboard_badge_statuses})
     {"provision", ref_monitors, dashboard_badge_statuses}
   end
 end
