@@ -71,8 +71,12 @@ defmodule CncfDashboardApi.GitlabMonitor.Job do
       "status_job monitored_jobs: #{inspect(monitored_jobs)}"
     end
     # loop through the jobs list in the order of precedence
-    # monitor_job_list e.g. ["e2e", "App-Deploy"]
-    # create status string e.g. "failure"
+    # job_list e.g. ["Build-Source", "App-Deploy", "e2e"]
+    # with statuses like so: "skipped", "running", "success"
+    # or
+    # monitor_job_list e.g. ["container", "compile"]
+    # with statuses like so: "created", "success"
+    #
     # If any job in the status jobs list has a status of failed, return failed
     # else if any job in the list has a status of running, return running
     # else 
@@ -115,21 +119,13 @@ defmodule CncfDashboardApi.GitlabMonitor.Job do
         Logger.info fn ->
           "status job: #{inspect(status_job)}"
         end
-        # # ticket #230
+        # ticket #230
         if status_job.status == "initial" do
-          # status_job.status = "N/A"
           status_job = %{status_job | job: status_job.job, status: "N/A"}
         end
         status_job
   end 
 
-  # Stay running if previous status (in order of precendent) was running
-  #   job && (job.status =~ "running" || job.status =~ "created") ->
-  #     # can only go to a running status from initial, running, or success status
-  #     if (acc.status =~ "running" || acc.status =~ "initial" || acc.status =~ "success") do
-  #       acc = %{status: "running" , job: job}
-  #     end
-  #     {:cont, acc}
   def precendent_before_running_status({"running", acc, job}) do
     Logger.info fn ->
       "precendent_before_running_status #{inspect({"running", acc, job})}"
@@ -153,17 +149,6 @@ defmodule CncfDashboardApi.GitlabMonitor.Job do
     end
     precendent_before_running_status({"running", acc, job})
   end
-
-  # # Allow change to running if previous status (in order of precendent) was created 
-  # # (this happens when precedent is backwards)
-  # def precendent_before_running_status({"created", acc, job}) do
-  #   Logger.info fn ->
-  #     "precendent_before_running_status #{inspect({"created", acc, job})}"
-  #   end
-  #   precendent_before_running_status({"running", acc, job})
-  #   # keep the preceding valid job (e.g. previous job was a running job)
-  #   {:cont, acc}
-  # end
 
   def precendent_before_running_status({status, acc, job}) do
     Logger.error fn ->
@@ -246,17 +231,10 @@ defmodule CncfDashboardApi.GitlabMonitor.Job do
 
   # if badge is unhandled (e.g. skipped, created) default to previous valid status in order of 
   # precedent and keep looping
-  # We should never see a skipped badge while order of precendent is in different stages 
-  # e.g. compile: skipped, container: running 
   # TODO handle multiple jobs in the same stage
   def badge_job_status({status, acc, child_pipline, job}) do
     Logger.error fn ->
       "unhandled job status: #{inspect({status, acc, child_pipline, job})} not handled"
-    end
-    if acc.status == "initial" do
-      acc = %{status: "N/A", job: acc.job} 
-    else
-      acc = %{status: acc.job.status, job: acc.job} 
     end
     {:cont, acc}
   end

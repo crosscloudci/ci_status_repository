@@ -65,8 +65,6 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServer do
             skpm_build_monitor = Repo.all(from skpm in CncfDashboardApi.SourceKeyProjectMonitor, 
               where: skpm.source_pipeline_id == ^skpm_monitor.project_build_pipeline_id) |> List.first
             CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm_build_monitor.id)
-            CncfDashboardApi.GitlabMonitor.PMToDashboard.pm_stage_to_project_rows({pm_record.pipeline_type, pm_record})
-            |> CncfDashboardApi.GitlabMonitor.PMToDashboard.project_rows_to_columns()
           _ ->
             :ok
         end

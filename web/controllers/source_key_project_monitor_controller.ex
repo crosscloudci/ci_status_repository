@@ -36,24 +36,20 @@ defmodule CncfDashboardApi.SourceKeyProjectMonitorController do
                 CncfDashboardApi.Polling.Supervisor.Pipeline.start_pipeline(source_key_project_monitor.source_pipeline_id, 
                   source_key_project_monitor.id, 
                   project.timeout * 1000) 
-            # Process.sleep(13000)
           n when n in ["deploy", "provision"] ->
             config = CncfDashboardApi.YmlReader.GitlabCi.gitlab_pipeline_config()
             cc = Enum.find(config, fn(x) -> x["pipeline_name"] == project.name end) 
             Logger.info fn ->
-              "source_key_project_monitor deploy  skpm.project_build_pipeline_id skpm.source_project_id skpm.cloud skpm target_project_name skpm.id timeout: #{inspect({source_key_project_monitor.project_build_pipeline_id, 
+              "source_key_project_monitor deploy  skpm.source_pipeline_id skpm.source_project_id skpm.cloud skpm target_project_name skpm.id timeout: #{inspect({source_key_project_monitor.source_pipeline_id, 
                   source_key_project_monitor.source_project_id, 
                   source_key_project_monitor.cloud, 
                   source_key_project_monitor.target_project_name, 
                   source_key_project_monitor.id, 
                   cc["timeout"]})}"
             end
-            # base unique identifier on the target's source_pipeline_id (e.g. a head or stable pipeline)), source_project_id (cross cloud or cross project), cloud (e.g. aws) , and target project name (e.g. linkerd)
-            # i.e. '{"cross-project", "linkerd"}
-                CncfDashboardApi.Polling.Supervisor.Pipeline.start_pipeline({source_key_project_monitor.project_build_pipeline_id, 
-                  source_key_project_monitor.source_project_id, 
-                  source_key_project_monitor.cloud, 
-                  source_key_project_monitor.target_project_name}, 
+            # base unique identifier on the target's source_pipeline_id 
+            # i.e. '{"cross-project", "cross-cloud"}
+                CncfDashboardApi.Polling.Supervisor.Pipeline.start_pipeline({source_key_project_monitor.source_pipeline_id}, 
                   source_key_project_monitor.id, 
                   cc["timeout"] * 1000) 
         end
