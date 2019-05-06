@@ -85,7 +85,7 @@ defmodule CncfDashboardApi.GitlabMonitor.Job.JobTest do
     assert ^temp_url = url
   end
 
-  test "successfull deploy badge_url" do 
+  test "successful deploy badge_url" do 
     project = insert(:project, %{pipelines: 
       [build(:pipeline, %{pipeline_jobs:
         [build(:pipeline_job, %{name: "App-Deploy", status: "success"}),
@@ -123,6 +123,33 @@ defmodule CncfDashboardApi.GitlabMonitor.Job.JobTest do
     url =  CncfDashboardApi.GitlabMonitor.Job.badge_url(job_names, child, pipeline.id)
     #should be the first job with failed status
     temp_url = "#{project.web_url}/-/jobs/#{skpj1.source_id}"
+    assert ^temp_url = url
+  end
+
+  test "failed deploy badge_url with skipped" do 
+    project = insert(:project, %{pipelines: 
+      [build(:pipeline, %{pipeline_jobs:
+        [build(:pipeline_job, %{name: "App-Deploy", status: "running"}),
+         build(:pipeline_job, %{name: "e2e", status: "skipped"}),
+        ]
+      })]} )
+    child = false 
+    job_names = ["App-Deploy", "e2e"]
+    pipeline = project.pipelines |> List.first
+    pipeline_job = pipeline.pipeline_jobs |> List.first
+    Logger.info fn ->
+      "first pipeline_job: #{inspect(pipeline_job)}"
+    end
+    skpj1 = insert(:source_key_pipeline_job, %{new_id: pipeline_job.id})
+    pipeline_job = pipeline.pipeline_jobs |> List.last
+    skpj2 = insert(:source_key_pipeline_job, %{source_id: "2", new_id: pipeline_job.id})
+
+    url =  CncfDashboardApi.GitlabMonitor.Job.badge_url(job_names, child, pipeline.id)
+    #should be the first job with failed status
+    temp_url = "#{project.web_url}/-/jobs/#{skpj1.source_id}"
+    Logger.info fn ->
+      "monitored url: #{inspect(temp_url)}"
+    end
     assert ^temp_url = url
   end
 end
