@@ -19,9 +19,9 @@ defmodule GitLabProxy do
 
   ## Examples
 
-      iex> GitLabProxy.get_gitlab_project_names
-      ["cross-cloud", "cross-project", "omnibus-gitlab",
-			 "miigitlab", "omnibus-gitlab"] 
+      iex> gpn = GitLabProxy.get_gitlab_project_names
+      iex> Enum.find_value(gpn, fn(x) -> x == "cross-project" end)
+      true
 
   """
   def get_gitlab_project_names do
@@ -77,8 +77,9 @@ defmodule GitLabProxy do
 
   ## Examples
 
-      iex> GitLabProxy.get_gitlab_pipelines(1)
-      [%{"id" => 522, "ref" => "ci-artifacts", "sha" => "6ec12a4db82fafa84f72076c96cab918dcdb814d", "status" => "success"}] 
+      iex> %{"id" => a} = GitLabProxy.get_gitlab_pipelines("1") |> List.first   
+      iex> a |> is_number
+      true
 
   """
   def get_gitlab_pipelines(project_id) do
