@@ -50,12 +50,25 @@ defmodule CncfDashboardApi.Polling.Timeout.PipelineServer do
       "is_pipeline_complete skpm: #{source_key_project_monitor_id}"
     end
     CncfDashboardApi.GitlabMonitor.migrate_source_key_monitor(source_key_project_monitor_id)
+    skpm_monitor = Repo.all(from skpm in CncfDashboardApi.SourceKeyProjectMonitor, 
+                       where: skpm.id == ^source_key_project_monitor_id) |> List.first
     {pm_found, pm_record} = CncfDashboardApi.GitlabMonitor.PipelineMonitor.pipeline_monitor(source_key_project_monitor_id) 
     Logger.info fn ->
       "is_pipeline_complete pm_record.running: #{pm_record.running}"
     end
     if pm_record.running do
-      CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(source_key_project_monitor_id)
+        case pm_record.pipeline_type  do
+          # "build" ->
+          n when n in ["deploy"] ->
+            #if deploy pipeline, check build pipeline as well
+            #need skpm_id for the project id (retrieve by source_pipeline_id as well)
+            skpm_build_monitor = Repo.all(from skpm in CncfDashboardApi.SourceKeyProjectMonitor, 
+              where: skpm.source_pipeline_id == ^skpm_monitor.project_build_pipeline_id) |> List.first
+            CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm_build_monitor.id)
+          _ ->
+            :ok
+        end
+         CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(source_key_project_monitor_id)
       {:ok, :running}
     else
       {:ok, :complete}
