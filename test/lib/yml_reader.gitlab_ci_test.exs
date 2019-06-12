@@ -28,6 +28,14 @@ defmodule CncfDashboardApi.YmlReader.GitlabCiTest do
     assert Enum.find_value(cloud_list, fn(x) -> x["active"] == true end) 
   end
 
+  test "cncf relation list" do 
+    cncf_relations = CncfDashboardApi.YmlReader.GitlabCi.cncf_relations_list()
+    assert Enum.find_value(cncf_relations, fn(x) -> 
+      x["name"] == "Graduated" &&
+      x["order"] == 1 
+    end) 
+  end
+
   @tag :wip
   test "projects_with_ymls" do 
     project_list = CncfDashboardApi.YmlReader.GitlabCi.projects_with_yml()

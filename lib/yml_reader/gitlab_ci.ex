@@ -61,6 +61,16 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
     end) 
 	end
 
+  def cncf_relations_list do
+    yml = CncfDashboardApi.YmlReader.GitlabCi.get() |> YamlElixir.read_from_string 
+    yml["cncf_relations"] 
+    |> Stream.with_index 
+    |> Enum.reduce([], fn ({v, idx}, acc) -> 
+      [%{"order" => (idx + 1), 
+        "name" => v} | acc] 
+    end) 
+	end
+
   def projects_with_yml do
 		yml = CncfDashboardApi.YmlReader.GitlabCi.get() |> YamlElixir.read_from_string 
 		yml["projects"] 
