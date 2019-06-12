@@ -119,6 +119,7 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
         "repository_url" => v["repository_url"],
         "configuration_repo" => v["configuration_repo"],
         "timeout" => v["timeout"],
+        "cncf_relation" => v["cncf_relation"],
         # "order" => (idx + 1)} | acc] 
         "order" => v["order"]} | acc] 
 		end) 

@@ -59,6 +59,7 @@ defmodule CncfDashboardApi.YmlReader.GitlabCiTest do
     assert Enum.find_value(project_list, fn(x) -> x["display_name"] == "CoreDNS" end) 
     assert Enum.find_value(project_list, fn(x) -> x["sub_title"] == "Service Discovery" end) 
     assert Enum.find_value(project_list, fn(x) -> x["yml_gitlab_name"] == "coredns" end) 
+    assert Enum.find_value(project_list, fn(x) -> x["cncf_relation"] == "Graduated" end) 
     assert Enum.find_value(project_list, fn(x) -> x["order"] == 2 end) 
     assert Enum.find_value(project_list, fn(x) -> x["repository_url"] == "https://github.com/coredns/coredns" end) 
     assert Enum.find_value(project_list, fn(x) -> is_number(x["timeout"]) end) 
