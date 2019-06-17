@@ -128,7 +128,7 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
       "clouds" => cloud_list, 
       "projects" => projects, 
       "cncf_relations" => cncf_relations} 
-    response = CncfDashboardApi.DashboardView.render("index.json", dashboard: with_cloud)
+    response = CncfDashboardApi.DashboardView.render("dashboard.json", dashboard: with_cloud)
   end
 
   @doc """
