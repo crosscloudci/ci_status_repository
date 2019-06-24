@@ -54,6 +54,7 @@ Deploy-Backend:
     - export KUBECONFIG=/kubeconfig
     - helm init --service-account tiller
     - helm repo add cncf http://cncf.gitlab.io/stable
+    - helm repo update
     # - helm upgrade nginx-"$CI_COMMIT_REF_NAME" --install --force stable/nginx-ingress
     # Purge Delete old db
     - helm delete --purge db-"$CI_COMMIT_REF_NAME"
