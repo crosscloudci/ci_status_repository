@@ -89,6 +89,8 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
           subtitle = cncfci_yml["project"]["sub_title"]
           project_url = cncfci_yml["project"]["project_url"]
           logo_url = cncfci_yml["project"]["logo_url"]
+          stable_ref = cncfci_yml["project"]["stable_ref"] 
+          head_ref = cncfci_yml["project"]["head_ref"] 
           Logger.info fn ->
             "cncfciyml: #{inspect(cncfci_yml)}"
           end
@@ -109,6 +111,8 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
         "repository_url" => v["repository_url"],
         "configuration_repo" => v["configuration_repo"],
         "timeout" => v["timeout"],
+        "stable_ref" => stable_ref,
+        "head_ref" => head_ref,
         # "order" => (idx + 1)} | acc] 
         "order" => v["order"]} | acc] 
 		end) 
