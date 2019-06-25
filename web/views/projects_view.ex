@@ -22,6 +22,7 @@ defmodule CncfDashboardApi.ProjectsView do
       ssh_url_to_repo: projects.ssh_url_to_repo,
       repository_url: projects.repository_url,
       order: projects.order,
+      cncf_relation: projects.cncf_relation,
       pipelines: render_many(projects.ref_monitors, CncfDashboardApi.RefMonitorView, "ref_monitor.json"),
       # ref_monitors: render_many(projects.ref_monitor, CncfDashboardApi.RefMonitor, "ref_monitor.json"),
       http_url_to_repo: projects.http_url_to_repo}

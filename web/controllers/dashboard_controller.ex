@@ -15,6 +15,7 @@ defmodule CncfDashboardApi.DashboardController do
   def index(conn, _params) do
     yml = System.get_env("GITLAB_CI_YML")
     {d_found, d_record} = %CncfDashboardApi.Dashboard{gitlab_ci_yml: yml } |> find_by([:gitlab_ci_yml])
+    cncf_relations = CncfDashboardApi.YmlReader.GitlabCi.cncf_relations_list()
     
     cloud_list = CncfDashboardApi.Repo.all(from cd1 in CncfDashboardApi.Clouds, 
                                            where: cd1.active == true,
@@ -31,7 +32,10 @@ defmodule CncfDashboardApi.DashboardController do
                                                      dashboard_badge_statuses: {dashboard_badge_statuses, cloud: cloud },
                                                    }] )
 
-    with_cloud = %{"dashboard" => d_record, "clouds" => cloud_list, "projects" => projects} 
+    with_cloud = %{"dashboard" => d_record, 
+      "clouds" => cloud_list, 
+      "projects" => projects, 
+      "cncf_relations" => cncf_relations} 
     render(conn, "index.json", dashboard: with_cloud)
   end
 
