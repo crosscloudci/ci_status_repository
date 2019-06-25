@@ -16,6 +16,7 @@ defmodule CncfDashboardApi.Projects do
     field :repository_url, :string
     field :timeout, :integer
     field :order, :integer
+    field :cncf_relation, :string
     has_many :pipelines, CncfDashboardApi.Pipelines, foreign_key: :project_id
     has_many :ref_monitors, CncfDashboardApi.RefMonitor, foreign_key: :project_id
     has_many :pipeline_jobs, CncfDashboardApi.PipelineJobs, foreign_key: :project_id
@@ -28,7 +29,7 @@ defmodule CncfDashboardApi.Projects do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :ssh_url_to_repo, :http_url_to_repo, :web_url, :active, :logo_url, :display_name, :sub_title, :yml_name, :yml_gitlab_name, :project_url, :repository_url, :timeout, :order])
+    |> cast(params, [:name, :ssh_url_to_repo, :http_url_to_repo, :web_url, :active, :logo_url, :display_name, :sub_title, :yml_name, :yml_gitlab_name, :project_url, :repository_url, :timeout, :cncf_relation, :order])
     # |> validate_required([:name, :ssh_url_to_repo, :http_url_to_repo])
     |> validate_required([:name])
   end

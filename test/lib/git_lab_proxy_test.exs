@@ -2,6 +2,7 @@ require Logger;
 require IEx;
 defmodule CncfDashboardApi.GitLabProxyTest do
   use ExUnit.Case
+  doctest GitLabProxy
 
   def project_id do
     # projects = GitLabProxy.get_gitlab_projects 
