@@ -34,22 +34,22 @@ Deploy-Backend:
         echo "Deploying $CI_COMMIT_REF_NAME on $BASE_URL"
         export BACKEND_INGRESS="devapi.cncf.ci"
         export TLS="true"
-        export PROJECT_SEGMENT_ENV="integration/"
+        export PROJECT_SEGMENT_ENV="integration"
       elif [ "$BASE_URL" == "https://gitlab.cidev.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "integration" ]; then 
         echo "Deploying $CI_COMMIT_REF_NAME on $BASE_URL"
         export BACKEND_INGRESS="cidevapi.cncf.ci"
         export TLS="true"
-        export PROJECT_SEGMENT_ENV="master/"
+        export PROJECT_SEGMENT_ENV="master"
       elif [ "$BASE_URL" == "https://gitlab.staging.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "staging" ]; then 
         echo "Deploying $CI_COMMIT_REF_NAME on $BASE_URL"
         export BACKEND_INGRESS="stagingapi.cncf.ci"
         export TLS="true"
-        export PROJECT_SEGMENT_ENV="staging/"
+        export PROJECT_SEGMENT_ENV="staging"
       elif [ "$BASE_URL" == "https://gitlab.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "production" ]; then
         echo "Deploying $CI_COMMIT_REF_NAME on $BASE_URL"
         export BACKEND_INGRESS="productionapi.cncf.ci"
         export TLS="true"
-        export PROJECT_SEGMENT_ENV="production/"
+        export PROJECT_SEGMENT_ENV="production"
       else
         echo "No Matching Environment Could Be Found"
         exit 1
