@@ -78,6 +78,7 @@ defmodule CncfDashboardApi.GitlabMigrations do
         project_url: :project_url,
         repository_url: :repository_url,
         timeout: :timeout,
+        cncf_relation: :cncf_relation,
         order: :order,
       }
     )
