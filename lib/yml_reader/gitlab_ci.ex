@@ -120,7 +120,16 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
           subtitle = v["sub_title"]
           project_url = v["project_url"]
           logo_url = v["logo_url"]
+          stable_ref = v["stable_ref"] 
+          head_ref = v["head_ref"] 
       end
+      # global config overwrites the project config
+      if v["display_name"], do: display_name = v["display_name"]
+      if v["sub_title"], do: subtitle = v["sub_title"]
+      if v["project_url"], do: project_url = v["project_url"]
+      if v["logo_url"], do: logo_url = v["logo_url"]
+      if v["stable_ref"], do: stable_ref = v["stable_ref"]
+      if v["head_ref"], do: head_ref = v["head_ref"]
 			[%{"id" => 0, 
         "yml_name" => k, 
         "active" => v["active"],
