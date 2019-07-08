@@ -16,6 +16,7 @@ defmodule CncfDashboardApi.DashboardView do
       kubernetes_release_types: kubernetes_release_types,
       kubernetes_refs: kubernetes_refs, 
       test_env: kubernetes_release_types, 
+      cncf_relations: dashboard["cncf_relations"], 
       archs: ["amd64", "arm64"],
     }
   end

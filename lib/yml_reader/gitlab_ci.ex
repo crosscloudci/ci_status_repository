@@ -61,12 +61,22 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
     end) 
 	end
 
+  def cncf_relations_list do
+    yml = CncfDashboardApi.YmlReader.GitlabCi.get() |> YamlElixir.read_from_string 
+    yml["cncf_relations"] 
+    |> Stream.with_index 
+    |> Enum.reduce([], fn ({v, idx}, acc) -> 
+      [%{"order" => (idx + 1), 
+        "name" => v} | acc] 
+    end) 
+	end
+
   def projects_with_yml do
 		yml = CncfDashboardApi.YmlReader.GitlabCi.get() |> YamlElixir.read_from_string 
 		yml["projects"] 
 		|> Stream.with_index 
 		|> Enum.reduce([], fn ({{k, v}, idx}, acc) -> 
-      case getcncfci(v["configuration_repo"]) do
+      case configuration_repo_path(v["configuration_repo"]) |> getcncfci() do
         {:error, :not_found} ->
           acc
         _ ->
@@ -74,6 +84,13 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
       end
 		end)
   end
+
+  def configuration_repo_path(configuration_repo) do 
+    # Logger.info fn ->
+    #   "env variable: #{inspect(System.get_env("PROJECT_SEGMENT_ENV"))}"
+    # end
+     "#{configuration_repo}/#{System.get_env("PROJECT_SEGMENT_ENV")}/cncfci.yml"
+  end 
 
 	def project_list do
     project_names = CncfDashboardApi.YmlReader.GitlabCi.projects_with_yml()
@@ -84,11 +101,17 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
 			# [%{"id" => (idx + 1), 
       case Enum.find_value(project_names, fn(x) -> x["project_name"] == k end) do
         true -> 
-          cncfci_yml = CncfDashboardApi.YmlReader.GitlabCi.getcncfci(v["configuration_repo"]) |> YamlElixir.read_from_string
+
+          Logger.info fn ->
+            "env varible: #{inspect(System.get_env("PROJECT_SEGMENT_ENV"))}"
+          end
+          cncfci_yml = configuration_repo_path(v["configuration_repo"]) |> getcncfci() |> YamlElixir.read_from_string
           display_name = cncfci_yml["project"]["display_name"]
           subtitle = cncfci_yml["project"]["sub_title"]
           project_url = cncfci_yml["project"]["project_url"]
           logo_url = cncfci_yml["project"]["logo_url"]
+          stable_ref = cncfci_yml["project"]["stable_ref"] 
+          head_ref = cncfci_yml["project"]["head_ref"] 
           Logger.info fn ->
             "cncfciyml: #{inspect(cncfci_yml)}"
           end
@@ -97,7 +120,16 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
           subtitle = v["sub_title"]
           project_url = v["project_url"]
           logo_url = v["logo_url"]
+          stable_ref = v["stable_ref"] 
+          head_ref = v["head_ref"] 
       end
+      # global config overwrites the project config
+      if v["display_name"], do: display_name = v["display_name"]
+      if v["sub_title"], do: subtitle = v["sub_title"]
+      if v["project_url"], do: project_url = v["project_url"]
+      if v["logo_url"], do: logo_url = v["logo_url"]
+      if v["stable_ref"], do: stable_ref = v["stable_ref"]
+      if v["head_ref"], do: head_ref = v["head_ref"]
 			[%{"id" => 0, 
         "yml_name" => k, 
         "active" => v["active"],
@@ -109,6 +141,9 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
         "repository_url" => v["repository_url"],
         "configuration_repo" => v["configuration_repo"],
         "timeout" => v["timeout"],
+        "cncf_relation" => v["cncf_relation"],
+        "stable_ref" => stable_ref,
+        "head_ref" => head_ref,
         # "order" => (idx + 1)} | acc] 
         "order" => v["order"]} | acc] 
 		end) 

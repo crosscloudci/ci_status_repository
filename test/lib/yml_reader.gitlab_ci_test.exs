@@ -1,4 +1,5 @@
 require IEx;
+# require Logger;
 defmodule CncfDashboardApi.YmlReader.GitlabCiTest do
   use ExUnit.Case
 
@@ -15,7 +16,10 @@ defmodule CncfDashboardApi.YmlReader.GitlabCiTest do
     |> Enum.reduce([], fn ({{k, v}, idx}, acc) -> 
       case k do
         "prometheus" ->
-          yml = CncfDashboardApi.YmlReader.GitlabCi.getcncfci(v["configuration_repo"])
+          # Logger.info fn ->
+          #   "env variable: #{inspect(System.get_env("PROJECT_SEGMENT_ENV"))}"
+          # end
+          yml = CncfDashboardApi.YmlReader.GitlabCi.configuration_repo_path(v["configuration_repo"]) |> CncfDashboardApi.YmlReader.GitlabCi.getcncfci() 
           assert yml |> is_binary  
         _ ->
       end
@@ -26,6 +30,14 @@ defmodule CncfDashboardApi.YmlReader.GitlabCiTest do
     cloud_list = CncfDashboardApi.YmlReader.GitlabCi.cloud_list()
     assert Enum.find_value(cloud_list, fn(x) -> x["cloud_name"] == "aws" end) 
     assert Enum.find_value(cloud_list, fn(x) -> x["active"] == true end) 
+  end
+
+  test "cncf relation list" do 
+    cncf_relations = CncfDashboardApi.YmlReader.GitlabCi.cncf_relations_list()
+    assert Enum.find_value(cncf_relations, fn(x) -> 
+      x["name"] == "Graduated" &&
+      x["order"] == 1 
+    end) 
   end
 
   @tag :wip
@@ -50,7 +62,10 @@ defmodule CncfDashboardApi.YmlReader.GitlabCiTest do
     assert Enum.find_value(project_list, fn(x) -> x["active"] == true end) 
     assert Enum.find_value(project_list, fn(x) -> x["display_name"] == "CoreDNS" end) 
     assert Enum.find_value(project_list, fn(x) -> x["sub_title"] == "Service Discovery" end) 
+    assert Enum.find_value(project_list, fn(x) -> x["stable_ref"] == "v1.5.0" end) 
+    assert Enum.find_value(project_list, fn(x) -> x["head_ref"] == "master" end) 
     assert Enum.find_value(project_list, fn(x) -> x["yml_gitlab_name"] == "coredns" end) 
+    assert Enum.find_value(project_list, fn(x) -> x["cncf_relation"] == "Graduated" end) 
     assert Enum.find_value(project_list, fn(x) -> x["order"] == 2 end) 
     assert Enum.find_value(project_list, fn(x) -> x["repository_url"] == "https://github.com/coredns/coredns" end) 
     assert Enum.find_value(project_list, fn(x) -> is_number(x["timeout"]) end) 

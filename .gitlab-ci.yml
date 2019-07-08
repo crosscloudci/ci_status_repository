@@ -27,25 +27,29 @@ Dashboard-Backend:
 
 Deploy-Backend:
   stage: Deploy
-  image: crosscloudci/helm:latest
+  image: crosscloudci/helm:v2.10.0
   script:
     - >
       if [ "$BASE_URL" == "https://gitlab.dev.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "master" ]; then
         echo "Deploying $CI_COMMIT_REF_NAME on $BASE_URL"
         export BACKEND_INGRESS="devapi.cncf.ci"
         export TLS="true"
+        export PROJECT_SEGMENT_ENV="integration"
       elif [ "$BASE_URL" == "https://gitlab.cidev.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "integration" ]; then 
         echo "Deploying $CI_COMMIT_REF_NAME on $BASE_URL"
         export BACKEND_INGRESS="cidevapi.cncf.ci"
         export TLS="true"
+        export PROJECT_SEGMENT_ENV="master"
       elif [ "$BASE_URL" == "https://gitlab.staging.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "staging" ]; then 
         echo "Deploying $CI_COMMIT_REF_NAME on $BASE_URL"
         export BACKEND_INGRESS="stagingapi.cncf.ci"
         export TLS="true"
+        export PROJECT_SEGMENT_ENV="staging"
       elif [ "$BASE_URL" == "https://gitlab.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "production" ]; then
         echo "Deploying $CI_COMMIT_REF_NAME on $BASE_URL"
         export BACKEND_INGRESS="productionapi.cncf.ci"
         export TLS="true"
+        export PROJECT_SEGMENT_ENV="production"
       else
         echo "No Matching Environment Could Be Found"
         exit 1
@@ -54,9 +58,10 @@ Deploy-Backend:
     - export KUBECONFIG=/kubeconfig
     - helm init --service-account tiller
     - helm repo add cncf http://cncf.gitlab.io/stable
+    - helm repo update
     # - helm upgrade nginx-"$CI_COMMIT_REF_NAME" --install --force stable/nginx-ingress
     # Purge Delete old db
     - helm delete --purge db-"$CI_COMMIT_REF_NAME"
-    - helm upgrade db-"$CI_COMMIT_REF_NAME" stable/postgresql --install --force --set postgresqlDatabase=backend --set persistence.enabled=false --set service.type=ClusterIP --set image.tag=10.6.0
+    - helm install stable/postgresql --name db-"$CI_COMMIT_REF_NAME" --set postgresqlDatabase=backend --set persistence.enabled=false --set service.type=ClusterIP
     - export POSTGRESQL_PASSWORD=$(kubectl get secret --namespace default db-"$CI_COMMIT_REF_NAME"-postgresql -o jsonpath="{.data.postgresql-password}" | base64 -d)
-    - helm upgrade bck-"$CI_COMMIT_REF_NAME" cncf/backend --install --force --wait --timeout 3600 --set tls="$TLS" --set db.user=postgres --set db.password=$POSTGRESQL_PASSWORD --set db.name=backend --set db.host=db-"$CI_COMMIT_REF_NAME"-postgresql --set db.pool=5 --set api="$BASE_URL"/api/v4 --set token="$GITLAB_TOKEN" --set jwt.issuer="$JWT_ISSUER" --set jwt.key="$JWT_KEY" --set imagePullSecrets="$CI_COMMIT_REF_NAME"secret --set yaml=https://raw.githubusercontent.com/CrossCloudCI/cncf-configuration/"$CI_COMMIT_REF_NAME"/cross-cloud.yml --set ingress.host="$BACKEND_INGRESS" --set ingress.port=4001 --set image.repository="$CI_REGISTRY_IMAGE/backend-$CI_COMMIT_REF_NAME" --set image.tag="$CI_COMMIT_SHA"
+    - helm upgrade bck-"$CI_COMMIT_REF_NAME" cncf/backend --install --force --wait --timeout 3600 --set tls="$TLS" --set db.user=postgres --set db.password=$POSTGRESQL_PASSWORD --set db.name=backend --set db.host=db-"$CI_COMMIT_REF_NAME"-postgresql --set db.pool=5 --set api="$BASE_URL"/api/v4 --set token="$GITLAB_TOKEN" --set jwt.issuer="$JWT_ISSUER" --set jwt.key="$JWT_KEY" --set imagePullSecrets="$CI_COMMIT_REF_NAME"secret --set yaml=https://raw.githubusercontent.com/CrossCloudCI/cncf-configuration/"$CI_COMMIT_REF_NAME"/cross-cloud.yml --set project.segment_env="$PROJECT_SEGMENT_ENV" --set ingress.host="$BACKEND_INGRESS" --set ingress.port=4001 --set image.repository="$CI_REGISTRY_IMAGE/backend-$CI_COMMIT_REF_NAME" --set image.tag="$CI_COMMIT_SHA"
