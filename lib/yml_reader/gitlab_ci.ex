@@ -76,7 +76,7 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
 		yml["projects"] 
 		|> Stream.with_index 
 		|> Enum.reduce([], fn ({{k, v}, idx}, acc) -> 
-      case getcncfci(v["configuration_repo"]) do
+      case configuration_repo_path(v["configuration_repo"]) |> getcncfci() do
         {:error, :not_found} ->
           acc
         _ ->
@@ -84,6 +84,13 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
       end
 		end)
   end
+
+  def configuration_repo_path(configuration_repo) do 
+    # Logger.info fn ->
+    #   "env variable: #{inspect(System.get_env("PROJECT_SEGMENT_ENV"))}"
+    # end
+     "#{configuration_repo}/#{System.get_env("PROJECT_SEGMENT_ENV")}/cncfci.yml"
+  end 
 
 	def project_list do
     project_names = CncfDashboardApi.YmlReader.GitlabCi.projects_with_yml()
@@ -94,7 +101,11 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
 			# [%{"id" => (idx + 1), 
       case Enum.find_value(project_names, fn(x) -> x["project_name"] == k end) do
         true -> 
-          cncfci_yml = CncfDashboardApi.YmlReader.GitlabCi.getcncfci(v["configuration_repo"]) |> YamlElixir.read_from_string
+
+          Logger.info fn ->
+            "env varible: #{inspect(System.get_env("PROJECT_SEGMENT_ENV"))}"
+          end
+          cncfci_yml = configuration_repo_path(v["configuration_repo"]) |> getcncfci() |> YamlElixir.read_from_string
           display_name = cncfci_yml["project"]["display_name"]
           subtitle = cncfci_yml["project"]["sub_title"]
           project_url = cncfci_yml["project"]["project_url"]
@@ -109,7 +120,16 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
           subtitle = v["sub_title"]
           project_url = v["project_url"]
           logo_url = v["logo_url"]
+          stable_ref = v["stable_ref"] 
+          head_ref = v["head_ref"] 
       end
+      # global config overwrites the project config
+      if v["display_name"], do: display_name = v["display_name"]
+      if v["sub_title"], do: subtitle = v["sub_title"]
+      if v["project_url"], do: project_url = v["project_url"]
+      if v["logo_url"], do: logo_url = v["logo_url"]
+      if v["stable_ref"], do: stable_ref = v["stable_ref"]
+      if v["head_ref"], do: head_ref = v["head_ref"]
 			[%{"id" => 0, 
         "yml_name" => k, 
         "active" => v["active"],

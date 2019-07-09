@@ -1,4 +1,5 @@
 require IEx;
+# require Logger;
 defmodule CncfDashboardApi.YmlReader.GitlabCiTest do
   use ExUnit.Case
 
@@ -15,7 +16,10 @@ defmodule CncfDashboardApi.YmlReader.GitlabCiTest do
     |> Enum.reduce([], fn ({{k, v}, idx}, acc) -> 
       case k do
         "prometheus" ->
-          yml = CncfDashboardApi.YmlReader.GitlabCi.getcncfci(v["configuration_repo"])
+          # Logger.info fn ->
+          #   "env variable: #{inspect(System.get_env("PROJECT_SEGMENT_ENV"))}"
+          # end
+          yml = CncfDashboardApi.YmlReader.GitlabCi.configuration_repo_path(v["configuration_repo"]) |> CncfDashboardApi.YmlReader.GitlabCi.getcncfci() 
           assert yml |> is_binary  
         _ ->
       end

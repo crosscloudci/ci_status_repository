@@ -38,7 +38,7 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     pipeline_monitor_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.PipelineMonitor, :count, :id)  
     assert 1 = pipeline_monitor_count  
     assert_receive %Phoenix.Socket.Broadcast{ topic: "dashboard:*", 
-      event: "new_cross_cloud_call", payload: %{reply: %{dashboard: dashboard}}}
+      event: "new_cross_cloud_call", payload: %{reply: dashboard}}
     %{clouds: _, projects: projects} =dashboard
     head_badge = projects 
                  |> List.first 
@@ -75,7 +75,7 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     pipeline_monitor_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.PipelineMonitor, :count, :id)  
     assert 1 = pipeline_monitor_count  
     assert_receive %Phoenix.Socket.Broadcast{ topic: "dashboard:*", 
-      event: "new_cross_cloud_call", payload: %{reply: %{dashboard: dashboard}}}
+      event: "new_cross_cloud_call", payload: %{reply: dashboard}}
     %{clouds: _, projects: projects} =dashboard
     head_badge = projects 
                  |> List.first 
@@ -135,10 +135,10 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm.id)
     CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm2.id)
     assert_receive %Phoenix.Socket.Broadcast{ topic: "dashboard:*", 
-      event: "new_cross_cloud_call", payload: %{reply: %{dashboard: dashboard}}}
+      event: "new_cross_cloud_call", payload: %{reply: dashboard}}
     %{clouds: _, projects: projects} =dashboard
     assert_receive %Phoenix.Socket.Broadcast{ topic: "dashboard:*", 
-      event: "new_cross_cloud_call", payload: %{reply: %{dashboard: dashboard2}}}
+      event: "new_cross_cloud_call", payload: %{reply: dashboard2}}
     %{clouds: _, projects: projects2} =dashboard2
     # CncfDashboardApi.Endpoint.subscribe(self, "dashboard:*")
     # CncfDashboardApi.GitlabMonitor.upsert_pipeline_monitor(skpm2.id)
@@ -213,7 +213,7 @@ defmodule CncfDashboardApi.GitlabMonitorTest do
     pipeline_monitor_count = CncfDashboardApi.Repo.aggregate(CncfDashboardApi.PipelineMonitor, :count, :id)  
     assert 1 = pipeline_monitor_count  
     assert_receive %Phoenix.Socket.Broadcast{ topic: "dashboard:*", 
-      event: "new_cross_cloud_call", payload: %{reply: %{dashboard: dashboard}}}
+      event: "new_cross_cloud_call", payload: %{reply: dashboard}}
     %{clouds: _, projects: projects} =dashboard
     head_badge = projects 
                  |> List.first 
