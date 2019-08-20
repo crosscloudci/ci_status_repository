@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.name }}
+  name: {{ .Release.Name }} 
   labels:
     heritage: {{ .Release.Service | quote }}
     release: {{ .Release.Name | quote }}
@@ -11,16 +11,16 @@ metadata:
     kubernetes.io/cluster-service: "true"
     kubernetes.io/name: "Backend"
     {{- else }}
-    app: {{ .Values.name }}
+    app: {{ .Release.Name }} 
     {{- end }}
 spec:
   selector:
   {{- if .Values.isClusterService }}
-    k8s-app: {{ .Chart.Name | quote }}
+    k8s-app: {{ .Release.Name }}
   {{- else }}
-    app: {{ .Values.name }}
+    app: {{ .Release.Name }}
   {{- end }}
   ports:
-  - name: backend
+  - name: {{ .Release.Name }}
     port: 4001
   type: {{ .Values.serviceType }}

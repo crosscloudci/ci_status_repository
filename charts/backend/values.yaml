@@ -6,8 +6,10 @@ replicaCount: 1
 
 name: backend
 
+tls: false
+
 image:
-  repository: registry.cncf.ci/cncf/cncf_ci_dashboard_backend
+  repository: MUST BE SET
   tag: "latest"
   secret: SET DOCKER SECRET
   pullPolicy: Always
@@ -24,13 +26,18 @@ ingress:
   host: Set External Domain
   port: Set Forwarding port
 
+jwt:
+  issuer: Set JWT Issuer
+  key: Set JWT Key
+
+project:
+  segment_env: Set Project Segment ENV
+
+
 resources:
-  limits:
-    cpu: 2000m
-    memory: 2028Mi
   requests:
-    cpu: 2000m
-    memory: 2028Mi
+    cpu: 200m
+    memory: 200Mi
 
 # isClusterService specifies whether chart should be deployed as cluster-service or normal k8s app.
 isClusterService: true

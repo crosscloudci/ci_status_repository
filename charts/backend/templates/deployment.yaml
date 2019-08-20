@@ -1,42 +1,41 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: {{ .Values.name }}
+  name: {{ .Release.Name }}
   labels:
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
     {{- if .Values.isClusterService }}
-    k8s-app: {{ .Chart.Name | quote }}
+    k8s-app: {{ .Release.Name }}
     kubernetes.io/cluster-service: "true"
     kubernetes.io/name: "Backend"
     {{- else }}
-    app: {{ .Values.name }}
+    app: {{ .Release.Name }}
     {{- end }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
   selector:
     matchLabels:
       {{- if .Values.isClusterService }}
-      k8s-app: {{ .Chart.Name | quote }}
+      k8s-app: {{ .Release.Name }}
       {{- else }}
-      app: {{ .Values.name }}
+      app: {{ .Release.Name }}
       {{- end }}
   template:
     metadata:
       labels:
         {{- if .Values.isClusterService }}
-        k8s-app: {{ .Chart.Name | quote }}
+        k8s-app: {{ .Release.Name }}
         {{- else }}
-        app: {{ .Values.name }}
+        app: {{ .Release.Name }}
         {{- end }}
-        release: {{ .Release.Name | quote }}
-      annotations:
-        {{- if .Values.isClusterService }}
-        scheduler.alpha.kubernetes.io/critical-pod: ''
-        scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
-        {{- end }}
+        release: {{ .Chart.Name | quote }}
     spec:
       containers:
-      - name: "{{ .Values.name }}"
+      - name: {{ .Release.Name }} 
         env:
         - name: GITLAB_API
           value: {{ .Values.api }}
@@ -54,11 +53,19 @@ spec:
           value: {{ .Values.db.host }}
         - name: DB_POOL_SIZE
           value: "{{ .Values.db.pool }}"
+        - name: JWT_ISSUER
+          value: {{ .Values.jwt.issuer }}
+        - name: JWT_KEY
+          value: {{ .Values.jwt.key }}
+        - name: PROJECT_SEGMENT_ENV
+          value: {{ .Values.project.segment_env }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+        resources:
+{{ toYaml .Values.resources | indent 10 }}
         ports:
         - containerPort: 4001
-          name: backend
+          name: {{ .Release.Name }}
         livenessProbe:
           httpGet:
             path: /
