@@ -1,9 +1,9 @@
 # CNCF Dashboard API server
 
-**Prerequisites:** Erlang 20.1, Elixir 1.5.1, Ruby 2.4.6, Node v7.6.0
+**Prerequisites:** Erlang 20.1, Elixir 1.5.1, Ruby 2.4.6
 
 ## Prerequisites
-You can install Erlang, Elixir, Ruby, and Node using a version manager like [kerl](https://github.com/kerl/kerl), [kiex](https://github.com/taylor/kiex), [rvm](https://github.com/rvm/rvm), or [nvm](https://github.com/creationix/nvm).
+You can install Erlang, Elixir, Ruby using a version manager like [kerl](https://github.com/kerl/kerl), [kiex](https://github.com/taylor/kiex), [rvm](https://github.com/rvm/rvm)
 
 # e.g.:
 
@@ -43,15 +43,6 @@ source /etc/profile.d/rvm.sh
 rvm install 2.2.1
 ```
 
-# Install nvm
-```
-curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
-```
-
-# Install node
-```
-nvm install 7.6.0
-```
 
 # Create an environment file and test db file (.env and test.secret.exs) using the example files e.g.
 ```
@@ -69,7 +60,6 @@ vim config/test.secret.exs.example
     . .env; mix gitlab_data.load_clouds
     . .env; mix gitlab_data.load_projects
     ```
-  * Install Node.js dependencies with `npm install`
   * Install gitlab lib deps `cd lib/gitlab ; bundle install ; cd ../..`
   * Start Phoenix endpoint with `. .env ; mix phoenix.server`
 
