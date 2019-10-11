@@ -15,7 +15,6 @@ RUN mix local.hex --force &&  \
     mix deps.get && \
     mix compile
 
-RUN npm install
 RUN gem install bundler
 
 RUN bundle install --gemfile /backend/lib/gitlab/Gemfile
