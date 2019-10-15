@@ -1,6 +1,6 @@
 # CNCF Dashboard API server
 
-**Prerequisites:** Erlang 20.1, Elixir 1.5.1, Ruby 2.4.6
+**Prerequisites:** Erlang 20.1, Elixir 1.9, Ruby 2.4.6
 
 ## Prerequisites
 You can install Erlang, Elixir, Ruby using a version manager like [kerl](https://github.com/kerl/kerl), [kiex](https://github.com/taylor/kiex), [rvm](https://github.com/rvm/rvm)
@@ -29,7 +29,7 @@ kerl install 20.1 20.1
 
 # Install elixir
 ```
-kiex install 1.5.1
+kiex install 1.9
 ```
 
 # Install rvm 

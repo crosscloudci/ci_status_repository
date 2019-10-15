@@ -160,6 +160,11 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
   """
   def upsert_ref_monitor(pipeline_monitor, target_pm, target_pl, pipeline_order, test_env, arch) do
     #TODO remove pipeline_monitor
+    derived_arch = nil 
+    derived_test_env = nil
+    kubernetes_release_type = nil
+    ref = nil
+    sha = nil
     Logger.info fn ->
       "upsert_ref_monitor pipeline_monitor, target_pm, target_pl, pipeline_order: #{inspect(pipeline_monitor)}, #{inspect(target_pm)},
       #{inspect(target_pl)}, #{inspect(pipeline_order)}"

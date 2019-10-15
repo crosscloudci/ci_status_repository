@@ -346,6 +346,9 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
     Logger.info fn ->
       "project_rows_to_columns #{inspect({"deploy", pm, ref_monitors})}"
     end
+    cp_status = nil
+    status = nil
+    deploy_url = nil
     dashboard_badge_statuses = []
     packet = Repo.get_by(CncfDashboardApi.Clouds, cloud_name: "packet")
     build_pm = CncfDashboardApi.GitlabMonitor.PipelineMonitor.build_pipeline_monitor_by_deploy_pipeline_monitor(pm)
@@ -432,6 +435,7 @@ defmodule CncfDashboardApi.GitlabMonitor.PMToDashboard do
       "columns_to_timedout_columns #{inspect({"deploy", ref_monitors, dashboard_badge_statuses})}"
     end
 
+    cp_status = nil
     # set all of the badges for the running ref monitor (rows) to failed
     timedout_dashboard_badge_statuses = ref_monitors |> Enum.reduce([], fn(rm, acc) ->
     # timedout_dashboard_badge_statuses = dashboard_badge_statuses |> Enum.reduce([], fn(dbs, acc) ->

@@ -4,7 +4,7 @@ defmodule CncfDashboardApi.Mixfile do
   def project do
     [app: :cncf_dashboard_api,
      version: "0.0.1",
-     elixir: "~> 1.2",
+     elixir: "~> 1.9",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix, :gettext] ++ Mix.compilers,
      build_embedded: Mix.env == :prod,
@@ -29,14 +29,14 @@ defmodule CncfDashboardApi.Mixfile do
   #
   # Type `mix help deps` for examples and options.
   defp deps do
-    [{:phoenix, "~> 1.4.9"},
+    [{:phoenix, "~> 1.3.4"},
      {:phoenix_pubsub, "~> 1.0"},
      {:phoenix_ecto, "~> 3.0"},
      {:postgrex, ">= 0.0.0"},
      {:phoenix_html, "~> 2.6"},
-     {:phoenix_live_reload, "~> 1.0", only: :dev},
+     {:phoenix_live_reload, "~> 1.0.0", only: :dev},
      {:gettext, "~> 0.11"},
-     {:plug_cowboy, "~> 2.0"},
+     {:plug_cowboy, "~> 1.0"},
      {:mix_test_watch, "~> 0.3", only: :dev, runtime: false},
      {:quantum, ">= 2.1.0"},
      {:sidetask, "~> 1.1"},

@@ -128,15 +128,15 @@ RUN apk -U upgrade && \
     apk --update --no-cache add inotify-tools ncurses-libs git make g++ wget ca-certificates openssl curl bash \
     && \
     update-ca-certificates --fresh && \
-    curl -sSL https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s  
+    curl -sSL https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s
 
 # Add local binaries to PATH
 ENV PATH $PATH:/root/.kiex/builds/elixir-git/bin
 
 RUN source $HOME/.kiex/scripts/kiex && \
-    kiex install 1.5.1 && \
-    kiex use 1.5.1 && \
-    kiex default 1.5.1 
+    kiex install 1.9 && \
+    kiex use 1.9 && \
+    kiex default 1.9
 
 
 CMD ["/bin/bash"]

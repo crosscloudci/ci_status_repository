@@ -93,6 +93,12 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
   end 
 
 	def project_list do
+    logo_url = ""
+    display_name = ""
+    subtitle = ""
+    project_url = ""
+    stable_ref = ""
+    head_ref = ""
     project_names = CncfDashboardApi.YmlReader.GitlabCi.projects_with_yml()
 		yml = CncfDashboardApi.YmlReader.GitlabCi.get() |> YamlElixir.read_from_string 
 		yml["projects"] 
