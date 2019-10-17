@@ -79,7 +79,11 @@ defmodule CncfDashboardApi.DataMigrations do
               # Logger.info fn ->
               #   "Data Migration Source map #{inspect source_map}"
               # end
-              {sp_found, sp_record} = %unquote(model){id: source_map["id"]} |> find_by(:id)
+              {sp_found, sp_record} = {:not_found ,  %unquote(model){}}
+
+              if source_map["id"] do
+                {sp_found, sp_record} = %unquote(model){id: source_map["id"]} |> find_by(:id)
+              end
             end
           end
         ) 
