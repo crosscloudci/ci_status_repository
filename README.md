@@ -40,7 +40,7 @@ source /etc/profile.d/rvm.sh
 
 # Install ruby 
 ```
-rvm install 2.2.1
+rvm install 2.4.6
 ```
 
 
@@ -52,6 +52,7 @@ vim config/test.secret.exs.example
 
 ## Build & start the Dashboard API server
 
+  * if you haven't already setup environment with by running `setup.sh` if it doesn't work `cat setup.sh` and run those commands
   * Install dependencies with `mix deps.get`
   * Compile elixir application with `mix do compile`
   * Create and migrate your database with `mix ecto.create && mix ecto.migrate`
