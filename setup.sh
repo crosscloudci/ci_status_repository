@@ -1,2 +1,2 @@
 . 20.1/activate
-kiex use 1.9
+kiex use 1.5.1

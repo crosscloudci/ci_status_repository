@@ -100,13 +100,11 @@ defmodule CncfDashboardApi.GitlabMigrations do
     Logger.info fn ->
       "upsert_missing_target_project_pipeline: p_record : #{inspect(p_record)}"
     end
-
-    p_found = true
-
     if is_nil(p_record) do
       p_found = false
+    else
+      p_found = true
     end
-
     if p_found do
       {skp_found, skp_record} = %CncfDashboardApi.SourceKeyProjects{new_id: p_record.id } |> find_by([:new_id])
       Logger.info fn ->
@@ -132,8 +130,6 @@ defmodule CncfDashboardApi.GitlabMigrations do
 
   def upsert_projects(map) do
     project_map_orig = map
-    project_map = project_map_orig
-
     if Mix.env == :test do
       # ccp = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == "cross-cloud" end)
       # Needs to return at least one project with pipelines
@@ -155,6 +151,8 @@ defmodule CncfDashboardApi.GitlabMigrations do
       # take_project_map =  Enum.take(project_map_orig, 5)
       # project_map = take_project_map ++ [ccp]
       project_map = take_project_map
+    else
+      project_map = project_map_orig 
     end
 
     upsert_count = CncfDashboardApi.DataMigrations.upsert_from_map(
@@ -215,10 +213,10 @@ defmodule CncfDashboardApi.GitlabMigrations do
 
   def upsert_all_pipelines do
     source_key_projects_orig = CncfDashboardApi.Repo.all(from skp in CncfDashboardApi.SourceKeyProjects) 
-    source_key_projects = source_key_projects_orig
-
     if Mix.env == :test do
       source_key_projects =  Enum.take(source_key_projects_orig, 2) # limited in test mode for speed purposes.
+    else
+      source_key_projects = source_key_projects_orig
     end
     project_ids = Enum.map(source_key_projects, fn(%{source_id: id}) -> %{"id" => String.to_integer(id)}end) 
     # Logger.info fn ->
@@ -231,12 +229,11 @@ defmodule CncfDashboardApi.GitlabMigrations do
   def upsert_pipeline_jobs(source_project_id, source_pipeline_id) do 
 
     pipeline_job_map_orig = GitLabProxy.get_gitlab_pipeline_jobs(source_project_id, source_pipeline_id)
-    pipeline_job_map = pipeline_job_map_orig
-
     if Mix.env == :test do
       pipeline_job_map =  Enum.take(pipeline_job_map_orig, 4) # limited in test mode for speed purposes. 
+    else
+      pipeline_job_map = pipeline_job_map_orig
     end
-
     skp = CncfDashboardApi.Repo.get_by(CncfDashboardApi.SourceKeyProjects, 
                                        source_id: source_project_id |> Integer.to_string) 
     skpl = CncfDashboardApi.Repo.get_by(CncfDashboardApi.SourceKeyPipelines, 

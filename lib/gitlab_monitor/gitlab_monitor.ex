@@ -189,9 +189,9 @@ defmodule CncfDashboardApi.GitlabMonitor do
                                                                  cloud: monitor.cloud,
                                                                  child_pipeline: monitor.child_pipeline,
                                                                  target_project_name: monitor.target_project_name,
-                                                                 kubernetes_release_type: monitor.kubernetes_release_type,
-                                                                 test_env: monitor.kubernetes_release_type,
-                                                                 provision_pipeline_id: monitor.provision_pipeline_id,
+                                                                 kubernetes_release_type: kubernetes_release_type,
+                                                                 test_env: kubernetes_release_type,
+                                                                 provision_pipeline_id: provision_pipeline_id,
                                                                  arch: monitor.arch,
                                                                  internal_build_pipeline_id: target_source_key_pipeline.new_id
                                                                })

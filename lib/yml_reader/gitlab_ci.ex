@@ -52,7 +52,8 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
     |> Stream.with_index 
     |> Enum.reduce([], fn ({{k, v}, idx}, acc) -> 
       # [%{"id" => (idx + 1), 
-      [%{"cloud_name" => k, 
+      [%{"id" => 0, 
+        "cloud_name" => k, 
         "active" => v["active"],
         "display_name" => v["display_name"],
         # "order" => (idx + 1)} | acc] 
@@ -92,12 +93,6 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
   end 
 
 	def project_list do
-    logo_url = ""
-    display_name = ""
-    subtitle = ""
-    project_url = ""
-    stable_ref = ""
-    head_ref = ""
     project_names = CncfDashboardApi.YmlReader.GitlabCi.projects_with_yml()
 		yml = CncfDashboardApi.YmlReader.GitlabCi.get() |> YamlElixir.read_from_string 
 		yml["projects"] 

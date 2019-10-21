@@ -65,35 +65,38 @@ defmodule CncfDashboardApi.DataMigrations do
         #     educational_institution = EducationalInstitution.find_or_initialize_by(id: lkp.new_id)
         #
 
-        # {sp_found, sp_record} = %CncfDashboardApi.Projects{id: (skp_record.new_id)} |> find_by(:id)
+        # {sp_found, sp_record} = %CncfDashboardApi.Projects{id: (skp_record.new_id || -1)} |> find_by(:id)
         # Logger.info fn ->
         #   "Data migration: Using a key model: #{inspect unquote(key_model)} for #{inspect unquote(model)}"
         # end
         unquote(
           if key_model do 
             quote do
-              {sp_found, sp_record} = case skp_found do
-                :not_found ->
-                {sp_found, sp_record} = {:not_found ,  %unquote(model){}}
-                :found ->
-                {sp_found, sp_record} = %unquote(model){id: (skp_record.new_id)} |> find_by(:id)
-                _ ->
-                {sp_found, sp_record} = {:not_found ,  %unquote(model){}}
-              end
+              {sp_found, sp_record} = %unquote(model){id: (skp_record.new_id || -1)} |> find_by(:id)
             end
           else
             quote do
               # Logger.info fn ->
               #   "Data Migration Source map #{inspect source_map}"
               # end
-              {sp_found, sp_record} = {:not_found ,  %unquote(model){}}
-
-              if source_map["id"] do
-                {sp_found, sp_record} = %unquote(model){id: source_map["id"]} |> find_by(:id)
-              end
+              {sp_found, sp_record} = %unquote(model){id: source_map["id"]} |> find_by(:id)
             end
           end
         ) 
+
+        # Logger.info fn ->
+        #   "Datamigration: Using a key model"
+        # end
+
+        case sp_found do
+          :not_found ->
+          # Logger.info fn ->
+          #   "upsert: sp_found not found"
+          # end
+          # sp_record = %CncfDashboardApi.Projects{}
+          sp_record = %unquote(model){}
+          _ -> :ok
+        end
 
         # 6) populate the local record with the rest of the information from the source (don't save yet)
         #     # fill in record from legacy record
@@ -111,7 +114,7 @@ defmodule CncfDashboardApi.DataMigrations do
         # 2. Expands into this: %{name: source_project["name"], description: source_project["desc1"]}   
         # 3. Which expands into this: %{name: "kubernetes", description: "Container project"}
         # build the destination changeset
-        cs1 = Enum.reduce(unquote(column_map), %{returning: true}, 
+        cs1 = Enum.reduce(unquote(column_map), %{}, 
                                   fn (x,acc) -> 
                                     Map.put(acc, elem(x,1), source_map[elem(x,0) 
                                     |> Atom.to_string]) 
@@ -125,21 +128,19 @@ defmodule CncfDashboardApi.DataMigrations do
         # 7) save the local record
         #     educational_institution.save!
 
-        {sp_found, sp_record} = case sp_found do
+        case sp_found do
           :found ->
             # {_, sp_record} = CncfDashboardApi.Repo.update(changeset) 
-            {sp_found, sp_record} = unquote(repo).update(changeset) 
+            {_, sp_record} = unquote(repo).update(changeset) 
             # Logger.info fn ->
             #   ":found data migration result: #{inspect(sp_record)}"
             # end
-            # {sp_found, sp_record}
           :not_found ->
             # {_, sp_record} = CncfDashboardApi.Repo.insert(changeset) 
-            {sp_found, sp_record} = unquote(repo).insert(changeset) 
+            {_, sp_record} = unquote(repo).insert(changeset) 
             # Logger.info fn ->
             #   ":not_found data migration result: #{inspect(sp_record)}"
             # end
-            # {sp_found, sp_record}
         end
 
         # 8) save the uniquekey record
@@ -148,7 +149,6 @@ defmodule CncfDashboardApi.DataMigrations do
         #     lkp.save!
 
         # changeset = CncfDashboardApi.SourceKeyProjects.changeset(skp_record, %{new_id: sp_record.id})
-        
         unquote(
           if key_model do 
             quote do

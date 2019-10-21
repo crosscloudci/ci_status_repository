@@ -11,10 +11,11 @@ defmodule CncfDashboardApi.Factory do
     }
   end
   def dashboard_badge_status_factory do
-    cloud = insert(:cloud)
     first_cloud = CncfDashboardApi.Repo.all(CncfDashboardApi.Clouds) |> List.first
     if first_cloud do
       cloud = first_cloud
+    else
+      cloud = insert(:cloud)
     end
     %CncfDashboardApi.DashboardBadgeStatus{
       # name: "Kubernetes",
@@ -34,10 +35,11 @@ defmodule CncfDashboardApi.Factory do
 
 	end
   def pipeline_job_factory do
-      cloud = insert(:cloud)
     first_cloud = CncfDashboardApi.Repo.all(CncfDashboardApi.Clouds) |> List.first
     if first_cloud do
       cloud = first_cloud
+    else
+      cloud = insert(:cloud)
     end
     %CncfDashboardApi.PipelineJobs{
       name: "Kubernetes",
@@ -59,10 +61,11 @@ defmodule CncfDashboardApi.Factory do
 	end
 
   def e2e_pipeline_job_factory do
-    cloud = insert(:cloud)
     first_cloud = CncfDashboardApi.Repo.all(CncfDashboardApi.Clouds) |> List.first
     if first_cloud do
       cloud = first_cloud
+    else
+      cloud = insert(:cloud)
     end
     %CncfDashboardApi.PipelineJobs{
       name: "e2e",
@@ -72,10 +75,11 @@ defmodule CncfDashboardApi.Factory do
     }
 	end
   def app_deploy_pipeline_job_factory do
-    cloud = insert(:cloud)
     first_cloud = CncfDashboardApi.Repo.all(CncfDashboardApi.Clouds) |> List.first
     if first_cloud do
       cloud = first_cloud
+    else
+      cloud = insert(:cloud)
     end
     %CncfDashboardApi.PipelineJobs{
       name: "App-Deploy",
@@ -85,10 +89,11 @@ defmodule CncfDashboardApi.Factory do
     }
   end
   def k8_pipeline_job_factory do
-    cloud = insert(:cloud)
     first_cloud = CncfDashboardApi.Repo.all(CncfDashboardApi.Clouds) |> List.first
     if first_cloud do
       cloud = first_cloud
+    else
+      cloud = insert(:cloud)
     end
     %CncfDashboardApi.PipelineJobs{
       name: "Kubernetes-Provisioning",

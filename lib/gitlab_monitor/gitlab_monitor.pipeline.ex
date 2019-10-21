@@ -61,11 +61,11 @@ defmodule CncfDashboardApi.GitlabMonitor.Pipeline do
   Returns `{%PipelineMonitor, %Pipelines}`
   """
  def target_pipeline_info(pipeline_monitor, pipeline) do
-  target_pm = nil
-  target_pl = nil
-   if (pipeline_monitor.pipeline_type == "deploy") || (pipeline_monitor.pipeline_type == "provision") do
+   if (pipeline_monitor.pipeline_type == "deploy") ||
+    (pipeline_monitor.pipeline_type == "provision") do
       target_pm = CncfDashboardApi.GitlabMonitor.PipelineMonitor.build_pipeline_monitor_by_deploy_pipeline_monitor(pipeline_monitor)
-      target_pl = Repo.all(from pm in CncfDashboardApi.Pipelines, where: pm.id == ^pipeline_monitor.internal_build_pipeline_id ) |> List.first
+      target_pl = Repo.all(from pm in CncfDashboardApi.Pipelines, 
+                           where: pm.id == ^pipeline_monitor.internal_build_pipeline_id ) |> List.first
 
       if is_nil(target_pm) do
         Logger.error fn ->
@@ -102,8 +102,6 @@ defmodule CncfDashboardApi.GitlabMonitor.Pipeline do
   Returns `{%PipelineMonitor, %Pipelines}`
   """
  def provision_pipeline_info(pipeline_monitor, pipeline) do
-  provision_pm = nil
-  provision_pl = nil
    case pipeline_monitor.pipeline_type do
      "deploy" ->
       provision_pm = CncfDashboardApi.GitlabMonitor.PipelineMonitor.provision_pipeline_monitor_by_deploy_pipeline_monitor(pipeline_monitor)
