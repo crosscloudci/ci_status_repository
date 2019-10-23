@@ -131,10 +131,7 @@ defmodule CncfDashboardApi.GitlabMigrations do
 	end
 
   def upsert_projects(map) do
-    project_map_orig = map
-    project_map = project_map_orig
-
-    if Mix.env == :test do
+    project_map = if Mix.env == :test do
       # ccp = GitLabProxy.get_gitlab_projects |> Enum.find(fn(x) -> x["name"] == "cross-cloud" end)
       # Needs to return at least one project with pipelines
       # test_project_map = project_map_orig |> Enum.reduce([], fn(x, acc) -> 
@@ -151,10 +148,12 @@ defmodule CncfDashboardApi.GitlabMigrations do
       #   end
       # end)
       # take_project_map =  Enum.take(test_project_map, 3)
-      take_project_map =  Enum.take(project_map_orig, 2)
       # take_project_map =  Enum.take(project_map_orig, 5)
       # project_map = take_project_map ++ [ccp]
-      project_map = take_project_map
+      # project_map = take_project_map
+      Enum.take(map, 2)
+    else
+      map
     end
 
     upsert_count = CncfDashboardApi.DataMigrations.upsert_from_map(
