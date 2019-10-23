@@ -61,9 +61,7 @@ defmodule CncfDashboardApi.GitlabMonitor.Pipeline do
   Returns `{%PipelineMonitor, %Pipelines}`
   """
  def target_pipeline_info(pipeline_monitor, pipeline) do
-  target_pm = nil
-  target_pl = nil
-   if (pipeline_monitor.pipeline_type == "deploy") || (pipeline_monitor.pipeline_type == "provision") do
+  {target_pm,target_pl} = if (pipeline_monitor.pipeline_type == "deploy") || (pipeline_monitor.pipeline_type == "provision") do
       target_pm = CncfDashboardApi.GitlabMonitor.PipelineMonitor.build_pipeline_monitor_by_deploy_pipeline_monitor(pipeline_monitor)
       target_pl = Repo.all(from pm in CncfDashboardApi.Pipelines, where: pm.id == ^pipeline_monitor.internal_build_pipeline_id ) |> List.first
 
@@ -80,12 +78,14 @@ defmodule CncfDashboardApi.GitlabMonitor.Pipeline do
       Logger.info fn ->
         " target_pipeline_info deploy target_pm: #{inspect(target_pm)}"
       end
+
+      {target_pm,target_pl}
     else
       Logger.info fn ->
         " target_pipeline_info build target_pm: #{inspect(pipeline_monitor)}"
       end
-      target_pm = pipeline_monitor
-      target_pl = pipeline
+
+      {pipeline_monitor, pipeline}
     end
     {target_pm, target_pl}
  end
@@ -102,9 +102,7 @@ defmodule CncfDashboardApi.GitlabMonitor.Pipeline do
   Returns `{%PipelineMonitor, %Pipelines}`
   """
  def provision_pipeline_info(pipeline_monitor, pipeline) do
-  provision_pm = nil
-  provision_pl = nil
-   case pipeline_monitor.pipeline_type do
+  {provision_pm, provision_pl } = case pipeline_monitor.pipeline_type do
      "deploy" ->
       provision_pm = CncfDashboardApi.GitlabMonitor.PipelineMonitor.provision_pipeline_monitor_by_deploy_pipeline_monitor(pipeline_monitor)
       provision_pl = Repo.all(from pm in CncfDashboardApi.Pipelines, 
@@ -121,16 +119,20 @@ defmodule CncfDashboardApi.GitlabMonitor.Pipeline do
       Logger.info fn ->
         " provision_pipeline_info deploy -> provision_pm: #{inspect(provision_pm)}"
       end
+      {provision_pm, provision_pl}
     "provision" -> 
       Logger.info fn ->
         " provision_pipeline_info provision -> provision pm: #{inspect(pipeline_monitor)}"
       end
       provision_pm = pipeline_monitor
       provision_pl = pipeline
+
+      {pipeline_monitor, pipeline }
      _ ->
       Logger.error fn ->
         " provision_pipeline_info A build pipeline monitor will not ever refer to a provision pm: #{inspect(pipeline_monitor)}"
       end
+      {nil, nil}
     end
     {provision_pm, provision_pl}
  end

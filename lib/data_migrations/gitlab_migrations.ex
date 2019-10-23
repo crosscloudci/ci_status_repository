@@ -101,10 +101,10 @@ defmodule CncfDashboardApi.GitlabMigrations do
       "upsert_missing_target_project_pipeline: p_record : #{inspect(p_record)}"
     end
 
-    p_found = true
-
-    if is_nil(p_record) do
-      p_found = false
+    p_found = if is_nil(p_record) do
+      false
+    else
+      true
     end
 
     if p_found do

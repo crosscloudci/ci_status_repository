@@ -160,28 +160,26 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
   """
   def upsert_ref_monitor(pipeline_monitor, target_pm, target_pl, pipeline_order, test_env, arch) do
     #TODO remove pipeline_monitor
-    derived_arch = nil 
-    derived_test_env = nil
-    kubernetes_release_type = nil
-    ref = nil
-    sha = nil
     Logger.info fn ->
       "upsert_ref_monitor pipeline_monitor, target_pm, target_pl, pipeline_order: #{inspect(pipeline_monitor)}, #{inspect(target_pm)},
       #{inspect(target_pl)}, #{inspect(pipeline_order)}"
     end
-    case pipeline_monitor.pipeline_type do
+
+    {derived_arch, derived_test_env, kubernetes_release_type, ref, sha} = case pipeline_monitor.pipeline_type do
       #TODO Get the ref (or status?) dynamically based on pipeline_monitor type
       # if build -> ref comes from target pipeline
         # if provision, ref comes from a retrieved build pipeline
         # if deploy ref comes from target pipeline
       "build" ->
-        # loop through all ref monitors and update the builds (for all drop downs)
-        kubernetes_release_type = test_env 
+         # loop through all ref monitors and update the builds (for all drop downs)
+        kubernetes_release_type = test_env
         # there is no test_env for builds.  set to passed env
         derived_test_env = test_env
-        derived_arch = arch 
+        derived_arch = arch
         ref = target_pl.ref
         sha = target_pl.sha
+
+        {derived_arch, derived_test_env, kubernetes_release_type, ref, sha}
       "provision" ->
         #  kubernetes release type is either the regular release type on a provision
         # project monitor or the release type on its build (kubernetes) project monitor
@@ -192,6 +190,8 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
           where: pm1.id == ^pipeline_monitor.internal_build_pipeline_id ) |> List.first
         ref = build_pl.ref
         sha = build_pl.sha
+
+        {derived_arch, derived_test_env, kubernetes_release_type, ref, sha}
       "deploy" ->
         provision_pm = CncfDashboardApi.GitlabMonitor.PipelineMonitor.provision_pipeline_monitor_by_deploy_pipeline_monitor(pipeline_monitor)
         Logger.info fn ->
@@ -204,8 +204,10 @@ defmodule CncfDashboardApi.GitlabMonitor.Dashboard do
           where: pm1.id == ^pipeline_monitor.internal_build_pipeline_id ) |> List.first
         ref = build_pl.ref
         sha = build_pl.sha
+
+        {derived_arch, derived_test_env, kubernetes_release_type, ref, sha}
       _ ->
-        :ok
+        {nil, nil, nil, nil, nil}
     end
     {rm_found, rm_record} = %CncfDashboardApi.RefMonitor{project_id: target_pm.project_id,
       release_type: target_pm.release_type, kubernetes_release_type: kubernetes_release_type, test_env: derived_test_env, arch: derived_arch} 
