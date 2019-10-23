@@ -21,7 +21,7 @@ defmodule CncfDashboardApi.GitlabMigrations do
                                                 |> List.first
                                    
       if local_cloud do  
-        [%{x | "id" => local_cloud.id} | acc] 
+        [Map.put(x, :id, local_cloud.id) | acc]
       else
         [x|acc]
       end
@@ -55,7 +55,7 @@ defmodule CncfDashboardApi.GitlabMigrations do
                                                 |> List.first
                                    
       if local_project do  
-        [%{x | "id" => local_project.id} | acc] 
+        [Map.put(x, :id, local_project.id) | acc]
       else
         acc
       end
