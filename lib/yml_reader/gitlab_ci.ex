@@ -92,17 +92,12 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
   end 
 
 	def project_list do
-    logo_url = ""
-    display_name = ""
-    subtitle = ""
-    project_url = ""
-    stable_ref = ""
-    head_ref = ""
     project_names = CncfDashboardApi.YmlReader.GitlabCi.projects_with_yml()
 		yml = CncfDashboardApi.YmlReader.GitlabCi.get() |> YamlElixir.read_from_string 
 		yml["projects"] 
 		|> Stream.with_index 
 		|> Enum.reduce([], fn ({{k, v}, idx}, acc) -> 
+
 			# [%{"id" => (idx + 1), 
       case Enum.find_value(project_names, fn(x) -> x["project_name"] == k end) do
         true -> 
@@ -129,12 +124,12 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
           head_ref = v["head_ref"] 
       end
       # global config overwrites the project config
-      if v["display_name"], do: display_name = v["display_name"]
-      if v["sub_title"], do: subtitle = v["sub_title"]
-      if v["project_url"], do: project_url = v["project_url"]
-      if v["logo_url"], do: logo_url = v["logo_url"]
-      if v["stable_ref"], do: stable_ref = v["stable_ref"]
-      if v["head_ref"], do: head_ref = v["head_ref"]
+      display_name = if v["display_name"], do: display_name = v["display_name"]
+      subtitle = if v["sub_title"], do: subtitle = v["sub_title"]
+      project_url = if v["project_url"], do: project_url = v["project_url"]
+      logo_url = if v["logo_url"], do: logo_url = v["logo_url"]
+      stable_ref = if v["stable_ref"], do: stable_ref = v["stable_ref"]
+      head_ref = if v["head_ref"], do: head_ref = v["head_ref"]
 			[%{"id" => 0, 
         "yml_name" => k, 
         "active" => v["active"],
