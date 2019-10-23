@@ -214,13 +214,15 @@ defmodule CncfDashboardApi.GitlabMigrations do
   end
 
   def upsert_all_pipelines do
-    source_key_projects_orig = CncfDashboardApi.Repo.all(from skp in CncfDashboardApi.SourceKeyProjects) 
-    source_key_projects = source_key_projects_orig
+    source_key_projects = CncfDashboardApi.Repo.all(from skp in CncfDashboardApi.SourceKeyProjects) 
 
-    if Mix.env == :test do
-      source_key_projects =  Enum.take(source_key_projects_orig, 2) # limited in test mode for speed purposes.
+    source_key_projects = if Mix.env == :test do
+        Enum.take(source_key_projects, 2)
+    else
+        source_key_projects 
     end
-    project_ids = Enum.map(source_key_projects, fn(%{source_id: id}) -> %{"id" => String.to_integer(id)}end) 
+
+    project_ids = Enum.map(source_key_projects, fn(%{source_id: id}) -> %{"id" => String.to_integer(id)}end)
     # Logger.info fn ->
     #   "upsert_all_piplelines project_ids are: " <> inspect(project_ids)
     # end
