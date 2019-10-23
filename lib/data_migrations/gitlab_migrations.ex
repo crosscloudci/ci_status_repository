@@ -231,11 +231,12 @@ defmodule CncfDashboardApi.GitlabMigrations do
   # pipeline_jobs depends on projects and pipelines being upserted previously
   def upsert_pipeline_jobs(source_project_id, source_pipeline_id) do 
 
-    pipeline_job_map_orig = GitLabProxy.get_gitlab_pipeline_jobs(source_project_id, source_pipeline_id)
-    pipeline_job_map = pipeline_job_map_orig
+    pipeline_job_map = GitLabProxy.get_gitlab_pipeline_jobs(source_project_id, source_pipeline_id)
 
-    if Mix.env == :test do
-      pipeline_job_map =  Enum.take(pipeline_job_map_orig, 4) # limited in test mode for speed purposes. 
+    pipeline_job_map = if Mix.env == :test do
+      Enum.take(pipeline_job_map, 4) # limited in test mode for speed purposes. 
+    else
+      pipeline_job_map
     end
 
     skp = CncfDashboardApi.Repo.get_by(CncfDashboardApi.SourceKeyProjects, 
