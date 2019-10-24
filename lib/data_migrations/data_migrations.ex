@@ -86,10 +86,10 @@ defmodule CncfDashboardApi.DataMigrations do
               # Logger.info fn ->
               #   "Data Migration Source map #{inspect source_map}"
               # end
-              {sp_found, sp_record} = {:not_found ,  %unquote(model){}}
-
-              if source_map["id"] do
+              {sp_found, sp_record} = if source_map["id"] do
                 {sp_found, sp_record} = %unquote(model){id: source_map["id"]} |> find_by(:id)
+                else
+                {:not_found ,  %unquote(model){}}
               end
             end
           end
@@ -111,7 +111,7 @@ defmodule CncfDashboardApi.DataMigrations do
         # 2. Expands into this: %{name: source_project["name"], description: source_project["desc1"]}   
         # 3. Which expands into this: %{name: "kubernetes", description: "Container project"}
         # build the destination changeset
-        cs1 = Enum.reduce(unquote(column_map), %{returning: true}, 
+        cs1 = Enum.reduce(unquote(column_map), %{},
                                   fn (x,acc) -> 
                                     Map.put(acc, elem(x,1), source_map[elem(x,0) 
                                     |> Atom.to_string]) 
@@ -128,18 +128,28 @@ defmodule CncfDashboardApi.DataMigrations do
         {sp_found, sp_record} = case sp_found do
           :found ->
             # {_, sp_record} = CncfDashboardApi.Repo.update(changeset) 
-            {sp_found, sp_record} = unquote(repo).update(changeset) 
             # Logger.info fn ->
             #   ":found data migration result: #{inspect(sp_record)}"
             # end
-            # {sp_found, sp_record}
+            {sp_found, sp_record} = unquote(repo).update(changeset)
           :not_found ->
             # {_, sp_record} = CncfDashboardApi.Repo.insert(changeset) 
-            {sp_found, sp_record} = unquote(repo).insert(changeset) 
             # Logger.info fn ->
             #   ":not_found data migration result: #{inspect(sp_record)}"
             # end
-            # {sp_found, sp_record}
+            {sp_found, sp_record} = unquote(repo).insert(changeset)
+        end
+
+        case sp_found do
+          :error ->
+          Logger.error fn ->
+              "error upserting record(s)! sp_found: #{inspect(sp_found)}  sp_record: #{inspect(sp_record)}"
+          end
+          _ ->
+
+          Logger.info fn ->
+              "probably success upserting info: sp_found: #{inspect(sp_found)}  sp_record: #{inspect(sp_record)}"
+          end
         end
 
         # 8) save the uniquekey record
