@@ -97,24 +97,28 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
 		yml["projects"] 
 		|> Stream.with_index 
 		|> Enum.reduce([], fn ({{k, v}, idx}, acc) -> 
+      Logger.info fn ->
+        "gitlab ci yml v: #{inspect(v)}"
+      end
 
 			# [%{"id" => (idx + 1), 
-      case Enum.find_value(project_names, fn(x) -> x["project_name"] == k end) do
+      {display_name, subtitle, project_url, logo_url, stable_ref, head_ref } = case Enum.find_value(project_names, fn(x) -> x["project_name"] == k end) do
         true -> 
 
           Logger.info fn ->
             "env varible: #{inspect(System.get_env("PROJECT_SEGMENT_ENV"))}"
           end
           cncfci_yml = configuration_repo_path(v["configuration_repo"]) |> getcncfci() |> YamlElixir.read_from_string
+          Logger.info fn ->
+            "cncfciyml: #{inspect(cncfci_yml)}"
+          end
           display_name = cncfci_yml["project"]["display_name"]
           subtitle = cncfci_yml["project"]["sub_title"]
           project_url = cncfci_yml["project"]["project_url"]
           logo_url = cncfci_yml["project"]["logo_url"]
           stable_ref = cncfci_yml["project"]["stable_ref"] 
           head_ref = cncfci_yml["project"]["head_ref"] 
-          Logger.info fn ->
-            "cncfciyml: #{inspect(cncfci_yml)}"
-          end
+          {display_name, subtitle, project_url, logo_url, stable_ref, head_ref }
         _ ->
           display_name = v["display_name"]
           subtitle = v["sub_title"]
@@ -122,15 +126,17 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
           logo_url = v["logo_url"]
           stable_ref = v["stable_ref"] 
           head_ref = v["head_ref"] 
+          {display_name, subtitle, project_url, logo_url, stable_ref, head_ref }
       end
       # global config overwrites the project config
-      display_name = if v["display_name"], do: display_name = v["display_name"]
-      subtitle = if v["sub_title"], do: subtitle = v["sub_title"]
-      project_url = if v["project_url"], do: project_url = v["project_url"]
-      logo_url = if v["logo_url"], do: logo_url = v["logo_url"]
-      stable_ref = if v["stable_ref"], do: stable_ref = v["stable_ref"]
-      head_ref = if v["head_ref"], do: head_ref = v["head_ref"]
-			[%{"id" => 0, 
+      display_name = if v["display_name"], do: v["display_name"], else: display_name
+      subtitle = if v["sub_title"], do:  v["sub_title"], else: subtitle
+      project_url = if v["project_url"], do: v["project_url"], else: project_url
+      logo_url = if v["logo_url"], do: v["logo_url"], else: logo_url
+      stable_ref = if v["stable_ref"], do:  v["stable_ref"], else: stable_ref
+      head_ref = if v["head_ref"], do: v["head_ref"], else: head_ref
+
+			test = [%{"id" => 0, 
         "yml_name" => k, 
         "active" => v["active"],
         "logo_url" => logo_url,
@@ -146,6 +152,12 @@ defmodule CncfDashboardApi.YmlReader.GitlabCi do
         "head_ref" => head_ref,
         # "order" => (idx + 1)} | acc] 
         "order" => v["order"]} | acc] 
+
+      Logger.info fn ->
+        "wellkinda hash #{inspect(test)}"
+      end
+
+      test
 		end) 
 	end
 
