@@ -1,7 +1,7 @@
 defmodule CncfDashboardApi.Endpoint do
   use Phoenix.Endpoint, otp_app: :cncf_dashboard_api
 
-  socket "/socket", CncfDashboardApi.UserSocket
+  socket "/socket", CncfDashboardApi.UserSocket, websocket: true
 
   # Serve at "/" the static files from "priv/static" directory.
   #

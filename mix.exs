@@ -29,14 +29,14 @@ defmodule CncfDashboardApi.Mixfile do
   #
   # Type `mix help deps` for examples and options.
   defp deps do
-    [{:phoenix, "~> 1.3.4"},
+    [{:phoenix, "~> 1.4.9"},
      {:phoenix_pubsub, "~> 1.0"},
      {:phoenix_ecto, "~> 3.0"},
      {:postgrex, ">= 0.0.0"},
      {:phoenix_html, "~> 2.6"},
      {:phoenix_live_reload, "~> 1.0.0", only: :dev},
      {:gettext, "~> 0.11"},
-     {:plug_cowboy, "~> 1.0"},
+     {:plug_cowboy, "~> 2.0"},
      {:mix_test_watch, "~> 0.3", only: :dev, runtime: false},
      {:quantum, ">= 2.1.0"},
      {:sidetask, "~> 1.1"},
@@ -44,13 +44,15 @@ defmodule CncfDashboardApi.Mixfile do
      {:timex_ecto, "~> 3.0"},
      {:ecto_conditionals, "~> 0.1.0"},
      {:yaml_elixir, "~> 1.3.1"},
-     {:cors_plug, "~> 1.2"},
+     {:cors_plug, "~> 2.0"},
      {:ex_machina, "~> 2.0"},
      {:gproc, "0.3.1"},
      {:joken, "~> 1.2.1"},
      {:retry, "~> 0.8.0"},
      {:guardian, "~> 0.12.0"},
-     {:export, "~> 0.1.1"}]
+     {:export, "~> 0.1.1"},
+     {:jason, "~> 1.0"},
+     ]
 
   end
 

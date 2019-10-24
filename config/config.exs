@@ -47,3 +47,4 @@ config :guardian, Guardian,
   serializer: CncfDashboardApi.GuardianSerializer,
   atoms: [:listen, :publish, :crews, :email, :name, :id]
 
+config :phoenix, :json_library, Jason

@@ -5,8 +5,7 @@ defmodule CncfDashboardApi.UserSocket do
   # channel "room:*", CncfDashboardApi.RoomChannel
   channel "dashboard:*", CncfDashboardApi.DashboardChannel
   ## Transports
-  transport :websocket, Phoenix.Transports.WebSocket
-  # transport :longpoll, Phoenix.Transports.LongPoll
+  # removed re: https://gist.github.com/chrismccord/bb1f8b136f5a9e4abc0bfc07b832257e#update-your-usersocket
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After
