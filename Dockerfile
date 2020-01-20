@@ -18,6 +18,7 @@ RUN mix local.hex --force &&  \
 RUN gem install bundler
 
 RUN bundle install --gemfile /backend/lib/gitlab/Gemfile
+RUN gem install gitlab
 
 EXPOSE 4000
 

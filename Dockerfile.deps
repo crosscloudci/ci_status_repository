@@ -45,7 +45,6 @@ RUN set -ex \
     openssl-dev \
     procps \
     readline-dev \
-    ruby \
     tar \
     xz \
     yaml-dev \
