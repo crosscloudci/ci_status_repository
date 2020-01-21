@@ -19,6 +19,10 @@ RUN gem install bundler
 
 RUN bundle install --gemfile /backend/lib/gitlab/Gemfile
 RUN gem install gitlab
+RUN gem install prawn
+RUN gem install json
+RUN gem install httparty
+RUN gem install awesome_print
 
 EXPOSE 4000
 
