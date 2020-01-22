@@ -18,11 +18,13 @@ RUN mix local.hex --force &&  \
 RUN gem install bundler
 
 RUN bundle install --gemfile /backend/lib/gitlab/Gemfile
-RUN gem install gitlab
-RUN gem install prawn
-RUN gem install json
-RUN gem install httparty
-RUN gem install awesome_print
+
+# based on ^ Gemfile and associated Gemfile.lock TODO: fix having to do this hack
+RUN gem install gitlab -v 4.2.0
+RUN gem install prawn -v 2.2.2
+RUN gem install json -v 1.8.6
+RUN gem install httparty -v 0.15.6
+RUN gem install awesome_print -v 1.2.0
 
 EXPOSE 4000
 
