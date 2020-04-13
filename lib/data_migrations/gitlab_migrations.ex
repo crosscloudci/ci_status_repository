@@ -147,7 +147,8 @@ defmodule CncfDashboardApi.GitlabMigrations do
       #   end
       # end)
       # take_project_map =  Enum.take(test_project_map, 3)
-      take_project_map =  Enum.take(project_map_orig, 5)
+      take_project_map =  Enum.take(project_map_orig, 2)
+      # take_project_map =  Enum.take(project_map_orig, 5)
       # project_map = take_project_map ++ [ccp]
       project_map = take_project_map
     else
