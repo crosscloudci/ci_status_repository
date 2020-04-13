@@ -22,7 +22,8 @@ Dashboard-Backend:
         exit 1
       fi
     - docker login -u "gitlab-ci-token" -p "$CI_JOB_TOKEN" $CI_REGISTRY
-    - docker build --pull --no-cache -t "$CI_REGISTRY_IMAGE/backend-$CI_COMMIT_REF_NAME:$CI_COMMIT_SHA" .
+    - docker build --no-cache -f Dockerfile.deps -t crosscloudci/backend-deps:latest .
+    - docker build -t "$CI_REGISTRY_IMAGE/backend-$CI_COMMIT_REF_NAME:$CI_COMMIT_SHA" .
     - docker push "$CI_REGISTRY_IMAGE/backend-$CI_COMMIT_REF_NAME:$CI_COMMIT_SHA"
 
 Deploy-Backend:
