@@ -28,7 +28,7 @@ Dashboard-Backend:
 
 Deploy-Backend:
   stage: Deploy
-  image: crosscloudci/helm:v2.10.0
+  image: crosscloudci/helm:latest
   script:
     - >
       if [ "$BASE_URL" == "https://gitlab.dev.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "master" ]; then
