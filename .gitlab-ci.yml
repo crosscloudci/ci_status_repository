@@ -64,17 +64,7 @@ Deploy-Backend:
     - helm upgrade --install ingress-controller ingress-nginx/ingress-nginx --set controller.kind=Deployment --set controller.service.externalIPs={147.75.105.99} --set controller.service.type=ClusterIP
     - kubectl create namespace cert-manager || true
     - helm upgrade --install cert-manager jetstack/cert-manager --namespace cert-manager --version v1.0.4 --set installCRDs=true --set ingressShim.defaultIssuerName=letsencrypt-prod --set ingressShim.defaultIssuerKind=ClusterIssuer --set ingressShim.defaultIssuerGroup=cert-manager.io
-    - >
-      TIME=0
-      until [[ $EXIT -eq 0 ]]; do 
-          kubectl apply -f letsencrypt-clusterissuer-prod.yaml
-          EXIT=$?
-          TIME=$(($TIME + 1))
-          sleep 1
-          if [[ $TIME -eq 120 ]]; then
-              exit 1
-          fi
-      done
+    - ./letsencrypt.sh
     # Purge Delete old db
     - helm delete --purge db-"$CI_COMMIT_REF_NAME" || true
     - helm install stable/postgresql --name db-"$CI_COMMIT_REF_NAME" --set postgresqlDatabase=backend --set persistence.enabled=false --set service.type=ClusterIP
