@@ -1,9 +1,9 @@
 # CNCF Dashboard API server
 
-**Prerequisites:** Erlang 20.1, Elixir 1.5.1, Ruby 2.4.6, Node v7.6.0
+**Prerequisites:** Erlang 20.1, Elixir 1.5.1, Ruby 2.4.6
 
 ## Prerequisites
-You can install Erlang, Elixir, Ruby, and Node using a version manager like [kerl](https://github.com/kerl/kerl), [kiex](https://github.com/taylor/kiex), [rvm](https://github.com/rvm/rvm), or [nvm](https://github.com/creationix/nvm).
+You can install Erlang, Elixir, Ruby using a version manager like [kerl](https://github.com/kerl/kerl), [kiex](https://github.com/taylor/kiex), [rvm](https://github.com/rvm/rvm)
 
 # e.g.:
 
@@ -40,18 +40,9 @@ source /etc/profile.d/rvm.sh
 
 # Install ruby 
 ```
-rvm install 2.2.1
+rvm install 2.4.6
 ```
 
-# Install nvm
-```
-curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
-```
-
-# Install node
-```
-nvm install 7.6.0
-```
 
 # Create an environment file and test db file (.env and test.secret.exs) using the example files e.g.
 ```
@@ -61,6 +52,7 @@ vim config/test.secret.exs.example
 
 ## Build & start the Dashboard API server
 
+  * if you haven't already setup environment with by running `setup.sh` if it doesn't work `cat setup.sh` and run those commands
   * Install dependencies with `mix deps.get`
   * Compile elixir application with `mix do compile`
   * Create and migrate your database with `mix ecto.create && mix ecto.migrate`
@@ -69,7 +61,6 @@ vim config/test.secret.exs.example
     . .env; mix gitlab_data.load_clouds
     . .env; mix gitlab_data.load_projects
     ```
-  * Install Node.js dependencies with `npm install`
   * Install gitlab lib deps `cd lib/gitlab ; bundle install ; cd ../..`
   * Start Phoenix endpoint with `. .env ; mix phoenix.server`
 
