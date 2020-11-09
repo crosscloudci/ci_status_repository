@@ -1,4 +1,4 @@
-FROM crosscloudci/backend-deps:latest
+FROM crosscloudci/backend-deps:prod
 
 MAINTAINER "Denver Williams <denver@debian.nz>"
 

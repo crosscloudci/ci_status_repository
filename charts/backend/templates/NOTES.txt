@@ -1,5 +1,0 @@
-{{- if .Values.isClusterService }}
-Backend is now running in the cluster as a cluster-service.
-{{- else }}
-Backend is now running in the cluster.
-{{- end }}
