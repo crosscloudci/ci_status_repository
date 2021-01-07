@@ -21,6 +21,7 @@ RUN bundle install --gemfile /backend/lib/gitlab/Gemfile
 
 # based on ^ Gemfile and associated Gemfile.lock TODO: fix having to do this hack
 RUN gem install gitlab -v 4.2.0
+RUN gem install ttfunk -v 1.6.2.1
 RUN gem install prawn -v 2.2.2
 RUN gem install json -v 1.8.6
 RUN gem install httparty -v 0.15.6
