@@ -9,14 +9,10 @@ Dashboard-Backend:
   stage: Build
   script:
     - >
-      if [ "$BASE_URL" == "https://gitlab.dev.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "master" ]; then
-        echo "Deploying $CI_COMMIT_REF_NAME on $BASE_URL"
-      elif [ "$BASE_URL" == "https://gitlab.cidev.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "integration" ]; then 
-        echo "Deploying $CI_COMMIT_REF_NAME on $BASE_URL"
-      elif [ "$BASE_URL" == "https://gitlab.staging.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "staging" ]; then 
-        echo "Deploying $CI_COMMIT_REF_NAME on $BASE_URL"
-      elif [ "$BASE_URL" == "https://gitlab.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "production" ]; then
-        echo "Deploying $CI_COMMIT_REF_NAME on $BASE_URL"
+      if [ "$CI_COMMIT_REF_NAME" == "master" ]; then
+        echo "Deploying $CI_COMMIT_REF_NAME"
+      elif [ "$CI_COMMIT_REF_NAME" == "production" ]; then
+        echo "Deploying $CI_COMMIT_REF_NAME"
       else
         echo "No Matching Environment Could Be Found"
         exit 1
@@ -31,22 +27,12 @@ Deploy-Backend:
   image: crosscloudci/helm:latest
   script:
     - >
-      if [ "$BASE_URL" == "https://gitlab.dev.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "master" ]; then
+      if [ "$CI_COMMIT_REF_NAME" == "master" ]; then
         echo "Deploying $CI_COMMIT_REF_NAME on $BASE_URL"
         export BACKEND_INGRESS="devapi.cncf.ci"
         export TLS="true"
-        export PROJECT_SEGMENT_ENV="integration"
-      elif [ "$BASE_URL" == "https://gitlab.cidev.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "integration" ]; then 
-        echo "Deploying $CI_COMMIT_REF_NAME on $BASE_URL"
-        export BACKEND_INGRESS="cidevapi.cncf.ci"
-        export TLS="true"
         export PROJECT_SEGMENT_ENV="master"
-      elif [ "$BASE_URL" == "https://gitlab.staging.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "staging" ]; then 
-        echo "Deploying $CI_COMMIT_REF_NAME on $BASE_URL"
-        export BACKEND_INGRESS="stagingapi.cncf.ci"
-        export TLS="true"
-        export PROJECT_SEGMENT_ENV="staging"
-      elif [ "$BASE_URL" == "https://gitlab.cncf.ci" ] && [ "$CI_COMMIT_REF_NAME" == "production" ]; then
+      elif [ "$CI_COMMIT_REF_NAME" == "production" ]; then
         echo "Deploying $CI_COMMIT_REF_NAME on $BASE_URL"
         export BACKEND_INGRESS="productionapi.cncf.ci"
         export TLS="true"
