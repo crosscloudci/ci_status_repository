@@ -5,9 +5,11 @@ GEM
     gitlab (4.2.0)
       httparty
       terminal-table
-    httparty (0.15.6)
+    httparty (0.21.0)
+      mini_mime (>= 1.0.0)
       multi_xml (>= 0.5.2)
     json (2.3.0)
+    mini_mime (1.1.2)
     multi_xml (0.6.0)
     pdf-core (0.7.0)
     prawn (2.2.2)
